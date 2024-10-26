@@ -5,7 +5,7 @@
 	"minAppVersion": "0.15.0",
 	"description": "Is able to show .glb and .stl files in Obsidian. Functions in combination with the dataview.js plugin. Please follow the installation instructions to get this plugin to work properly",
 	"author": "Jesse Strijker",
-	"authorUrl": "https://obsidian.md",
+	"authorUrl": "https://jessestrijker.com",
 	"fundingUrl": "https://obsidian.md/pricing",
-	"isDesktopOnly": false
+	"isDesktopOnly": true
 }

@@ -9,6 +9,7 @@ export default class ThreeJSPlugin extends Plugin {
         const pluginFolderName = "Embed3D"
         const FolderNameForModels = "Place Models Here"
 
+        //needs to change
         if (this.app.vault.getFolderByPath(pluginFolderName) == null) {
             console.log("Apparantly " + pluginFolderName + " does not exist yet, creating it...")
             this.app.vault.createFolder(pluginFolderName)

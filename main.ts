@@ -1,6 +1,6 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 //import * as THREE from 'three';
-const fs = require('fs');
+//const fs = require('fs');
 
 const dataScript = `
 // You always receive an input object
@@ -149,13 +149,10 @@ function threeJS(modelExtension) {
 
 export default class ThreeJSPlugin extends Plugin {
 	async onload() {
-		const pluginFolderName = "Embed3D"
+		console.log("Embed 3D loaded")
+		/*const pluginFolderName = "Embed3D"
 		const FolderNameForModels = "Place Models Here"
-		/*const dir = "folder/folder/something/"
-		if (!tp.file.exists(dir)) {
-			await this.app.vault.createFolder(dir)
-		}
-		await tp.file.move(dir + tp.file.title)*/
+
 		if (this.app.vault.getFolderByPath(pluginFolderName) == null) {
 			console.log("Apparantly " + pluginFolderName + " does not exist yet, creating it...")
 			this.app.vault.createFolder(pluginFolderName)
@@ -169,14 +166,6 @@ export default class ThreeJSPlugin extends Plugin {
 		if (this.app.vault.getFolderByPath(pluginFolderName + '/' + FolderNameForModels) == null) {
 			this.app.vault.createFolder(pluginFolderName + '/' + FolderNameForModels)
 		}
-
-		const folderPath = this.app.vault.adapter.getResourcePath("3DModels")
-		/*console.log(folderPath)
-		this.addCommand({
-			id: 'insert-threejs-scene',
-			name: 'Insert Three.js Scene',
-			callback: () => this.insertThreeJSScene()
-		});*/
 
 		this.addCommand({
 			id: "3DModel",
@@ -209,65 +198,26 @@ export default class ThreeJSPlugin extends Plugin {
 				let content = firstLine + secondLine + thirdLine + fourthLine + lastLine
 				editor.replaceSelection(content);
 			},
-		});
+		});*/
+
+		this.registerMarkdownCodeBlockProcessor('csv', (source, el, ctx) => {
+			console.log("codeblock detected")
+			const rows = source.split('\n').filter((row) => row.length > 0);
+
+			const table = el.createEl('table');
+			const body = table.createEl('tbody');
+
+			for (let i = 0; i < rows.length; i++) {
+				const cols = rows[i].split(',');
+
+				const row = body.createEl('tr');
+
+				for (let j = 0; j < cols.length; j++) {
+					row.createEl('td', { text: cols[j] });
+				}
+			}
+		})
 	}
-
-	/*insertThreeJSScene() {
-		console.log("1")
-		const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-		if (!activeView) {
-			return;
-		}
-		console.log("2")
-
-		const editor = activeView.editor;
-		const sceneID = `threejs-scene-${Date.now()}`;
-		console.log("3")
-
-		// Insert a placeholder for the Three.js scene
-		editor.replaceSelection(`<div id="${sceneID}" class="threejs-scene" style="width: 100%; height: 400px;"></div>\n`);
-		console.log("4")
-		// Refresh the preview to show the changes (re-render the view)
-		// activeView.previewMode.rerender();
-
-		console.log("5")
-
-		// Listen for the markdown render event to inject the Three.js scene into preview
-		//this.registerMarkdownPostProcessor((element, context) => {
-		// Find the div with the specific class (that we inserted in the markdown)
-		const container = document.querySelector('.threejs-scene') as HTMLElement;
-		if (container) {
-			this.loadThreeJSScene(container);
-		}
-		//});
-
-	}
-
-	loadThreeJSScene(container: HTMLElement) {
-		console.log("Loading threejs scene")
-		const scene = new THREE.Scene();
-		const camera = new THREE.PerspectiveCamera(75, container.offsetWidth / 400, 0.1, 1000);
-		const renderer = new THREE.WebGLRenderer();
-
-		renderer.setSize(container.offsetWidth, 400);
-		container.appendChild(renderer.domElement);
-
-		const geometry = new THREE.BoxGeometry();
-		const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-		const cube = new THREE.Mesh(geometry, material);
-		scene.add(cube);
-
-		camera.position.z = 5;
-
-		function animate() {
-			requestAnimationFrame(animate);
-			cube.rotation.x += 0.01;
-			cube.rotation.y += 0.01;
-			renderer.render(scene, camera);
-		}
-
-		animate();
-	}*/
 
 	onunload() {
 		console.log('ThreeJS plugin unloaded');

@@ -1,12 +1,39 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, Editor, MarkdownView, Modal, Modifier, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 declare const THREE: any;
 declare const STLLoader: any;
 declare const GLTFLoader: any;
 
+interface ExamplePluginSettings {
+    folder: string,
+    keyOne: any,
+    keyTwo: string,
+}
+
+const DEFAULT_SETTINGS: Partial<ExamplePluginSettings> = {
+    folder: "foldername/foldername/etc.",
+    keyOne: "Alt",
+    keyTwo: "3",
+};
+
 export default class ThreeJSPlugin extends Plugin {
+    settings: ExamplePluginSettings;
+
+    async loadSettings() {
+        this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    }
+
+    async saveSettings() {
+        await this.saveData(this.settings);
+    }
+
     async onload() {
+        await this.loadSettings();
+
+        this.addSettingTab(new ExampleSettingTab(this.app, this));
+
         console.log("Embed3D Plugin loaded")
-        const pluginFolderName = "Embed3D"
+        
+        /*const pluginFolderName = "Embed3D"
         const FolderNameForModels = "Place Models Here"
 
         //needs to change
@@ -17,13 +44,20 @@ export default class ThreeJSPlugin extends Plugin {
 
         if (this.app.vault.getFolderByPath(pluginFolderName + '/' + FolderNameForModels) == null) {
             this.app.vault.createFolder(pluginFolderName + '/' + FolderNameForModels)
+        }*/
+
+        console.log(this.settings.folder)
+        let folder = this.settings.folder
+
+        if(this.app.vault.getFolderByPath(folder) == null){
+            console.log("The folder established for this plugin is non-existent")
         }
 
         //Quickadd for syntax of rendering 3D model with plugin
         this.addCommand({
             id: "3DModel",
             name: "3DModel",
-            hotkeys: [{ modifiers: ["Alt"], key: "3" }],
+            hotkeys: [{ modifiers: [this.settings.keyOne], key: this.settings.keyTwo }],
             editorCallback: (editor: Editor) => {
                 let selection = editor.getSelection();
                 if (selection == "") {
@@ -76,7 +110,7 @@ export default class ThreeJSPlugin extends Plugin {
                 // Convert the JSON string to an object
                 const parsedData: Source3D = JSON.parse(source);
 
-                const modelPath = this.app.vault.adapter.getResourcePath("Embed3D/Place Models Here/" + parsedData.name);
+                const modelPath = this.app.vault.adapter.getResourcePath(this.settings.folder + "/" + parsedData.name);
                 const modelType = parsedData.name.substr(parsedData.name.length - 3);
                 const inputRotationX = parsedData.rotationX;
                 const inputRotationY = parsedData.rotationY;
@@ -194,5 +228,62 @@ export default class ThreeJSPlugin extends Plugin {
 
     onunload() {
         console.log('ThreeJS plugin unloaded');
+    }
+}
+
+export class ExampleSettingTab extends PluginSettingTab {
+    plugin: ThreeJSPlugin;
+
+    constructor(app: App, plugin: ThreeJSPlugin) {
+        super(app, plugin);
+        this.plugin = plugin;
+    }
+
+    display(): void {
+        let { containerEl } = this;
+
+        containerEl.empty();
+
+        containerEl.createEl('h2', {text: 'Settings for 3DEmbed Plugin'});
+        containerEl.createEl('small', {text: '(Reload obsidian after changing settings for them to take effect)'});
+
+        new Setting(containerEl)
+            .setName('Folder')
+            .setDesc('Folder where all 3D models are located')
+            .addText((text) =>
+                text
+                    .setPlaceholder('int')
+                    .setValue(this.plugin.settings.folder)
+                    .onChange(async (value) => {
+                        this.plugin.settings.folder = value;
+                        await this.plugin.saveSettings();
+                    })
+            );
+
+            new Setting(containerEl)
+            .setName('Key One')
+            .setDesc('Enter the first key you need to press to activate the command')
+            .addText((text) =>
+                text
+                    .setPlaceholder('Alt')
+                    .setValue(this.plugin.settings.keyOne)
+                    .onChange(async (value) => {
+                        this.plugin.settings.keyOne = value;
+                        await this.plugin.saveSettings();
+                    })
+            );
+
+            new Setting(containerEl)
+            .setName('Key Two')
+            .setDesc('Enter the second key you need to press to activate the command')
+            .addText((text) =>
+                text
+                    .setPlaceholder('3')
+                    .setValue(this.plugin.settings.keyTwo)
+                    .onChange(async (value) => {
+                        this.plugin.settings.keyTwo = value;
+                        await this.plugin.saveSettings();
+                    })
+            );
     }
 }

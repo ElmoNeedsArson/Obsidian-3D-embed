@@ -1,18 +1,16 @@
 import { App, Editor, MarkdownView, Modal, Modifier, Notice, Plugin, PluginSettingTab, Setting, getLinkpath } from 'obsidian';
 declare const THREE: any;
 
-interface ExamplePluginSettings {
-    keyOne: any,
-    keyTwo: string,
+interface ThreeDEmbedSetting {
+    standardColor: string,
 }
 
-const DEFAULT_SETTINGS: Partial<ExamplePluginSettings> = {
-    keyOne: "Alt",
-    keyTwo: "3",
+const DEFAULT_SETTINGS: Partial<ThreeDEmbedSetting> = {
+    standardColor: "#ADD8E6"
 };
 
 export default class ThreeJSPlugin extends Plugin {
-    settings: ExamplePluginSettings;
+    settings: ThreeDEmbedSetting;
 
     async loadSettings() {
         this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
@@ -25,7 +23,7 @@ export default class ThreeJSPlugin extends Plugin {
     async onload() {
         await this.loadSettings();
 
-        this.addSettingTab(new ExampleSettingTab(this.app, this));
+        this.addSettingTab(new ThreeDSettingsTab(this.app, this));
 
         console.log("Embed3D Plugin loaded")
 
@@ -33,13 +31,13 @@ export default class ThreeJSPlugin extends Plugin {
         this.addCommand({
             id: "3DModel",
             name: "3DModel",
-            hotkeys: [{ modifiers: [this.settings.keyOne], key: this.settings.keyTwo }],
+            //hotkeys: [{ modifiers: [this.settings.keyOne], key: this.settings.keyTwo }],
             editorCallback: (editor: Editor) => {
                 let selection = editor.getSelection();
                 if (selection == "") {
                     const lineNumber = editor.getCursor().line
                     const searchQuery = editor.getLine(lineNumber).trim()
-                    console.log("Sq: " + searchQuery)
+                    //console.log("Sq: " + searchQuery)
 
                     function mySubString(str: string) {
                         let newStr;
@@ -49,12 +47,12 @@ export default class ThreeJSPlugin extends Plugin {
                     let newStr1 = mySubString(searchQuery)
                     let newStr2 = mySubString(newStr1)
                     selection = newStr2;
-                    console.log("Newstring: " + newStr2)
+                    //console.log("Newstring: " + newStr2)
                 }
 
                 //const searchQuery = doc.getLine(curLineNum).trim()
                 let firstLine = "\n```3D\n"
-                let contents = `{\n"name": "` + selection + `",\n"rotationX": 0, "rotationY": 0, "rotationZ": 0, \n"scale": 0.5, \n"colorHexString": "ADD8E6", \n"positionX": 0, "positionY": 0, "positionZ": 0\n}\n`
+                let contents = `{\n"name": "` + selection + `",\n"rotationX": 0, "rotationY": 0, "rotationZ": 0, \n"scale": 0.5, \n"colorHexString": "` + this.settings.standardColor.replace(/#/g, "") + `", \n"positionX": 0, "positionY": 0, "positionZ": 0\n}\n`
                 let lastLine = '\n```\n'
                 let content = firstLine + contents + lastLine
                 editor.replaceSelection(content);
@@ -63,8 +61,8 @@ export default class ThreeJSPlugin extends Plugin {
 
         //Registers codeblock for 3D
         this.registerMarkdownCodeBlockProcessor('3D', (source, el, ctx) => {
-            console.log("codeblock detected")
-            console.log(el)
+            //console.log("codeblock detected")
+            //console.log(el)
 
             interface Source3D {
                 name: any;
@@ -209,7 +207,7 @@ export default class ThreeJSPlugin extends Plugin {
     }
 }
 
-export class ExampleSettingTab extends PluginSettingTab {
+export class ThreeDSettingsTab extends PluginSettingTab {
     plugin: ThreeJSPlugin;
 
     constructor(app: App, plugin: ThreeJSPlugin) {
@@ -222,30 +220,18 @@ export class ExampleSettingTab extends PluginSettingTab {
 
         containerEl.empty();
 
-        containerEl.createEl('h2', { text: 'Settings for 3DEmbed Plugin' });
-        containerEl.createEl('small', { text: '(Reload obsidian after changing settings for them to take effect)' });
-
         new Setting(containerEl)
-            .setName('Key Bind')
-            .setDesc('Enter 2 keys to embed the 3D model in your note. Reload the plugin or obsidian after changing the values')
-            .addText((text) =>
-                text
-                    .setPlaceholder('Alt')
-                    .setValue(this.plugin.settings.keyOne)
+            .setName('Standard Scene Color')
+            .setDesc('When embedding a model a standard scene color needs to be provided')
+            .addColorPicker((colorPicker) =>
+                colorPicker
+                    //.setValue(this.plugin.settings.highlightColor) // Set the initial color
+                    .setValue(this.plugin.settings.standardColor)
                     .onChange(async (value) => {
-                        this.plugin.settings.keyOne = value;
+                        console.log(value)
+                        this.plugin.settings.standardColor = value;
                         await this.plugin.saveSettings();
                     })
-                    .inputEl.style.width = '50px'
-            ).addText((text) =>
-                text
-                    .setPlaceholder('3')
-                    .setValue(this.plugin.settings.keyTwo)
-                    .onChange(async (value) => {
-                        this.plugin.settings.keyTwo = value;
-                        await this.plugin.saveSettings();
-                    })
-                    .inputEl.style.width = '50px'
-            );
+            )
     }
 }

@@ -8,6 +8,10 @@ This allows you to see every type of file in your obsidian vault, including 3D m
 ## 2. Watch this video that showcases how to use the plugin:
 
 
+https://github.com/user-attachments/assets/9b10c36c-36c3-4bc1-a4a7-f5d00f735ec7
+
+
+
 ## 3. Or read these images and text:
 3.1) Drag Model from file overview/manager into note as an embed
 ![image](https://github.com/user-attachments/assets/50f07214-9624-404a-b98a-6f7e2aeae39d)

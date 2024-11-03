@@ -1,66 +1,46 @@
-## Releasing new releases
+# 3D Embed Plugin - How to use
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+## 1. Showing all filetypes in obsidian:
+Go to the settings tab of obsidian -> 'Files and Links' -> toggle the 'Detect all file extensions'
+![image](https://github.com/user-attachments/assets/d5e27828-1a29-4870-8294-52e9011e2083)
+This allows you to see every type of file in your obsidian vault, including 3D model files such as stl. 
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+## 2. Watch this video that showcases how to use the plugin:
 
-## Adding your plugin to the community plugin list
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+https://github.com/user-attachments/assets/9b10c36c-36c3-4bc1-a4a7-f5d00f735ec7
 
-## How to use
 
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
 
-## Manually installing the plugin
+## 3. Or read these images and text:
+3.1) Drag Model from file overview/manager into note as an embed
+![Screenshot 2024-11-03 184117](https://github.com/user-attachments/assets/245386b4-5f41-4bf3-8afa-55287cd46207)
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+3.2) position cursor on line with 3D model embed
+![Screenshot 2024-11-03 184225](https://github.com/user-attachments/assets/cad3f9f5-d1bd-4b61-a816-79ce3fc0a00e)
 
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint .\src\`
+3.3) On line with embed execute the embed 3D command (ctrl+p) -> embed 3D: 3DModel
+![image](https://github.com/user-attachments/assets/c75579e8-a051-433c-ab64-486aa30fd9da)
 
-## Funding URL
+3.4) Voila a 3D model
+![image](https://github.com/user-attachments/assets/6e142009-9cfb-44e4-b1a9-1457f288f55f)
 
-You can include funding URLs where people who use your plugin can financially support it.
-
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
-
-```json
+# Additional Information
+## Example Codeblock
+Look at the codeblock to alter minor things in the scene
+```js
+```3D
 {
-    "fundingUrl": "https://buymeacoffee.com"
+"name": "Castle.glb",
+"rotationX": 0, "rotationY": 0, "rotationZ": 0,
+"AutorotateX": 0, "AutorotateY": 0.001, "AutorotateZ": 0,
+"positionX": 0, "positionY": 0, "positionZ": 0,
+"scale": "0.5",
+"colorHexString": "7abbd6"
 }
 ```
 
-If you have multiple URLs, you can also do:
+## Standard Settings
+Use the settings tab, to alter standard settings such as background color, size of 3D embed, or scale of the model. 
+![image](https://github.com/user-attachments/assets/b7df88bf-75e2-4066-a685-8dfa11478816)
 
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
-```
-
-## API Documentation
-
-See https://github.com/obsidianmd/obsidian-api

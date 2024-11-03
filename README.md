@@ -1,13 +1,19 @@
-# 3D Embed Plugin
+# 3D Embed Plugin - How to use
 
-0. See video:
+## 1. Showing all filetypes in obsidian:
+Go to the settings tab of obsidian -> 'Files and Links' -> toggle the 'Detect all file extensions'
+![image](https://github.com/user-attachments/assets/d5e27828-1a29-4870-8294-52e9011e2083)
+This allows you to see every type of file in your obsidian vault, including 3D model files such as stl. 
 
-1. Drag Model from file overview/manager into note as an embed
+## 2. Watch this video that showcases how to use the plugin:
 
-2. On line with embed execute the embed 3D command (ctrl+p) -> embed 3D: 3DModel
 
-Tadaa 3D scene in obsidian note
+## 3. Or read these images and text:
+3.1) Drag Model from file overview/manager into note as an embed
 
+3.2) On line with embed execute the embed 3D command (ctrl+p) -> embed 3D: 3DModel
+
+# Additional Information
 ## Example Codeblock
 Look at the codeblock to alter minor things in the scene
 ```js

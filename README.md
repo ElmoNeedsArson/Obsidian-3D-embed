@@ -8,6 +8,7 @@
 
 Tadaa 3D scene in obsidian note
 
+## Example Codeblock
 Look at the codeblock to alter minor things in the scene
 ```js
 ```3D
@@ -19,5 +20,4 @@ Look at the codeblock to alter minor things in the scene
 "scale": "0.5",
 "colorHexString": "7abbd6"
 }
-```
 ```

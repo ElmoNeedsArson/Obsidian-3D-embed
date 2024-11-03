@@ -17,7 +17,7 @@ https://github.com/user-attachments/assets/9b10c36c-36c3-4bc1-a4a7-f5d00f735ec7
 ![Screenshot 2024-11-03 184117](https://github.com/user-attachments/assets/245386b4-5f41-4bf3-8afa-55287cd46207)
 
 3.2) position cursor on line with 3D model embed
-![image](https://github.com/user-attachments/assets/000d7b73-0820-4d08-bc8c-5f9907241e8a)
+![Screenshot 2024-11-03 184225](https://github.com/user-attachments/assets/cad3f9f5-d1bd-4b61-a816-79ce3fc0a00e)
 
 3.3) On line with embed execute the embed 3D command (ctrl+p) -> embed 3D: 3DModel
 ![image](https://github.com/user-attachments/assets/c75579e8-a051-433c-ab64-486aa30fd9da)

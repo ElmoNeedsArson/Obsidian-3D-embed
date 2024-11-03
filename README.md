@@ -21,3 +21,8 @@ Look at the codeblock to alter minor things in the scene
 "colorHexString": "7abbd6"
 }
 ```
+
+## Standard Settings
+Use the settings tab, to alter standard settings such as background color, size of 3D embed, or scale of the model. 
+![image](https://github.com/user-attachments/assets/b7df88bf-75e2-4066-a685-8dfa11478816)
+

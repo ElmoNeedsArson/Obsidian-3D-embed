@@ -1,9 +1,9 @@
 {
-	"id": "3DEmbeds",
+	"id": "3d_Embeds",
 	"name": "Embed 3D",
 	"version": "1.0.1",
 	"minAppVersion": "0.15.0",
-	"description": "Embed 3DModels(.glb and .stl) in obsidian notes.",
+	"description": "Embed 3DModels in markdown notes.",
 	"author": "Jesse Strijker",
 	"authorUrl": "https://jessestrijker.com",
 	"isDesktopOnly": true

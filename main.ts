@@ -75,9 +75,9 @@ export default class ThreeJSPlugin extends Plugin {
 
         this.registerMarkdownCodeBlockProcessor('3D', (source, el, ctx) => {
             try {
-                console.log(source)
+                //console.log(source)
                 const parsedData = JSON.parse(source);
-                console.log(parsedData)
+                //console.log(parsedData)
                 const modelPath = this.getModelPath(parsedData.name);
                 if (!modelPath) throw new Error("Model path not found");
                 const containerEl = (ctx as any).containerEl;
@@ -105,7 +105,7 @@ export default class ThreeJSPlugin extends Plugin {
         const renderer = new THREE.WebGLRenderer();
         renderer.setSize(width, this.settings.standardEmbedHeight);
         el.appendChild(renderer.domElement);
-        console.log("Renderer added")
+        //console.log("Renderer added")
 
         const light = new THREE.DirectionalLight(0xffffff, 1);
         light.position.set(5, 10, 5);
@@ -117,13 +117,13 @@ export default class ThreeJSPlugin extends Plugin {
         const controls = new OrbitControls(camera, renderer.domElement);
 
         // Load the model based on the extension
-        console.log(modelPath)
+        //console.log(modelPath)
         const modelExtension = name.slice(-3).toLowerCase();
-        console.log(modelExtension)
+        //console.log(modelExtension)
         let ThreeDmodel: THREE.Object3D;
         this.loadModel(scene, modelPath, modelExtension, config, (model) => {
             // Do something with the loaded model here
-            console.log("Model loaded:", model);
+            //console.log("Model loaded:", model);
             ThreeDmodel = model;
         });
 
@@ -164,7 +164,7 @@ export default class ThreeJSPlugin extends Plugin {
     }
 
     loadModel(scene: THREE.Scene, modelPath: string, extension: string, config: any, callback: (model: THREE.Object3D) => void) {
-        console.log(extension)
+        //console.log(extension)
         switch (extension) {
             case 'stl':
                 const stlLoader = new STLLoader();
@@ -177,7 +177,7 @@ export default class ThreeJSPlugin extends Plugin {
                 });
                 break;
             case 'glb':
-                console.log("Running GLB")
+                //console.log("Running GLB")
                 const gltfLoader = new GLTFLoader();
                 gltfLoader.load(modelPath, (gltf) => {
                     const model = gltf.scene;

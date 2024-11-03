@@ -1,8 +1,10 @@
 # 3D Embed Plugin
 
-Drag Model from file overview into note as an embed
+0. See video:
 
-On line with embed execute the embed 3D command (ctrl+p) -> embed 3D: 3DModel
+1. Drag Model from file overview/manager into note as an embed
+
+2. On line with embed execute the embed 3D command (ctrl+p) -> embed 3D: 3DModel
 
 Tadaa 3D scene in obsidian note
 

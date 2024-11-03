@@ -1,11 +1,10 @@
 {
-	"id": "3DInObsidian",
+	"id": "3DEmbeds",
 	"name": "Embed 3D",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Is able to show .glb and .stl files in Obsidian. Functions in combination with the dataview.js plugin. Please follow the installation instructions to get this plugin to work properly",
+	"description": "Embed 3DModels(.glb and .stl) in obsidian notes.",
 	"author": "Jesse Strijker",
 	"authorUrl": "https://jessestrijker.com",
-	"fundingUrl": "",
 	"isDesktopOnly": true
 }

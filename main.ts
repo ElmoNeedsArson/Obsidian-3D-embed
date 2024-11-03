@@ -217,7 +217,7 @@ class ThreeDSettingsTab extends PluginSettingTab {
         containerEl.empty();
 
         new Setting(containerEl)
-            .setName('Standard Scene Color')
+            .setName('Standard scene color')
             .setDesc('Default background color for 3D scenes')
             .addColorPicker(colorPicker =>
                 colorPicker.setValue(this.plugin.settings.standardColor)
@@ -228,8 +228,8 @@ class ThreeDSettingsTab extends PluginSettingTab {
             );
 
         new Setting(containerEl)
-            .setName('Standard Scale of Model')
-            .setDesc('Default Size of 3D models in scene (non whole numbers should be seperated by dot, not comma)')
+            .setName('Standard scale of 3Dmodel')
+            .setDesc('Default size of 3D models in scene (non whole numbers should be seperated by dot, not comma)')
             .addText(text =>
                 text
                     .setValue(this.plugin.settings.standardScale.toString())
@@ -242,7 +242,7 @@ class ThreeDSettingsTab extends PluginSettingTab {
             )
 
         new Setting(containerEl)
-            .setName('Standard Height')
+            .setName('Standard height')
             .setDesc('Default height of a 3D model embed in your note (in pixels)')
             .addText(text =>
                 text

@@ -52,7 +52,7 @@ export default class ThreeJSPlugin extends Plugin {
 
                 //const searchQuery = doc.getLine(curLineNum).trim()
                 let firstLine = "\n```3D\n"
-                let contents = `{\n"name": "` + selection + `",\n"rotationX": 0, "rotationY": 0, "rotationZ": 0, \n"scale": 0.5, \n"autoRotate": true, \n"colorHexString": "` + this.settings.standardColor.replace(/#/g, "") + `", \n"positionX": 0, "positionY": 0, "positionZ": 0\n}\n`
+                let contents = `{\n"name": "` + selection + `",\n"rotationX": 0, "rotationY": 0, "rotationZ": 0, \n"scale": 0.5, \n"AutorotateX": 0, "AutorotateY": 0.001, "AutorotateZ": 0, \n"colorHexString": "` + this.settings.standardColor.replace(/#/g, "") + `", \n"positionX": 0, "positionY": 0, "positionZ": 0\n}\n`
                 let lastLine = '\n```\n'
                 let content = firstLine + contents + lastLine
                 editor.replaceSelection(content);
@@ -106,7 +106,7 @@ export default class ThreeJSPlugin extends Plugin {
         console.log(modelPath)
         const modelExtension = name.slice(-3).toLowerCase();
         console.log(modelExtension)
-        let ThreeDmodel:THREE.Object3D;
+        let ThreeDmodel: THREE.Object3D;
         this.loadModel(scene, modelPath, modelExtension, config, (model) => {
             // Do something with the loaded model here
             console.log("Model loaded:", model);
@@ -137,12 +137,18 @@ export default class ThreeJSPlugin extends Plugin {
         const animate = () => {
             requestAnimationFrame(animate);
 
-            if(config.autoRotate){
+            /*if(config.autoRotate){
                 if(ThreeDmodel){
                 ThreeDmodel.rotation.y += 0.001;}
-            }
+            }*/
             controls.update();
             renderer.render(scene, camera);
+            
+            if (ThreeDmodel) {
+                ThreeDmodel.rotation.y += config.AutorotateY;
+                ThreeDmodel.rotation.x += config.AutorotateX;
+                ThreeDmodel.rotation.z += config.AutorotateZ;
+            }
         };
         animate();
     }

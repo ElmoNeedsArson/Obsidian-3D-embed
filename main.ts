@@ -34,8 +34,8 @@ export default class ThreeJSPlugin extends Plugin {
 
         //adds a code block that instantly adds the 3D scene to your note
         this.addCommand({
-            id: "3DModel",
-            name: "3DModel",
+            id: "Add a 3D embed at the cursorposition",
+            name: "Add a 3D embed at the cursorposition",
             editorCallback: (editor: Editor) => {
                 let selection = editor.getSelection();
 

@@ -75,15 +75,11 @@ export default class ThreeJSPlugin extends Plugin {
 
         this.registerMarkdownCodeBlockProcessor('3D', (source, el, ctx) => {
             try {
-                //console.log(source)
                 const parsedData = JSON.parse(source);
-                //console.log(parsedData)
                 const modelPath = this.getModelPath(parsedData.name);
                 if (!modelPath) throw new Error("Model path not found");
-                const containerEl = (ctx as any).containerEl;
-                //console.log(containerEl.firstChild.clientWidth);
-                const width = containerEl.firstChild.clientWidth
-                this.initializeThreeJsScene(el, parsedData, modelPath, parsedData.name, width, containerEl);
+                const width = (ctx as any).el.clientWidth || 300
+                this.initializeThreeJsScene(el, parsedData, modelPath, parsedData.name, width, ctx);
             } catch (error) {
                 new Notice("Failed to render 3D model: " + error.message);
             }
@@ -95,7 +91,7 @@ export default class ThreeJSPlugin extends Plugin {
         return path ? this.app.vault.getResourcePath(path) : null;
     }
 
-    initializeThreeJsScene(el: HTMLElement, config: any, modelPath: string, name: string, width: number, containerEl: HTMLElement) {
+    initializeThreeJsScene(el: HTMLElement, config: any, modelPath: string, name: string, width: number, ctx: any) {
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(`#${config.colorHexString || this.settings.standardColor.replace(/#/g, "")}`);
 
@@ -117,29 +113,27 @@ export default class ThreeJSPlugin extends Plugin {
         const controls = new OrbitControls(camera, renderer.domElement);
 
         // Load the model based on the extension
-        //console.log(modelPath)
         const modelExtension = name.slice(-3).toLowerCase();
-        //console.log(modelExtension)
         let ThreeDmodel: THREE.Object3D;
         this.loadModel(scene, modelPath, modelExtension, config, (model) => {
-            // Do something with the loaded model here
-            //console.log("Model loaded:", model);
             ThreeDmodel = model;
         });
 
         // Resize function to update camera and renderer on container width change
         const onResize = () => {
-            const firstChild = containerEl.firstChild as HTMLElement; // Cast to HTMLElement
-            if (firstChild) {
-                const newWidth = firstChild.clientWidth; // Now TypeScript recognizes clientWidth
+            let newWidth = 0;
+            //ensures that the browser has completed its rendering and layout process before you attempt to access ctx.el.clientWidth
+            requestAnimationFrame(() => { 
+                newWidth = (ctx as any).el.clientWidth || 300
+
                 renderer.setSize(newWidth, this.settings.standardEmbedHeight);
                 camera.aspect = newWidth / this.settings.standardEmbedHeight;
                 camera.updateProjectionMatrix();
-            }
+            });
         };
 
         const resizeObserver = new ResizeObserver(onResize);
-        resizeObserver.observe(containerEl); // Observe the container element for resize events
+        resizeObserver.observe(el); // Observe the container element for resize events
 
         // Clean up on plugin unload
         this.register(() => {

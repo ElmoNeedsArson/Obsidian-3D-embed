@@ -6,5 +6,5 @@
 	"description": "Embed 3DModels in markdown notes.",
 	"author": "Jesse Strijker",
 	"authorUrl": "https://jessestrijker.com",
-	"isDesktopOnly": true
+	"isDesktopOnly": false
 }

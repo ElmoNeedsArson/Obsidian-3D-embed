@@ -83,7 +83,7 @@ export default class ThreeJSPlugin extends Plugin {
         });
 
         //detects when an embed is being activated with a stl or glb extension and replaces it with a 3D render
-        this.registerEvent(
+        /*this.registerEvent(
             this.app.metadataCache.on("resolve", (file) => {
                 const cache = this.app.metadataCache.getFileCache(file);
                 if (!cache || !cache.embeds) return; // Safeguard for missing cache or embeds
@@ -140,7 +140,7 @@ export default class ThreeJSPlugin extends Plugin {
                     }
                 }
             })
-        );
+        );*/
 
 
 

@@ -58,26 +58,17 @@ export default class ThreeJSPlugin extends Plugin {
                 const modelPath = this.getModelPath(selection)
                 if (!modelPath) { new Notice("This model cannot be found", 5000); }
                 else if (modelPath) {
-                    // Generate 3D model block content
-                    const blockContent = `
-                        \`\`\`3D
-                        {
-                        "name": "${selection}",
-                        "rotationX": 0,
-                        "rotationY": 0,
-                        "rotationZ": 0,
-                        "AutorotateX": 0,
-                        "AutorotateY": 0.001,
-                        "AutorotateZ": 0,
-                        "positionX": 0,
-                        "positionY": 0,
-                        "positionZ": 0,
-                        "scale": "${this.settings.standardScale ?? "1"}",
-                        "colorHexString": "${(this.settings.standardColor ?? "#ffffff").replace("#", "")}"
-                        }
-                        \`\`\`
-                    `.trim();
-                    editor.replaceSelection(blockContent);
+                    let codeBlockType = "\n```3D\n{"
+                    let name = `\n"name": "` + selection + `"`
+                    let rotation = `,\n"rotationX": 0, "rotationY": 0, "rotationZ": 0`
+                    let autoRotate = `,\n"AutorotateX": 0, "AutorotateY": 0.001, "AutorotateZ": 0`
+                    let position = `,\n"positionX": 0, "positionY": 0, "positionZ": 0`
+                    let scale = `,\n"scale": "` + this.settings.standardScale + `"`
+                    let color = `,\n"colorHexString": "` + this.settings.standardColor.replace(/#/g, "") + `"`
+                    let codeBlockClosing = '\n}\n```\n'
+
+                    let content = codeBlockType + name + rotation + autoRotate + position + scale + color + codeBlockClosing
+                    editor.replaceSelection(content);
                 }
             },
         });
@@ -141,9 +132,6 @@ export default class ThreeJSPlugin extends Plugin {
                 }
             })
         );*/
-
-
-
 
         this.registerMarkdownCodeBlockProcessor('3D', (source, el, ctx) => {
             try {

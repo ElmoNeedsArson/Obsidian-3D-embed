@@ -1,4 +1,4 @@
-import { App, Editor, Notice, Plugin, PluginSettingTab, Setting, View, getLinkpath } from 'obsidian';
+import { App, Editor, Notice, Plugin, PluginSettingTab, Setting, View, getLinkpath, TFile, MarkdownView } from 'obsidian';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -58,20 +58,92 @@ export default class ThreeJSPlugin extends Plugin {
                 const modelPath = this.getModelPath(selection)
                 if (!modelPath) { new Notice("This model cannot be found", 5000); }
                 else if (modelPath) {
-                    let codeBlockType = "\n```3D\n{"
-                    let name = `\n"name": "` + selection + `"`
-                    let rotation = `,\n"rotationX": 0, "rotationY": 0, "rotationZ": 0`
-                    let autoRotate = `,\n"AutorotateX": 0, "AutorotateY": 0.001, "AutorotateZ": 0`
-                    let position = `,\n"positionX": 0, "positionY": 0, "positionZ": 0`
-                    let scale = `,\n"scale": "` + this.settings.standardScale + `"`
-                    let color = `,\n"colorHexString": "` + this.settings.standardColor.replace(/#/g, "") + `"`
-                    let codeBlockClosing = '\n}\n```\n'
-
-                    let content = codeBlockType + name + rotation + autoRotate + position + scale + color + codeBlockClosing
-                    editor.replaceSelection(content);
+                    // Generate 3D model block content
+                    const blockContent = `
+                        \`\`\`3D
+                        {
+                        "name": "${selection}",
+                        "rotationX": 0,
+                        "rotationY": 0,
+                        "rotationZ": 0,
+                        "AutorotateX": 0,
+                        "AutorotateY": 0.001,
+                        "AutorotateZ": 0,
+                        "positionX": 0,
+                        "positionY": 0,
+                        "positionZ": 0,
+                        "scale": "${this.settings.standardScale ?? "1"}",
+                        "colorHexString": "${(this.settings.standardColor ?? "#ffffff").replace("#", "")}"
+                        }
+                        \`\`\`
+                    `.trim();
+                    editor.replaceSelection(blockContent);
                 }
             },
         });
+
+        //detects when an embed is being activated with a stl or glb extension and replaces it with a 3D render
+        this.registerEvent(
+            this.app.metadataCache.on("resolve", (file) => {
+                const cache = this.app.metadataCache.getFileCache(file);
+                if (!cache || !cache.embeds) return; // Safeguard for missing cache or embeds
+
+                for (const embed of cache.embeds) {
+                    if (!embed || !embed.link) continue; // Skip invalid embeds
+
+                    const fileLink: string = embed.link ?? ""; // Default to an empty string if undefined
+                    const fileExtension: string = fileLink.match(/\.([a-z0-9]+)$/i)?.[1] ?? ""; // Extract file extension safely
+                    const validExtensions = ["stl", "glb"];
+
+                    if (!validExtensions.includes(fileExtension)) continue;
+
+                    const embedLine: number = embed.position.start.line;
+                    const modelPath = this.getModelPath(fileLink);
+
+                    if (!modelPath) {
+                        new Notice("This model cannot be found", 5000);
+                        continue;
+                    }
+
+                    // Generate 3D model block content
+                    const blockContent = `
+                        \`\`\`3D
+                        {
+                        "name": "${fileLink}",
+                        "rotationX": 0,
+                        "rotationY": 0,
+                        "rotationZ": 0,
+                        "AutorotateX": 0,
+                        "AutorotateY": 0.001,
+                        "AutorotateZ": 0,
+                        "positionX": 0,
+                        "positionY": 0,
+                        "positionZ": 0,
+                        "scale": "${this.settings.standardScale ?? "1"}",
+                        "colorHexString": "${(this.settings.standardColor ?? "#ffffff").replace("#", "")}"
+                        }
+                        \`\`\`
+                    `.trim();
+
+                    // Replace embed with generated 3D block
+                    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+                    if (activeView) {
+                        const editor = activeView.editor;
+                        const lines = editor.getValue().split("\n");
+                        if (lines[embedLine] !== undefined) {
+                            lines[embedLine] = blockContent;
+                            editor.setValue(lines.join("\n"));
+                            new Notice("Embed replaced with 3D model block!", 3000);
+                        } else {
+                            console.error("Invalid line number for embed replacement:", embedLine);
+                        }
+                    }
+                }
+            })
+        );
+
+
+
 
         this.registerMarkdownCodeBlockProcessor('3D', (source, el, ctx) => {
             try {
@@ -123,7 +195,7 @@ export default class ThreeJSPlugin extends Plugin {
         const onResize = () => {
             let newWidth = 0;
             //ensures that the browser has completed its rendering and layout process before you attempt to access ctx.el.clientWidth
-            requestAnimationFrame(() => { 
+            requestAnimationFrame(() => {
                 newWidth = (ctx as any).el.clientWidth || 300
 
                 renderer.setSize(newWidth, this.settings.standardEmbedHeight);

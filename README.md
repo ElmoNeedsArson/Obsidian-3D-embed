@@ -48,3 +48,6 @@ Use the settings tab, to alter standard settings such as background color, size 
 1) Currently only two 3D embeds in one note are supported at the same time
 2) Big models will be laggy, since obsidian has a limited amount of RAM that cannot be altered.
 
+## Future plans:
+1) Use one renderer instead of a new renderer with introduction of a new model. (Uncertain of achievability)
+

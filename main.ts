@@ -3,18 +3,22 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
-
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
+import { ThreeMFLoader } from 'three/examples/jsm/loaders/3MFLoader.js';
 
 interface ThreeDEmbedSettings {
     standardColor: string;
     standardScale: number;
     standardEmbedHeight: number;
+    autoRotate: boolean;
 }
 
 const DEFAULT_SETTINGS: Partial<ThreeDEmbedSettings> = {
     standardColor: "#ADD8E6",
     standardScale: 0.5,
     standardEmbedHeight: 300,
+    autoRotate: false,
 };
 
 export default class ThreeJSPlugin extends Plugin {
@@ -58,16 +62,19 @@ export default class ThreeJSPlugin extends Plugin {
                 const modelPath = this.getModelPath(selection)
                 if (!modelPath) { new Notice("This model cannot be found", 5000); }
                 else if (modelPath) {
+                    let autorotateY = this.settings.autoRotate ? 0.001 : 0
                     let codeBlockType = "\n```3D\n{"
                     let name = `\n"name": "` + selection + `"`
                     let rotation = `,\n"rotationX": 0, "rotationY": 0, "rotationZ": 0`
-                    let autoRotate = `,\n"AutorotateX": 0, "AutorotateY": 0.001, "AutorotateZ": 0`
+                    let autoRotate = `,\n"AutorotateX": 0, "AutorotateY":` + autorotateY + `, "AutorotateZ": 0`
                     let position = `,\n"positionX": 0, "positionY": 0, "positionZ": 0`
                     let scale = `,\n"scale": "` + this.settings.standardScale + `"`
                     let color = `,\n"colorHexString": "` + this.settings.standardColor.replace(/#/g, "") + `"`
+                    let showAxisHelper = `,\n"showAxisHelper": false, "length": 5`
+                    let showGridHelper = `,\n"showGridHelper": false, "gridSize": 10`
                     let codeBlockClosing = '\n}\n```\n'
 
-                    let content = codeBlockType + name + rotation + autoRotate + position + scale + color + codeBlockClosing
+                    let content = codeBlockType + name + rotation + autoRotate + position + scale + color + showAxisHelper + showGridHelper + codeBlockClosing
                     editor.replaceSelection(content);
                 }
             },
@@ -94,14 +101,20 @@ export default class ThreeJSPlugin extends Plugin {
     initializeThreeJsScene(el: HTMLElement, config: any, modelPath: string, name: string, width: number, ctx: any) {
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(`#${config.colorHexString || this.settings.standardColor.replace(/#/g, "")}`);
-
+        if (config.showAxisHelper) {
+            const axesHelper = new THREE.AxesHelper(config.length);
+            scene.add(axesHelper);
+        }
+        if (config.showGridHelper) {
+            const gridHelper = new THREE.GridHelper(config.gridSize, config.gridSize);
+            scene.add(gridHelper);
+        }
         const camera = new THREE.PerspectiveCamera(75, width / this.settings.standardEmbedHeight, 0.1, 1000);
         camera.position.z = 10;
 
         const renderer = new THREE.WebGLRenderer();
         renderer.setSize(width, this.settings.standardEmbedHeight);
         el.appendChild(renderer.domElement);
-        //console.log("Renderer added")
 
         const light = new THREE.DirectionalLight(0xffffff, 1);
         light.position.set(5, 10, 5);
@@ -158,7 +171,6 @@ export default class ThreeJSPlugin extends Plugin {
     }
 
     loadModel(scene: THREE.Scene, modelPath: string, extension: string, config: any, callback: (model: THREE.Object3D) => void) {
-        //console.log(extension)
         switch (extension) {
             case 'stl':
                 const stlLoader = new STLLoader();
@@ -168,16 +180,65 @@ export default class ThreeJSPlugin extends Plugin {
                     this.applyModelSettings(model, config);
                     scene.add(model);
                     callback(model);
+                }, undefined, (error) => {
+                    new Notice("Failed to load stl model: " + error);
                 });
                 break;
             case 'glb':
-                //console.log("Running GLB")
                 const gltfLoader = new GLTFLoader();
                 gltfLoader.load(modelPath, (gltf) => {
                     const model = gltf.scene;
                     this.applyModelSettings(model, config);
                     scene.add(model);
                     callback(model);
+                }, undefined, (error) => {
+                    new Notice("Failed to load glb (GLTF) model: " + error);
+                });
+                break;
+            case 'obj':
+                const objLoader = new OBJLoader();
+                objLoader.load(modelPath, (obj) => {
+                    obj.traverse((child) => {
+                        if (child instanceof THREE.Mesh) {
+                            if (!child.material) {
+                                child.material = new THREE.MeshStandardMaterial({ color: 0x606060 });
+                            }
+                        }
+                    });
+                    this.applyModelSettings(obj, config);
+                    scene.add(obj);
+                    callback(obj);
+                }, undefined, (error) => {
+                    new Notice("Failed to load obj model: " + error);
+                });
+                break;
+            case 'fbx':
+                const fbxLoader = new FBXLoader();
+                fbxLoader.load(modelPath, (fbx) => {
+
+                    fbx.traverse((child) => {
+                        if (child instanceof THREE.Mesh) {
+                            //For some reason, fbx files have weird scaling, so specifically scaling the mesh, makes it work-ish
+                            child.scale.set(config.scale, config.scale, config.scale);
+                        }
+                    });
+
+                    this.applyModelSettings(fbx, config);
+                    scene.add(fbx)
+                    callback(fbx);
+                }, undefined, (error) => {
+                    new Notice("Failed to load fbx model: " + error);
+                });
+                break;
+            case '3mf':
+                const ThreeMFloader = new ThreeMFLoader();
+
+                ThreeMFloader.load(modelPath, (ThreeMF) => {
+                    this.applyModelSettings(ThreeMF, config);
+                    scene.add(ThreeMF);
+                    callback(ThreeMF);
+                }, undefined, (error) => {
+                    new Notice("Failed to load 3mf model: " + error);
                 });
                 break;
             default:
@@ -247,6 +308,19 @@ class ThreeDSettingsTab extends PluginSettingTab {
                         await this.plugin.saveSettings();
                     })
 
+            )
+
+        new Setting(containerEl)
+            .setName('Auto Rotate Models')
+            .setDesc('If true, will always automatically rotate the models in your scene')
+            .addToggle(
+                (toggle) =>
+                    toggle
+                        .setValue(this.plugin.settings.autoRotate) // Set the initial value based on settings
+                        .onChange(async (value) => {
+                            this.plugin.settings.autoRotate = value; // Update setting when toggled
+                            await this.plugin.saveData(this.plugin.settings); // Save the new setting value
+                        })
             )
     }
 }

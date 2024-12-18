@@ -1,17 +1,24 @@
 import { App, Editor, Notice, Plugin, PluginSettingTab, Setting, View, getLinkpath, TFile, MarkdownView } from 'obsidian';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import { ThreeMFLoader } from 'three/examples/jsm/loaders/3MFLoader.js';
 
+//import { replaceCodeBlock } from 'obsidian-dev-utils/dist/lib/obsidian/MarkdownCodeBlockProcessor';
+//import { replaceCodeBlock } from 'obsidian-dev-utils';
+type ValueProvider<T, Args extends any[]> = (...args: Args) => Promise<T> | T;
+
 interface ThreeDEmbedSettings {
     standardColor: string;
     standardScale: number;
     standardEmbedHeight: number;
     autoRotate: boolean;
+    orthographicCam: boolean;
+    autoShowGUI: boolean;
 }
 
 const DEFAULT_SETTINGS: Partial<ThreeDEmbedSettings> = {
@@ -19,6 +26,8 @@ const DEFAULT_SETTINGS: Partial<ThreeDEmbedSettings> = {
     standardScale: 0.5,
     standardEmbedHeight: 300,
     autoRotate: false,
+    orthographicCam: false,
+    autoShowGUI: false,
 };
 
 export default class ThreeJSPlugin extends Plugin {
@@ -65,16 +74,21 @@ export default class ThreeJSPlugin extends Plugin {
                     let autorotateY = this.settings.autoRotate ? 0.001 : 0
                     let codeBlockType = "\n```3D\n{"
                     let name = `\n"name": "` + selection + `"`
+                    let GUI = `,\n"showGuiOverlay": ` + this.settings.autoShowGUI
                     let rotation = `,\n"rotationX": 0, "rotationY": 0, "rotationZ": 0`
                     let autoRotate = `,\n"AutorotateX": 0, "AutorotateY":` + autorotateY + `, "AutorotateZ": 0`
                     let position = `,\n"positionX": 0, "positionY": 0, "positionZ": 0`
                     let scale = `,\n"scale": "` + this.settings.standardScale + `"`
-                    let color = `,\n"colorHexString": "` + this.settings.standardColor.replace(/#/g, "") + `"`
+                    let objectColor = `,\n"stlColorHexString": "606060"`
+                    let backgroundColor = `,\n"backgroundColorHexString": "` + this.settings.standardColor.replace(/#/g, "") + `"`
+                    let cameraType = `,\n"orthographic": ` + this.settings.orthographicCam
+                    let cameraPos = `,\n"camPosX": 0, "camPosY": 5, "camPosZ": 10`
+                    let cameraLookat = `,\n"camPosLookatX": 0, "camPosLookatY": 0, "camPosLookatZ": 0`
                     let showAxisHelper = `,\n"showAxisHelper": false, "length": 5`
                     let showGridHelper = `,\n"showGridHelper": false, "gridSize": 10`
                     let codeBlockClosing = '\n}\n```\n'
 
-                    let content = codeBlockType + name + rotation + autoRotate + position + scale + color + showAxisHelper + showGridHelper + codeBlockClosing
+                    let content = codeBlockType + name + GUI + rotation + autoRotate + position + scale + objectColor + backgroundColor + cameraType + cameraPos + cameraLookat + showAxisHelper + showGridHelper + codeBlockClosing
                     editor.replaceSelection(content);
                 }
             },
@@ -100,17 +114,22 @@ export default class ThreeJSPlugin extends Plugin {
 
     initializeThreeJsScene(el: HTMLElement, config: any, modelPath: string, name: string, width: number, ctx: any) {
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(`#${config.colorHexString || this.settings.standardColor.replace(/#/g, "")}`);
+
+        scene.background = new THREE.Color(`#${config.backgroundColorHexString || config.colorHexString || this.settings.standardColor.replace(/#/g, "")}`);
+        const axesHelper = new THREE.AxesHelper(config.length);
+        const gridHelper = new THREE.GridHelper(config.gridSize, config.gridSize);
+
+        this.gui(config.showGuiOverlay, el, scene, axesHelper, gridHelper)
+
         if (config.showAxisHelper) {
-            const axesHelper = new THREE.AxesHelper(config.length);
             scene.add(axesHelper);
         }
         if (config.showGridHelper) {
-            const gridHelper = new THREE.GridHelper(config.gridSize, config.gridSize);
             scene.add(gridHelper);
         }
-        const camera = new THREE.PerspectiveCamera(75, width / this.settings.standardEmbedHeight, 0.1, 1000);
-        camera.position.z = 10;
+
+        let camera = this.setCameraMode(config.orthographic, width, this.settings.standardEmbedHeight);
+        this.applyCameraSettings(camera, config);
 
         const renderer = new THREE.WebGLRenderer();
         renderer.setSize(width, this.settings.standardEmbedHeight);
@@ -175,7 +194,15 @@ export default class ThreeJSPlugin extends Plugin {
             case 'stl':
                 const stlLoader = new STLLoader();
                 stlLoader.load(modelPath, (geometry) => {
-                    const material = new THREE.MeshPhongMaterial({ color: 0x606060, shininess: 100 });
+                    let material: any;
+                    if (config.stlColorHexString) {
+                        console.log("colored")
+                        let col2: string;
+                        col2 = "#" + config.stlColorHexString
+                        material = new THREE.MeshStandardMaterial({ color: col2 });
+                    } else {
+                        material = new THREE.MeshPhongMaterial({ color: 0x606060, shininess: 100 });
+                    }
                     const model = new THREE.Mesh(geometry, material);
                     this.applyModelSettings(model, config);
                     scene.add(model);
@@ -243,6 +270,136 @@ export default class ThreeJSPlugin extends Plugin {
                 break;
             default:
                 throw new Error("Unsupported model format");
+        }
+    }
+
+    gui(guiShow : boolean, el: HTMLElement, scene: THREE.Scene, axesHelper: THREE.AxesHelper, gridHelper: THREE.GridHelper){
+        if (guiShow) {
+            let colorInput = document.createElement('input');
+            colorInput.addClass("colorInput")
+            colorInput.type = 'color'
+            el.appendChild(colorInput)
+
+            let axisInput = document.createElement('input');
+            axisInput.classList.add('axisInput');
+            axisInput.type = 'checkbox'
+            el.appendChild(axisInput)
+
+            let gridInput = document.createElement('input');
+            gridInput.classList.add('gridInput');
+            gridInput.type = 'checkbox'
+            el.appendChild(gridInput)
+
+            gridInput.addEventListener('input', () => {
+                if (gridInput.checked) {
+                    scene.add(gridHelper);
+                } else {
+                    scene.remove(gridHelper); // or some other action for false
+                }
+            })
+
+            axisInput.addEventListener('input', () => {
+                if (axisInput.checked) {
+                    scene.add(axesHelper);
+                } else {
+                    scene.remove(axesHelper); // or some other action for false
+                }
+            })
+
+            colorInput.addEventListener('input', () => {
+                scene.background = new THREE.Color(colorInput.value);
+
+                /*//this could be triggered by a different thing then triggering the color picker, for example on page unload.
+                //Then this should add to a queue of changes 
+    
+                // view contains the editor to change the markdown
+                const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+                // the context contains the begin and end of the block in the markdown file
+                const sec = ctx.getSectionInfo(ctx.el);
+                const lineno = sec?.lineStart;
+                const lineNoColorSetting = lineno + 7
+    
+                // Make sure the user is editing a Markdown file.
+                if (view) {
+                    const colorValue = colorInput.value.replace('#', '');
+                    const codeBlockProvider: ValueProvider<string, [string]> = async (oldCodeBlock: string) => {
+                        // Parse the old code block or use it to update values.
+                        // Example: Add or replace the "AutorotateY" field dynamically.
+    
+                        const autorotateY = this.settings.autoRotate ? 0.001 : 0;
+                        // Build the new code block content
+                        let codeBlockType = "```3D\n{";
+                        let name = `"name": "updatedName"`;
+                        let rotation = `"rotationX": 0, "rotationY": 0, "rotationZ": 0`;
+                        let autoRotate = `"AutorotateX": 0, "AutorotateY": ${ThreeDmodel.rotation.y}, "AutorotateZ": 0`;
+                        let position = `"positionX": 0, "positionY": 0, "positionZ": 0`;
+                        let scale = `"scale": "1.0"`;
+                        let color = `"colorHexString": "` + colorValue + `",`;
+                        let showAxisHelper = `"showAxisHelper": false, "length": 5`;
+                        let showGridHelper = `"showGridHelper": false, "gridSize": 10`;
+    
+                        let newCodeBlock = `${codeBlockType}
+                      ${name},
+                      ${rotation},
+                      ${autoRotate},
+                      ${position},
+                      ${scale},
+                      ${color},
+                      ${showAxisHelper},
+                      ${showGridHelper}
+                      }
+                      \`\`\``;
+    
+                        return newCodeBlock;
+                    };
+    
+                    //replaceCodeBlock(this.app, ctx, el, codeBlockProvider)
+                    view.editor.setLine(lineNoColorSetting, `"colorHexString": "` + colorValue + `",`)
+                }*/
+            })
+        } else {
+            const colorInput = el.querySelector('.colorInput');
+            const axisInput = el.querySelector('.axisInput');
+            const gridInput = el.querySelector('.gridInput');
+
+            if (colorInput) el.removeChild(colorInput);
+            if (axisInput) el.removeChild(axisInput);
+            if (gridInput) el.removeChild(gridInput);
+        }
+    }
+
+    setCameraMode(orthographic: boolean, width: number, height: number) {
+        let camera: any;
+        if (!orthographic) {
+            camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+            console.log("Made perspective camera")
+        } else if (orthographic) {
+            const aspect = width / height;
+            const distance = 10; // distance at which you want the orthographic camera to mimic the perspective camera
+
+            // Perspective camera's FOV in radians
+            const fov = THREE.MathUtils.degToRad(75);
+
+            // Frustum height at the given distance
+            const frustumHeight = 2 * distance * Math.tan(fov / 2);
+            const frustumWidth = frustumHeight * aspect;
+            camera = new THREE.OrthographicCamera(-frustumWidth / 2, frustumWidth / 2, frustumHeight / 2, -frustumHeight / 2, 1, 1000);
+            console.log("Made orthographic camera")
+        } else {
+            camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+            console.log("Defaulted to perspective cam")
+        }
+        return camera;
+    }
+
+    applyCameraSettings(cam: any, config: any) {
+        if (config.camPosX) { cam.position.x = config.camPosX; } else { cam.position.x = 0 }
+        if (config.camPosY) { cam.position.y = config.camPosY; } else { cam.position.y = 5 }
+        if (config.camPosZ) { cam.position.z = config.camPosZ; } else { cam.position.z = 10 }
+        if (config.camPosLookatX && config.camPosLookatY && config.camPosLookatZ) {
+            cam.lookAt(new THREE.Vector3(config.camPosLookatX, config.camPosLookatY, config.camPosLookatZ));
+        } else {
+            cam.lookAt(new THREE.Vector3(0, 0, 0));
         }
     }
 
@@ -319,6 +476,32 @@ class ThreeDSettingsTab extends PluginSettingTab {
                         .setValue(this.plugin.settings.autoRotate) // Set the initial value based on settings
                         .onChange(async (value) => {
                             this.plugin.settings.autoRotate = value; // Update setting when toggled
+                            await this.plugin.saveData(this.plugin.settings); // Save the new setting value
+                        })
+            )
+
+        new Setting(containerEl)
+            .setName('Toggle Orthographic Camera')
+            .setDesc('If true, will load all your scenes with a orthographic camera, if false, defaults to a perspective camera. You can also set this per scene, in the codeblock config')
+            .addToggle(
+                (toggle) =>
+                    toggle
+                        .setValue(this.plugin.settings.orthographicCam) // Set the initial value based on settings
+                        .onChange(async (value) => {
+                            this.plugin.settings.orthographicCam = value; // Update setting when toggled
+                            await this.plugin.saveData(this.plugin.settings); // Save the new setting value
+                        })
+            )
+
+            new Setting(containerEl)
+            .setName('Toggle Automatically show GUI')
+            .setDesc('If true, will show basic gui options for a scene (color selector, grid checkbox) upon model load. Can also be set in the codeblock config')
+            .addToggle(
+                (toggle) =>
+                    toggle
+                        .setValue(this.plugin.settings.autoShowGUI) // Set the initial value based on settings
+                        .onChange(async (value) => {
+                            this.plugin.settings.autoShowGUI = value; // Update setting when toggled
                             await this.plugin.saveData(this.plugin.settings); // Save the new setting value
                         })
             )

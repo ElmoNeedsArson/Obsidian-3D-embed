@@ -27,19 +27,25 @@ https://github.com/user-attachments/assets/9b10c36c-36c3-4bc1-a4a7-f5d00f735ec7
 
 # Additional Information
 ## Example Codeblock
-Look at the codeblock to alter minor things in the scene
+Look at the codeblock to alter minor things in the scene. It shows all the config options of a 3D scene for now
 ```js
 ```3D
 {
 "name": "Castle.glb",
+"showGuiOverlay": false,
 "rotationX": 0, "rotationY": 0, "rotationZ": 0,
-"AutorotateX": 0, "AutorotateY": 0.001, "AutorotateZ": 0,
+"AutorotateX": 0, "AutorotateY":0.001, "AutorotateZ": 0,
 "positionX": 0, "positionY": 0, "positionZ": 0,
 "scale": "0.5",
-"colorHexString": "7abbd6"
+"stlColorHexString": "606060",
+"backgroundColorHexString": "7abbd6",
+"orthographic": false,
+"camPosX": 0, "camPosY": 5, "camPosZ": 10,
+"camPosLookatX": 0, "camPosLookatY": 0, "camPosLookatZ": 0,
 "showAxisHelper": false, "length": 5,
 "showGridHelper": false, "gridSize": 10
 }
+'''
 ```
 
 ## Standard Settings
@@ -57,4 +63,5 @@ Use the settings tab, to alter standard settings such as background color, size 
 3) Load textures in 3D models
 4) Load multiple objects in one scene
 5) Be able to run custom three.js script for a scene. 
+6) Add transform controls
 

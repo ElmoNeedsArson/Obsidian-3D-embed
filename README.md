@@ -40,12 +40,12 @@ Look at the codeblock to alter minor things in the scene. It shows all the confi
 "stlColorHexString": "606060",
 "backgroundColorHexString": "7abbd6",
 "orthographic": false,
-"camPosX": 0, "camPosY": 5, "camPosZ": 10,
-"camPosLookatX": 0, "camPosLookatY": 0, "camPosLookatZ": 0,
+"camPosXYZ": [0,5,10],
+"LookatXYZ": [0,0,0],
 "showAxisHelper": false, "length": 5,
 "showGridHelper": false, "gridSize": 10
 }
-'''
+```
 ```
 
 ## Standard Settings

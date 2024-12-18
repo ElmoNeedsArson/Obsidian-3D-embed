@@ -82,8 +82,8 @@ export default class ThreeJSPlugin extends Plugin {
                     let objectColor = `,\n"stlColorHexString": "606060"`
                     let backgroundColor = `,\n"backgroundColorHexString": "` + this.settings.standardColor.replace(/#/g, "") + `"`
                     let cameraType = `,\n"orthographic": ` + this.settings.orthographicCam
-                    let cameraPos = `,\n"camPosX": 0, "camPosY": 5, "camPosZ": 10`
-                    let cameraLookat = `,\n"camPosLookatX": 0, "camPosLookatY": 0, "camPosLookatZ": 0`
+                    let cameraPos = `,\n"camPosXYZ": [0,5,10]`
+                    let cameraLookat = `,\n"LookatXYZ": [0,0,0]`
                     let showAxisHelper = `,\n"showAxisHelper": false, "length": 5`
                     let showGridHelper = `,\n"showGridHelper": false, "gridSize": 10`
                     let codeBlockClosing = '\n}\n```\n'
@@ -129,8 +129,7 @@ export default class ThreeJSPlugin extends Plugin {
         }
 
         let camera = this.setCameraMode(config.orthographic, width, this.settings.standardEmbedHeight);
-        this.applyCameraSettings(camera, config);
-
+        
         const renderer = new THREE.WebGLRenderer();
         renderer.setSize(width, this.settings.standardEmbedHeight);
         el.appendChild(renderer.domElement);
@@ -143,6 +142,7 @@ export default class ThreeJSPlugin extends Plugin {
         scene.add(ambientLight);
 
         const controls = new OrbitControls(camera, renderer.domElement);
+        this.applyCameraSettings(camera, config, controls);
 
         // Load the model based on the extension
         const modelExtension = name.slice(-3).toLowerCase();
@@ -196,7 +196,6 @@ export default class ThreeJSPlugin extends Plugin {
                 stlLoader.load(modelPath, (geometry) => {
                     let material: any;
                     if (config.stlColorHexString) {
-                        console.log("colored")
                         let col2: string;
                         col2 = "#" + config.stlColorHexString
                         material = new THREE.MeshStandardMaterial({ color: col2 });
@@ -372,7 +371,6 @@ export default class ThreeJSPlugin extends Plugin {
         let camera: any;
         if (!orthographic) {
             camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-            console.log("Made perspective camera")
         } else if (orthographic) {
             const aspect = width / height;
             const distance = 10; // distance at which you want the orthographic camera to mimic the perspective camera
@@ -384,22 +382,26 @@ export default class ThreeJSPlugin extends Plugin {
             const frustumHeight = 2 * distance * Math.tan(fov / 2);
             const frustumWidth = frustumHeight * aspect;
             camera = new THREE.OrthographicCamera(-frustumWidth / 2, frustumWidth / 2, frustumHeight / 2, -frustumHeight / 2, 1, 1000);
-            console.log("Made orthographic camera")
         } else {
             camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-            console.log("Defaulted to perspective cam")
         }
         return camera;
     }
 
-    applyCameraSettings(cam: any, config: any) {
-        if (config.camPosX) { cam.position.x = config.camPosX; } else { cam.position.x = 0 }
-        if (config.camPosY) { cam.position.y = config.camPosY; } else { cam.position.y = 5 }
-        if (config.camPosZ) { cam.position.z = config.camPosZ; } else { cam.position.z = 10 }
-        if (config.camPosLookatX && config.camPosLookatY && config.camPosLookatZ) {
-            cam.lookAt(new THREE.Vector3(config.camPosLookatX, config.camPosLookatY, config.camPosLookatZ));
+    applyCameraSettings(cam: any, config: any, controls: OrbitControls) {
+        if(config.camPosXYZ){
+            cam.position.x = config.camPosXYZ[0];
+            cam.position.y = config.camPosXYZ[1];
+            cam.position.z = config.camPosXYZ[2];
         } else {
-            cam.lookAt(new THREE.Vector3(0, 0, 0));
+            cam.position.x = 0
+            cam.position.y = 5
+            cam.position.z = 10
+        }
+        if(config.LookatXYZ){
+            controls.target = new THREE.Vector3(config.LookatXYZ[0],config.LookatXYZ[1],config.LookatXYZ[2])
+        } else {
+            controls.target = new THREE.Vector3(0,0,0)
         }
     }
 

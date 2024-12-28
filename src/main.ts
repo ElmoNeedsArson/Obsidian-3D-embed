@@ -383,9 +383,9 @@ export default class ThreeJSPlugin extends Plugin {
                         if (view.editor.getLine(lineno + i).contains(`"positionX"`)) {
                             view.editor.setLine(lineno + i, `"positionX": ${mdl.position.x.toFixed(3)}, "positionY": ${mdl.position.y.toFixed(3)}, "positionZ": ${mdl.position.z.toFixed(3)},`)
                         }
-                        // if (view.editor.getLine(lineno + i).contains(`"showGuiOverlay"`)) {
-                        //     view.editor.setLine(lineno + i, `"showGuiOverlay": false,`)
-                        // }
+                        if (view.editor.getLine(lineno + i).contains(`"showGuiOverlay"`)) {
+                            view.editor.setLine(lineno + i, `"showGuiOverlay": false,`)
+                        }
                         if (view.editor.getLine(lineno + i).contains(`"backgroundColorHexString"`)) {
                             view.editor.setLine(lineno + i, `"backgroundColorHexString": "${colorValue}",`)
                         }
@@ -412,6 +412,8 @@ export default class ThreeJSPlugin extends Plugin {
                     transformOptions()
                 } else {
                     scene.remove(gizmo); // or some other action for false
+                    const radioParent = el.querySelector('.radioParent')
+                    if (radioParent) el.removeChild(radioParent);
                 }
 
                 function render() {

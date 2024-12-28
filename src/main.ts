@@ -339,18 +339,12 @@ export default class ThreeJSPlugin extends Plugin {
             TransformControlsInput.title = "Show transform controls on the objects"
             el.appendChild(TransformControlsInput)
 
-            el.addEventListener('click', () => {
-                console.log("clicked in el")
-                //el.focus()
-                el.setAttribute('tabindex', '0');
-            })
-
             function defineModel(){
                 let mdl: any;
 
                 scene.traverse(function (object) {
                     if (object.name === "Scene") {
-                        console.log("Found the imported model:", object);
+                        //console.log("Found the imported model:", object);
                         mdl = object
                     }
                 });

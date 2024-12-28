@@ -10,28 +10,6 @@ import { ThreeMFLoader } from 'three/examples/jsm/loaders/3MFLoader.js';
 
 import { DEFAULT_SETTINGS, ThreeDEmbedSettings, ThreeDSettingsTab } from './settings';
 
-//import { replaceCodeBlock } from 'obsidian-dev-utils/dist/lib/obsidian/MarkdownCodeBlockProcessor';
-//import { replaceCodeBlock } from 'obsidian-dev-utils';
-type ValueProvider<T, Args extends any[]> = (...args: Args) => Promise<T> | T;
-
-// interface ThreeDEmbedSettings {
-//     standardColor: string;
-//     standardScale: number;
-//     standardEmbedHeight: number;
-//     autoRotate: boolean;
-//     orthographicCam: boolean;
-//     autoShowGUI: boolean;
-// }
-
-// const DEFAULT_SETTINGS: Partial<ThreeDEmbedSettings> = {
-//     standardColor: "#ADD8E6",
-//     standardScale: 0.5,
-//     standardEmbedHeight: 300,
-//     autoRotate: false,
-//     orthographicCam: false,
-//     autoShowGUI: false,
-// };
-
 export default class ThreeJSPlugin extends Plugin {
     settings: ThreeDEmbedSettings;
 
@@ -73,6 +51,7 @@ export default class ThreeJSPlugin extends Plugin {
                 const modelPath = this.getModelPath(selection)
                 if (!modelPath) { new Notice("This model cannot be found", 5000); }
                 else if (modelPath) {
+
                     let autorotateY = this.settings.autoRotate ? 0.001 : 0
                     let codeBlockType = "\n```3D\n{"
                     let name = `\n"name": "` + selection + `"`
@@ -80,17 +59,30 @@ export default class ThreeJSPlugin extends Plugin {
                     let rotation = `,\n"rotationX": 0, "rotationY": 0, "rotationZ": 0`
                     let autoRotate = `,\n"AutorotateX": 0, "AutorotateY":` + autorotateY + `, "AutorotateZ": 0`
                     let position = `,\n"positionX": 0, "positionY": 0, "positionZ": 0`
+                    let showTransformControls = `,\n"showTransformControls": false`
                     let scale = `,\n"scale": "` + this.settings.standardScale + `"`
-                    let objectColor = `,\n"stlColorHexString": "606060"`
+                    let objectColor = `,\n"stlColorHexString": "` + this.settings.stlColor.replace(/#/g, "") + `"`
+                    let wireFrame = `,\n"stlWireframe":` + this.settings.stlWireframe
                     let backgroundColor = `,\n"backgroundColorHexString": "` + this.settings.standardColor.replace(/#/g, "") + `"`
-                    let cameraType = `,\n"orthographic": ` + this.settings.orthographicCam
+
+                    let cameraType = ""
+                    if (this.settings.cameraType == "Orthographic") {
+                        cameraType = `,\n"orthographic": true`
+                    } else {
+                        cameraType = `,\n"orthographic": false`
+                    }
+
                     let cameraPos = `,\n"camPosXYZ": [0,5,10]`
                     let cameraLookat = `,\n"LookatXYZ": [0,0,0]`
                     let showAxisHelper = `,\n"showAxisHelper": false, "length": 5`
                     let showGridHelper = `,\n"showGridHelper": false, "gridSize": 10`
                     let codeBlockClosing = '\n}\n```\n'
-
-                    let content = codeBlockType + name + GUI + rotation + autoRotate + position + scale + objectColor + backgroundColor + cameraType + cameraPos + cameraLookat + showAxisHelper + showGridHelper + codeBlockClosing
+                    let content = ""
+                    if (this.settings.showConfig) {
+                        content = codeBlockType + name + GUI + rotation + autoRotate + position + showTransformControls + scale + objectColor + wireFrame + backgroundColor + cameraType + cameraPos + cameraLookat + showAxisHelper + showGridHelper + codeBlockClosing
+                    } else if (!this.settings.showConfig) {
+                        content = codeBlockType + name + codeBlockClosing
+                    }
                     editor.replaceSelection(content);
                 }
             },
@@ -104,7 +96,15 @@ export default class ThreeJSPlugin extends Plugin {
                 const width = (ctx as any).el.clientWidth || 300
                 this.initializeThreeJsScene(el, parsedData, modelPath, parsedData.name, width, ctx);
             } catch (error) {
-                new Notice("Failed to render 3D model: " + error.message);
+                let message: string;
+                if (error.toString().contains("Expected ',' or '}'")) {
+                    message = "Please make sure that every line BUT the last one ends with a comma ','"
+                } else if (error.toString().contains("Expected double")) {
+                    message = "The last line should not end with a comma"
+                } else {
+                    message = error.message
+                }
+                new Notice("Failed to render 3D model: " + message, 10000);
             }
         });
     }
@@ -121,8 +121,6 @@ export default class ThreeJSPlugin extends Plugin {
         const axesHelper = new THREE.AxesHelper(config.length);
         const gridHelper = new THREE.GridHelper(config.gridSize, config.gridSize);
 
-        this.gui(config.showGuiOverlay, el, scene, axesHelper, gridHelper)
-
         if (config.showAxisHelper) {
             scene.add(axesHelper);
         }
@@ -131,7 +129,7 @@ export default class ThreeJSPlugin extends Plugin {
         }
 
         let camera = this.setCameraMode(config.orthographic, width, this.settings.standardEmbedHeight);
-        
+
         const renderer = new THREE.WebGLRenderer();
         renderer.setSize(width, this.settings.standardEmbedHeight);
         el.appendChild(renderer.domElement);
@@ -143,15 +141,35 @@ export default class ThreeJSPlugin extends Plugin {
         const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
         scene.add(ambientLight);
 
-        const controls = new OrbitControls(camera, renderer.domElement);
-        this.applyCameraSettings(camera, config, controls);
+        const orbit = new OrbitControls(camera, renderer.domElement);
+        const controls = new TransformControls(camera, renderer.domElement)
+        const gizmo = controls.getHelper();
+
+        //let GUIshowTransformControls = this.guiControls(config.showGuiOverlay, el, scene)
+
+        if (config.showTransformControls) {
+
+            controls.addEventListener('change', render);
+            controls.addEventListener('dragging-changed', function (event) {
+                orbit.enabled = !event.value;
+            });
+
+            scene.add(gizmo);
+
+            function render() {
+                renderer.render(scene, camera);
+            }
+        }
+        this.applyCameraSettings(camera, config, orbit);
 
         // Load the model based on the extension
         const modelExtension = name.slice(-3).toLowerCase();
-        let ThreeDmodel: THREE.Object3D;
+        let ThreeDmodel: THREE.Object3D | undefined;
         this.loadModel(scene, modelPath, modelExtension, config, (model) => {
             ThreeDmodel = model;
         });
+
+        this.gui(config.showGuiOverlay, el, scene, axesHelper, gridHelper, controls, orbit, gizmo, camera, renderer, ctx, ThreeDmodel)
 
         // Resize function to update camera and renderer on container width change
         const onResize = () => {
@@ -175,17 +193,24 @@ export default class ThreeJSPlugin extends Plugin {
             renderer.dispose();
         });
 
+
         // Animation loop
         const animate = () => {
+            //if (config.showTransformControls) {
+            if (ThreeDmodel) {
+                controls.attach(ThreeDmodel);
+            }
+            //}
             requestAnimationFrame(animate);
 
-            controls.update();
+            //controls.update();
+            orbit.update()
             renderer.render(scene, camera);
 
             if (ThreeDmodel) {
-                ThreeDmodel.rotation.y += config.AutorotateY;
-                ThreeDmodel.rotation.x += config.AutorotateX;
-                ThreeDmodel.rotation.z += config.AutorotateZ;
+                ThreeDmodel.rotation.y += config.AutorotateY || 0;
+                ThreeDmodel.rotation.x += config.AutorotateX || 0;
+                ThreeDmodel.rotation.z += config.AutorotateZ || 0;
             }
         };
         animate();
@@ -201,6 +226,9 @@ export default class ThreeJSPlugin extends Plugin {
                         let col2: string;
                         col2 = "#" + config.stlColorHexString
                         material = new THREE.MeshStandardMaterial({ color: col2 });
+                        if (config.stlWireframe) {
+                            material.wireframe = true;
+                        }
                     } else {
                         material = new THREE.MeshPhongMaterial({ color: 0x606060, shininess: 100 });
                     }
@@ -274,22 +302,181 @@ export default class ThreeJSPlugin extends Plugin {
         }
     }
 
-    gui(guiShow : boolean, el: HTMLElement, scene: THREE.Scene, axesHelper: THREE.AxesHelper, gridHelper: THREE.GridHelper){
+    gui(guiShow: boolean, el: HTMLElement, scene: THREE.Scene, axesHelper: THREE.AxesHelper, gridHelper: THREE.GridHelper, controls: TransformControls, orbit: OrbitControls, gizmo: any, camera: any, renderer: any, ctx: any, model: any) {
         if (guiShow) {
+            let applyReload = document.createElement('button');
+            applyReload.addClass("buttonInput_Reload")
+            applyReload.innerText = "Apply & Reload"
+            el.appendChild(applyReload)
+
+            let reset = document.createElement('button');
+            reset.addClass("buttonInput_Reset")
+            reset.innerText = "Reset Rotation/Position"
+            el.appendChild(reset)
+
             let colorInput = document.createElement('input');
             colorInput.addClass("colorInput")
             colorInput.type = 'color'
+            colorInput.value = this.settings.standardColor
+            colorInput.title = "Set the Scene Color"
             el.appendChild(colorInput)
 
             let axisInput = document.createElement('input');
             axisInput.classList.add('axisInput');
             axisInput.type = 'checkbox'
+            axisInput.title = "Show the basic axis in the scene"
             el.appendChild(axisInput)
 
             let gridInput = document.createElement('input');
             gridInput.classList.add('gridInput');
             gridInput.type = 'checkbox'
+            gridInput.title = "Show a grid in the scene"
             el.appendChild(gridInput)
+
+            let TransformControlsInput = document.createElement('input');
+            TransformControlsInput.classList.add('TransformControlsInput');
+            TransformControlsInput.type = 'checkbox'
+            TransformControlsInput.title = "Show transform controls on the objects"
+            el.appendChild(TransformControlsInput)
+
+            el.addEventListener('click', () => {
+                console.log("clicked in el")
+                //el.focus()
+                el.setAttribute('tabindex', '0');
+            })
+
+            function defineModel(){
+                let mdl: any;
+
+                scene.traverse(function (object) {
+                    if (object.name === "Scene") {
+                        console.log("Found the imported model:", object);
+                        mdl = object
+                    }
+                });
+
+                return mdl;
+            }
+
+            reset.addEventListener('click', () => {
+                let mdl = defineModel()
+                mdl.position.x = 0;
+                mdl.position.y = 0;
+                mdl.position.z = 0;
+
+                mdl.rotation.x = 0;
+                mdl.rotation.y = 0;
+                mdl.rotation.z = 0;
+
+                camera.position.x = 0;
+                camera.position.y = 5;
+                camera.position.z = 10;
+            })
+
+            applyReload.addEventListener('click', () => {
+                let mdl = defineModel()
+
+                const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+
+                //gets line number of the codeblock that is being triggered with the button
+                const sec = ctx.getSectionInfo(ctx.el);
+                const lineno = sec?.lineStart;
+
+                const colorValue = colorInput.value.replace('#', '');
+
+                if (view) {
+                    for (let i = 0; i < 20; i++) {
+                        if (view.editor.getLine(lineno + i).contains(`"positionX"`)) {
+                            view.editor.setLine(lineno + i, `"positionX": ${mdl.position.x.toFixed(3)}, "positionY": ${mdl.position.y.toFixed(3)}, "positionZ": ${mdl.position.z.toFixed(3)},`)
+                        }
+                        // if (view.editor.getLine(lineno + i).contains(`"showGuiOverlay"`)) {
+                        //     view.editor.setLine(lineno + i, `"showGuiOverlay": false,`)
+                        // }
+                        if (view.editor.getLine(lineno + i).contains(`"backgroundColorHexString"`)) {
+                            view.editor.setLine(lineno + i, `"backgroundColorHexString": "${colorValue}",`)
+                        }
+                        if (view.editor.getLine(lineno + i).contains(`"rotationX"`)) {
+                            view.editor.setLine(lineno + i, `"rotationX": ${mdl.rotation.x * (180 / Math.PI)}, "rotationY": ${mdl.rotation.y * (180 / Math.PI)}, "rotationZ": ${mdl.rotation.z * (180 / Math.PI)},`)
+                        }
+                        if (view.editor.getLine(lineno + i).contains(`"camPosXYZ"`)) {
+                            view.editor.setLine(lineno + i, `"camPosXYZ": [${camera.position.x},${camera.position.y},${camera.position.z}],`)
+                        }
+                    }
+                }
+            })
+
+            TransformControlsInput.addEventListener('input', () => {
+                console.log("trigger")
+                controls.addEventListener('change', render);
+                controls.addEventListener('dragging-changed', function (event) {
+                    orbit.enabled = !event.value;
+                });
+
+                //scene.add(gizmo);
+                if (TransformControlsInput.checked) {
+                    scene.add(gizmo);
+                    transformOptions()
+                } else {
+                    scene.remove(gizmo); // or some other action for false
+                }
+
+                function render() {
+                    renderer.render(scene, camera);
+                }
+
+                function transformOptions() {
+                    let radioParent = document.createElement('div');
+                    radioParent.classList.add('radioParent');
+                    el.appendChild(radioParent)
+
+                    const radioData = [
+                        { label: 'Transform', value: '1' },
+                        { label: 'Rotate', value: '2' },
+                        //{ label: 'Scale', value: '3' },
+                    ];
+
+                    // Create a radio button group
+                    radioData.forEach((data, index) => {
+                        // Create the radio input element
+                        const radio = document.createElement('input');
+                        radio.type = 'radio';
+                        radio.name = 'exampleRadio'; // Group name for the radio buttons
+                        radio.id = `radio${index}`;
+                        radio.value = data.value;
+
+                        if (index == 0) {
+                            radio.checked = true;
+                        }
+
+                        // Create the label element
+                        const label = document.createElement('label');
+                        label.htmlFor = `radio${index}`;
+                        label.textContent = data.label;
+
+                        // Append the radio and label to the container
+                        radioParent.appendChild(radio);
+                        radioParent.appendChild(label);
+
+                        radio.addEventListener('change', (event) => {
+                            const target = event.target as HTMLInputElement;
+
+                            switch (target.value) {
+                                case '1':
+                                    controls.setMode('translate');
+                                    break;
+
+                                case '2':
+                                    controls.setMode('rotate');
+                                    break;
+
+                                // case '3':
+                                //     controls.setMode('scale');
+                                //     break;
+                            }
+                        })
+                    });
+                }
+            })
 
             gridInput.addEventListener('input', () => {
                 if (gridInput.checked) {
@@ -309,63 +496,17 @@ export default class ThreeJSPlugin extends Plugin {
 
             colorInput.addEventListener('input', () => {
                 scene.background = new THREE.Color(colorInput.value);
-
-                /*//this could be triggered by a different thing then triggering the color picker, for example on page unload.
-                //Then this should add to a queue of changes 
-    
-                // view contains the editor to change the markdown
-                const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-                // the context contains the begin and end of the block in the markdown file
-                const sec = ctx.getSectionInfo(ctx.el);
-                const lineno = sec?.lineStart;
-                const lineNoColorSetting = lineno + 7
-    
-                // Make sure the user is editing a Markdown file.
-                if (view) {
-                    const colorValue = colorInput.value.replace('#', '');
-                    const codeBlockProvider: ValueProvider<string, [string]> = async (oldCodeBlock: string) => {
-                        // Parse the old code block or use it to update values.
-                        // Example: Add or replace the "AutorotateY" field dynamically.
-    
-                        const autorotateY = this.settings.autoRotate ? 0.001 : 0;
-                        // Build the new code block content
-                        let codeBlockType = "```3D\n{";
-                        let name = `"name": "updatedName"`;
-                        let rotation = `"rotationX": 0, "rotationY": 0, "rotationZ": 0`;
-                        let autoRotate = `"AutorotateX": 0, "AutorotateY": ${ThreeDmodel.rotation.y}, "AutorotateZ": 0`;
-                        let position = `"positionX": 0, "positionY": 0, "positionZ": 0`;
-                        let scale = `"scale": "1.0"`;
-                        let color = `"colorHexString": "` + colorValue + `",`;
-                        let showAxisHelper = `"showAxisHelper": false, "length": 5`;
-                        let showGridHelper = `"showGridHelper": false, "gridSize": 10`;
-    
-                        let newCodeBlock = `${codeBlockType}
-                      ${name},
-                      ${rotation},
-                      ${autoRotate},
-                      ${position},
-                      ${scale},
-                      ${color},
-                      ${showAxisHelper},
-                      ${showGridHelper}
-                      }
-                      \`\`\``;
-    
-                        return newCodeBlock;
-                    };
-    
-                    //replaceCodeBlock(this.app, ctx, el, codeBlockProvider)
-                    view.editor.setLine(lineNoColorSetting, `"colorHexString": "` + colorValue + `",`)
-                }*/
             })
         } else {
             const colorInput = el.querySelector('.colorInput');
             const axisInput = el.querySelector('.axisInput');
             const gridInput = el.querySelector('.gridInput');
+            const TransformControlsInput = el.querySelector('.TransformControlsInput')
 
             if (colorInput) el.removeChild(colorInput);
             if (axisInput) el.removeChild(axisInput);
             if (gridInput) el.removeChild(gridInput);
+            if (TransformControlsInput) el.removeChild(TransformControlsInput);
         }
     }
 
@@ -391,7 +532,7 @@ export default class ThreeJSPlugin extends Plugin {
     }
 
     applyCameraSettings(cam: any, config: any, controls: OrbitControls) {
-        if(config.camPosXYZ){
+        if (config.camPosXYZ) {
             cam.position.x = config.camPosXYZ[0];
             cam.position.y = config.camPosXYZ[1];
             cam.position.z = config.camPosXYZ[2];
@@ -400,15 +541,15 @@ export default class ThreeJSPlugin extends Plugin {
             cam.position.y = 5
             cam.position.z = 10
         }
-        if(config.LookatXYZ){
-            controls.target = new THREE.Vector3(config.LookatXYZ[0],config.LookatXYZ[1],config.LookatXYZ[2])
+        if (config.LookatXYZ) {
+            controls.target = new THREE.Vector3(config.LookatXYZ[0], config.LookatXYZ[1], config.LookatXYZ[2])
         } else {
-            controls.target = new THREE.Vector3(0,0,0)
+            controls.target = new THREE.Vector3(0, 0, 0)
         }
     }
 
     applyModelSettings(model: THREE.Object3D, config: any) {
-        model.scale.set(config.scale || 1, config.scale || 1, config.scale || 1);
+        model.scale.set(config.scale || this.settings.standardScale || 1, config.scale || this.settings.standardScale || 1, config.scale || this.settings.standardScale || 1);
         model.rotation.x = THREE.MathUtils.degToRad(config.rotationX || 0);
         model.rotation.y = THREE.MathUtils.degToRad(config.rotationY || 0);
         model.rotation.z = THREE.MathUtils.degToRad(config.rotationZ || 0);

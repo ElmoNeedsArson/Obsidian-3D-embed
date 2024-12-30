@@ -8,7 +8,10 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import { ThreeMFLoader } from 'three/examples/jsm/loaders/3MFLoader.js';
 
+import { v4 as uuidv4 } from 'uuid';
+
 import { DEFAULT_SETTINGS, ThreeDEmbedSettings, ThreeDSettingsTab } from './settings';
+import { prototype } from 'events';
 
 
 
@@ -26,7 +29,20 @@ export default class ThreeJSPlugin extends Plugin {
 
     async onload() {
         await this.loadSettings();
+        let rendererArray: any;
+        rendererArray = [];
         this.addSettingTab(new ThreeDSettingsTab(this.app, this));
+        const rendererManager = new RendererManager(16); // Allow up to 16 renderers
+
+        function hashCode(content: string): string {
+            let hash = 0;
+            for (let i = 0; i < content.length; i++) {
+                const char = content.charCodeAt(i);
+                hash = (hash << 5) - hash + char;
+                hash |= 0; // Convert to 32-bit integer
+            }
+            return hash.toString();
+        }
 
         //adds a code block that instantly adds the 3D scene to your note
         this.addCommand({
@@ -93,18 +109,27 @@ export default class ThreeJSPlugin extends Plugin {
         });
 
         this.registerMarkdownCodeBlockProcessor('3D', (source, el, ctx) => {
-            console.log("Registering a new codeblock")
-            const renderer = new THREE.WebGLRenderer();
+            // Combine file path, content, and linestart to create a unique ID
+            const sectionInfo = ctx.getSectionInfo(el)?.lineStart
+            const codeblockId = `${ctx.sourcePath}-${sectionInfo}-${hashCode(source)}`;
+            //console.log("Codeblock ID:", codeblockId);
 
-            const canvases = document.querySelectorAll('canvas');
-            const activeContexts = Array.from(canvases)
-                .map(canvas => ({
-                    canvas,
-                    context: canvas.getContext('webgl') || canvas.getContext('webgl2')
-                }))
-                .filter(item => item.context);
-                
-            console.log(activeContexts);
+            // CURRENT ISSUE DESCRIPTION
+            // the current codeblockID is not unique enough, it is based on the contents of a codeblock. Therefor an identical codeblock cannot be rendered
+            // similataniously. A solution for this would be to add a unique identifier in the codeblock itself, but this has issues for 2 reasons, 
+            // one if the file is open twice it wont work, two if the user manually copies a scene, it wont work because it will keep the same ID
+            // other solution was using lines from the section info, but moving the codeblocks around would generate a new id, since its a 'different'
+            // codeblock. 
+
+            // I cant just disable all renderers, because then only the last registered codeblock will show
+
+            //if there is a renderer for this id, remove it
+            rendererManager.releaseRenderer(codeblockId);
+
+            //add a renderer for this codeblock
+            //const renderer = rendererManager.getRenderer(codeblockId);
+            //or the old code:
+            const renderer = new THREE.WebGLRenderer
 
             try {
                 const parsedData = JSON.parse(source);
@@ -784,6 +809,77 @@ export default class ThreeJSPlugin extends Plugin {
     }
 
     onunload() {
+        //RendererManager.disposeAll();
+
         console.log("ThreeJS plugin unloaded");
     }
 }
+
+class RendererManager {
+    private maxRenderers: number;
+    private rendererPool: THREE.WebGLRenderer[] = [];
+    private activeRenderers: Map<string, THREE.WebGLRenderer> = new Map();
+
+    constructor(maxRenderers: number = 10) {
+        this.maxRenderers = maxRenderers;
+    }
+
+    /**
+     * Get a WebGLRenderer for a given codeblock.
+     * If one exists for the codeblock, it is reused. Otherwise, a new one is created or pulled from the pool.
+     * @param codeblockId - The unique identifier for the codeblock.
+     * @returns {THREE.WebGLRenderer} The renderer assigned to the codeblock.
+     */
+    getRenderer(codeblockId: string): THREE.WebGLRenderer {
+        // Check if a renderer is already assigned to this codeblock
+        if (this.activeRenderers.has(codeblockId)) {
+            return this.activeRenderers.get(codeblockId)!;
+        }
+
+        let renderer: THREE.WebGLRenderer;
+
+        // Reuse a renderer from the pool if available
+        if (this.rendererPool.length > 0) {
+            renderer = this.rendererPool.pop()!;
+        } else if (this.activeRenderers.size < this.maxRenderers) {
+            // Create a new renderer if the pool is empty and we're under the max limit
+            renderer = new THREE.WebGLRenderer();
+        } else {
+            throw new Notice("Too many active renderers. Please free some renderers.")
+            //throw new Error("Too many active renderers. Please free some renderers.");
+        }
+
+        // Associate the renderer with this codeblock
+        this.activeRenderers.set(codeblockId, renderer);
+        console.log("Active Renderers:", this.activeRenderers.size, Array.from(this.activeRenderers.keys()));
+
+        return renderer;
+    }
+
+    /**
+     * Release the WebGLRenderer associated with a specific codeblock, returning it to the pool.
+     * @param codeblockId - The unique identifier for the codeblock.
+     */
+    releaseRenderer(codeblockId: string): void {
+        const renderer = this.activeRenderers.get(codeblockId);
+        if (renderer) {
+            this.activeRenderers.delete(codeblockId);
+            this.rendererPool.push(renderer); // Return to the pool
+        }
+    }
+
+    /**
+     * Dispose of all renderers and clear the pool and active renderers.
+     */
+    disposeAll(): void {
+        for (const renderer of this.activeRenderers.values()) {
+            renderer.dispose();
+        }
+        for (const renderer of this.rendererPool) {
+            renderer.dispose();
+        }
+        this.activeRenderers.clear();
+        this.rendererPool = [];
+    }
+}
+

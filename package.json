@@ -24,6 +24,7 @@
 	"dependencies": {
 		"@types/three": "^0.169.0",
 		"three": "^0.169.0",
-		"three-stdlib": "^2.33.0"
+		"three-stdlib": "^2.33.0",
+		"uuid": "^11.0.3"
 	}
 }

@@ -10,8 +10,11 @@ import { ThreeMFLoader } from 'three/examples/jsm/loaders/3MFLoader.js';
 
 import { DEFAULT_SETTINGS, ThreeDEmbedSettings, ThreeDSettingsTab } from './settings';
 
+
+
 export default class ThreeJSPlugin extends Plugin {
     settings: ThreeDEmbedSettings;
+
 
     async loadSettings() {
         this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
@@ -73,6 +76,7 @@ export default class ThreeJSPlugin extends Plugin {
                     }
 
                     let cameraPos = `,\n"camPosXYZ": [0,5,10]`
+                    //let cameraRot = `,\n"camRotXYZ": [0,0,0]`
                     let cameraLookat = `,\n"LookatXYZ": [0,0,0]`
                     let showAxisHelper = `,\n"showAxisHelper": false, "length": 5`
                     let showGridHelper = `,\n"showGridHelper": false, "gridSize": 10`
@@ -81,7 +85,7 @@ export default class ThreeJSPlugin extends Plugin {
                     if (this.settings.showConfig) {
                         content = codeBlockType + name + GUI + rotation + autoRotate + position + showTransformControls + scale + objectColor + wireFrame + backgroundColor + cameraType + cameraPos + cameraLookat + showAxisHelper + showGridHelper + codeBlockClosing
                     } else if (!this.settings.showConfig) {
-                        content = codeBlockType + name + codeBlockClosing
+                        content = codeBlockType + name + GUI + rotation + position + backgroundColor + cameraPos + cameraLookat + codeBlockClosing
                     }
                     editor.replaceSelection(content);
                 }
@@ -89,21 +93,64 @@ export default class ThreeJSPlugin extends Plugin {
         });
 
         this.registerMarkdownCodeBlockProcessor('3D', (source, el, ctx) => {
+            console.log("Registering a new codeblock")
+            const renderer = new THREE.WebGLRenderer();
+
+            const canvases = document.querySelectorAll('canvas');
+            const activeContexts = Array.from(canvases)
+                .map(canvas => ({
+                    canvas,
+                    context: canvas.getContext('webgl') || canvas.getContext('webgl2')
+                }))
+                .filter(item => item.context);
+                
+            console.log(activeContexts);
+
             try {
                 const parsedData = JSON.parse(source);
                 const modelPath = this.getModelPath(parsedData.name);
-                if (!modelPath) throw new Error("Model path not found");
-                const width = (ctx as any).el.clientWidth || 300
-                this.initializeThreeJsScene(el, parsedData, modelPath, parsedData.name, width, ctx);
-            } catch (error) {
-                let message: string;
-                if (error.toString().contains("Expected ',' or '}'")) {
-                    message = "Please make sure that every line BUT the last one ends with a comma ','"
-                } else if (error.toString().contains("Expected double")) {
-                    message = "The last line should not end with a comma"
-                } else {
-                    message = error.message
+
+                const requiredFields = {
+                    positionX: { name: "x position", example: `"positionX": 0, "positionY": 0, "positionZ": 0,` },
+                    positionY: { name: "y position", example: `"positionX": 0, "positionY": 0, "positionZ": 0,` },
+                    positionZ: { name: "z position", example: `"positionX": 0, "positionY": 0, "positionZ": 0,` },
+                    rotationX: { name: "x rotation", example: `"rotationX": 0, "rotationY": 0, "rotationZ": 0,` },
+                    rotationY: { name: "y rotation", example: `"rotationX": 0, "rotationY": 0, "rotationZ": 0,` },
+                    rotationZ: { name: "z rotation", example: `"rotationX": 0, "rotationY": 0, "rotationZ": 0,` },
+                    camPosXYZ: { name: "camera Position", example: `"camPosXYZ": [0,5.000000000000002,10],` },
+                    LookatXYZ: { name: "camera lookAt", example: `"LookatXYZ": [0,0,0],` },
+                    backgroundColorHexString: { name: "background color", example: `"backgroundColorHexString": "80bcd6",` },
+                    showGuiOverlay: { name: "gui show", example: `"showGuiOverlay": true,` }
+                } as const;
+
+                // Validation errors
+                const errors: string[] = [];
+                for (const [field, { name, example }] of Object.entries(requiredFields)) {
+                    if (parsedData[field as keyof typeof parsedData] === undefined) {
+                        errors.push(`Please include the ${name} in the config. For example ${example}`);
+                    }
                 }
+                if (errors.length > 0) {
+                    new Notice(errors.join('\n'), 10000);
+                    return;
+                }
+
+                if (!modelPath) {
+                    new Notice("Model path not found", 10000);
+                    return;
+                }
+
+                // Rest of your code
+                const width = (ctx as any).el.clientWidth || 300;
+                this.initializeThreeJsScene(el, parsedData, modelPath, parsedData.name, width, ctx, renderer);
+
+            } catch (error) {
+                let message = error.toString().includes("Expected ',' or '}'")
+                    ? "Please make sure that every line BUT the last one ends with a comma ','"
+                    : error.toString().includes("Expected double")
+                        ? "The last line should not end with a comma"
+                        : error.message;
+
                 new Notice("Failed to render 3D model: " + message, 10000);
             }
         });
@@ -114,7 +161,7 @@ export default class ThreeJSPlugin extends Plugin {
         return path ? this.app.vault.getResourcePath(path) : null;
     }
 
-    initializeThreeJsScene(el: HTMLElement, config: any, modelPath: string, name: string, width: number, ctx: any) {
+    initializeThreeJsScene(el: HTMLElement, config: any, modelPath: string, name: string, width: number, ctx: any, renderer: THREE.WebGLRenderer) {
         const scene = new THREE.Scene();
 
         scene.background = new THREE.Color(`#${config.backgroundColorHexString || config.colorHexString || this.settings.standardColor.replace(/#/g, "")}`);
@@ -130,7 +177,7 @@ export default class ThreeJSPlugin extends Plugin {
 
         let camera = this.setCameraMode(config.orthographic, width, this.settings.standardEmbedHeight);
 
-        const renderer = new THREE.WebGLRenderer();
+        //const renderer = new THREE.WebGLRenderer();
         renderer.setSize(width, this.settings.standardEmbedHeight);
         el.appendChild(renderer.domElement);
 
@@ -145,7 +192,17 @@ export default class ThreeJSPlugin extends Plugin {
         const controls = new TransformControls(camera, renderer.domElement)
         const gizmo = controls.getHelper();
 
-        //let GUIshowTransformControls = this.guiControls(config.showGuiOverlay, el, scene)
+        const geometry = new THREE.BoxGeometry(1, 1, 1);
+        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        const cube = new THREE.Mesh(geometry, material);
+        cube.position.x = 5
+        scene.add(cube);
+
+        const cube2 = new THREE.Mesh(geometry, material);
+        cube2.position.x = -5
+        scene.add(cube2);
+
+        // orbit.target.set(cube2.position.x, cube2.position.y, cube2.position.z)
 
         if (config.showTransformControls) {
 
@@ -196,6 +253,7 @@ export default class ThreeJSPlugin extends Plugin {
 
         // Animation loop
         const animate = () => {
+            //console.log(orbit.target)
             //if (config.showTransformControls) {
             if (ThreeDmodel) {
                 controls.attach(ThreeDmodel);
@@ -339,7 +397,7 @@ export default class ThreeJSPlugin extends Plugin {
             TransformControlsInput.title = "Show transform controls on the objects"
             el.appendChild(TransformControlsInput)
 
-            function defineModel(){
+            function defineModel() {
                 let mdl: any;
 
                 scene.traverse(function (object) {
@@ -353,6 +411,8 @@ export default class ThreeJSPlugin extends Plugin {
             }
 
             reset.addEventListener('click', () => {
+                console.log(camera.rotation)
+
                 let mdl = defineModel()
                 mdl.position.x = 0;
                 mdl.position.y = 0;
@@ -365,9 +425,17 @@ export default class ThreeJSPlugin extends Plugin {
                 camera.position.x = 0;
                 camera.position.y = 5;
                 camera.position.z = 10;
+
+                orbit.target.x = 0;
+                orbit.target.y = 0;
+                orbit.target.z = 0;
+
+                scene.background = new THREE.Color(this.settings.standardColor);
+                colorInput.value = this.settings.standardColor
             })
 
             applyReload.addEventListener('click', () => {
+                //saveOrbitState(orbit, camera)
                 let mdl = defineModel()
 
                 const view = this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -379,23 +447,186 @@ export default class ThreeJSPlugin extends Plugin {
                 const colorValue = colorInput.value.replace('#', '');
 
                 if (view) {
-                    for (let i = 0; i < 20; i++) {
-                        if (view.editor.getLine(lineno + i).contains(`"positionX"`)) {
-                            view.editor.setLine(lineno + i, `"positionX": ${mdl.position.x.toFixed(3)}, "positionY": ${mdl.position.y.toFixed(3)}, "positionZ": ${mdl.position.z.toFixed(3)},`)
-                        }
-                        if (view.editor.getLine(lineno + i).contains(`"showGuiOverlay"`)) {
-                            view.editor.setLine(lineno + i, `"showGuiOverlay": false,`)
-                        }
-                        if (view.editor.getLine(lineno + i).contains(`"backgroundColorHexString"`)) {
-                            view.editor.setLine(lineno + i, `"backgroundColorHexString": "${colorValue}",`)
-                        }
-                        if (view.editor.getLine(lineno + i).contains(`"rotationX"`)) {
-                            view.editor.setLine(lineno + i, `"rotationX": ${mdl.rotation.x * (180 / Math.PI)}, "rotationY": ${mdl.rotation.y * (180 / Math.PI)}, "rotationZ": ${mdl.rotation.z * (180 / Math.PI)},`)
-                        }
-                        if (view.editor.getLine(lineno + i).contains(`"camPosXYZ"`)) {
-                            view.editor.setLine(lineno + i, `"camPosXYZ": [${camera.position.x},${camera.position.y},${camera.position.z}],`)
+                    let startblock = 0;
+                    let endblock = 0;
+                    for (let i = 0; i < 20; i++) { //20 is the max length of a codeblock
+                        if (view.editor.getLine(lineno + i).contains("```3D")) {
+                            console.log("trigger")
+                            startblock = lineno + i
+                            console.log("start: " + startblock)
+                        } else if (view.editor.getLine(lineno + i).contains("```")) {
+                            console.log("trigger2")
+                            endblock = lineno + i
+                            console.log("end: " + endblock)
+                            break;
                         }
                     }
+
+                    function cameraLookDir(camera: any) {
+                        var vector = new THREE.Vector3(0, 0, -1);
+                        vector.applyEuler(camera.rotation);
+                        return vector;
+                    }
+
+                    console.log("camlookat " + JSON.stringify(cameraLookDir(camera).x))
+
+                    for (let i = 0; i < endblock; i++) {
+                        //save position settings
+                        if (view.editor.getLine(lineno + i).contains(`"positionX"`)) {
+                            console.log("found position replacing it")
+                            if (view.editor.getLine(lineno + i + 1).contains(`}`)) {
+                                view.editor.setLine(lineno + i, `"positionX": ${mdl.position.x.toFixed(3)}, "positionY": ${mdl.position.y.toFixed(3)}, "positionZ": ${mdl.position.z.toFixed(3)}`)
+                            } else {
+                                view.editor.setLine(lineno + i, `"positionX": ${mdl.position.x.toFixed(3)}, "positionY": ${mdl.position.y.toFixed(3)}, "positionZ": ${mdl.position.z.toFixed(3)},`)
+                            }
+                        }
+
+                        //save guioverlay setting
+                        if (view.editor.getLine(lineno + i).contains(`"showGuiOverlay"`)) {
+                            console.log("found gui replacing it")
+                            if (view.editor.getLine(lineno + i + 1).contains(`}`)) {
+                                view.editor.setLine(lineno + i, `"showGuiOverlay": false`)
+                            } else {
+                                view.editor.setLine(lineno + i, `"showGuiOverlay": false,`)
+                            }
+                        }
+
+                        //save background color setting
+                        if (view.editor.getLine(lineno + i).contains(`"backgroundColorHexString"`)) {
+                            console.log("found color replacing it")
+                            if (view.editor.getLine(lineno + i + 1).contains(`}`)) {
+                                view.editor.setLine(lineno + i, `"backgroundColorHexString": "${colorValue}"`)
+                            } else {
+                                view.editor.setLine(lineno + i, `"backgroundColorHexString": "${colorValue}",`)
+                            }
+                        }
+
+                        //save rotation settings
+                        if (view.editor.getLine(lineno + i).contains(`"rotationX"`)) {
+                            console.log("found rotation replacing it")
+                            if (view.editor.getLine(lineno + i + 1).contains(`}`)) {
+                                view.editor.setLine(lineno + i, `"rotationX": ${mdl.rotation.x * (180 / Math.PI)}, "rotationY": ${mdl.rotation.y * (180 / Math.PI)}, "rotationZ": ${mdl.rotation.z * (180 / Math.PI)}`)
+                            } else {
+                                view.editor.setLine(lineno + i, `"rotationX": ${mdl.rotation.x * (180 / Math.PI)}, "rotationY": ${mdl.rotation.y * (180 / Math.PI)}, "rotationZ": ${mdl.rotation.z * (180 / Math.PI)},`)
+                            }
+                        }
+
+                        //save camera position
+                        if (view.editor.getLine(lineno + i).contains(`"camPosXYZ"`)) {
+                            console.log("found camXYZ replacing it")
+                            if (view.editor.getLine(lineno + i + 1).contains(`}`)) {
+                                view.editor.setLine(lineno + i, `"camPosXYZ": [${camera.position.x},${camera.position.y},${camera.position.z}]`)
+                            } else {
+                                view.editor.setLine(lineno + i, `"camPosXYZ": [${camera.position.x},${camera.position.y},${camera.position.z}],`)
+                            }
+                        }
+
+                        if (view.editor.getLine(lineno + i).contains(`"LookatXYZ"`)) {
+                            console.log("found camLookat replacing it")
+                            if (view.editor.getLine(lineno + i + 1).contains(`}`)) {
+                                view.editor.setLine(lineno + i, `"LookatXYZ": [${orbit.target.x},${orbit.target.y},${orbit.target.z}]`)
+                            } else {
+                                view.editor.setLine(lineno + i, `"LookatXYZ": [${orbit.target.x},${orbit.target.y},${orbit.target.z}],`)
+                            }
+                        }
+                    }
+                    /*
+                    //Paste the missing information in the codeblock for saving settings
+                    let GUI = `"showGuiOverlay": ` + this.settings.autoShowGUI + ","
+                    let rotation = `"rotationX": 0, "rotationY": 0, "rotationZ": 0,`
+                    let position = `"positionX": 0, "positionY": 0, "positionZ": 0,`
+                    let cameraPos = '"camPosXYZ": [0,5,10]'
+
+                    let end = '}\n```\n\n'
+                
+                    //let content = ""
+
+                    if(!GuiSetting){
+                        view.editor.setLine(endblock-1, GUI)
+                        endblock += 1
+                    }
+                    if(!rotationSetting){
+                        view.editor.setLine(endblock-1, rotation)
+                        endblock += 1
+                    }
+                    if(!positionSetting){
+                        view.editor.setLine(endblock-1, position)
+                        endblock += 1
+                    }
+                    if(!camSetting){
+                        view.editor.setLine(endblock-1, cameraPos)
+                        endblock += 1
+                    }
+
+                    view.editor.setLine(endblock-1, end)
+
+
+                    //view.editor.setLine(startblock + 4, content)
+
+                    for (let i = 0; i < 20; i++) { //20 is the max length of a codeblock
+                        if (view.editor.getLine(lineno + i).contains("```3D")) {
+                            console.log("trigger")
+                            startblock = lineno + i
+                            console.log("start: " + startblock)
+                        } else if (view.editor.getLine(lineno + i).contains("```")) {
+                            console.log("trigger2")
+                            endblock = lineno + i
+                            console.log("end: " + endblock)
+                            break;
+                        }
+                    }
+
+                    for (let i = 0; i < endblock; i++) {
+                        //save position settings
+                        if (view.editor.getLine(lineno + i).contains(`"positionX"`)) {
+                            positionSetting = true
+                            if (view.editor.getLine(lineno + i + 1).contains(`}`)) {
+                                view.editor.setLine(lineno + i, `"positionX": ${mdl.position.x.toFixed(3)}, "positionY": ${mdl.position.y.toFixed(3)}, "positionZ": ${mdl.position.z.toFixed(3)}`)
+                            } else {
+                                view.editor.setLine(lineno + i, `"positionX": ${mdl.position.x.toFixed(3)}, "positionY": ${mdl.position.y.toFixed(3)}, "positionZ": ${mdl.position.z.toFixed(3)},`)
+                            }
+                        }
+
+                        //save guioverlay setting
+                        if (view.editor.getLine(lineno + i).contains(`"showGuiOverlay"`)) {
+                            GuiSetting = true;
+                            if (view.editor.getLine(lineno + i + 1).contains(`}`)) {
+                                view.editor.setLine(lineno + i, `"showGuiOverlay": false`)
+                            } else {
+                                view.editor.setLine(lineno + i, `"showGuiOverlay": false,`)
+                            }
+                        }
+
+                        //save background color setting
+                        if (view.editor.getLine(lineno + i).contains(`"backgroundColorHexString"`)) {
+                            colorSetting = true
+                            if (view.editor.getLine(lineno + i + 1).contains(`}`)) {
+                                view.editor.setLine(lineno + i, `"backgroundColorHexString": "${colorValue}"`)
+                            } else {
+                                view.editor.setLine(lineno + i, `"backgroundColorHexString": "${colorValue}",`)
+                            }
+                        }
+
+                        //save rotation settings
+                        if (view.editor.getLine(lineno + i).contains(`"rotationX"`)) {
+                            rotationSetting = true
+                            if (view.editor.getLine(lineno + i + 1).contains(`}`)) {
+                                view.editor.setLine(lineno + i, `"rotationX": ${mdl.rotation.x * (180 / Math.PI)}, "rotationY": ${mdl.rotation.y * (180 / Math.PI)}, "rotationZ": ${mdl.rotation.z * (180 / Math.PI)}`)
+                            } else {
+                                view.editor.setLine(lineno + i, `"rotationX": ${mdl.rotation.x * (180 / Math.PI)}, "rotationY": ${mdl.rotation.y * (180 / Math.PI)}, "rotationZ": ${mdl.rotation.z * (180 / Math.PI)},`)
+                            }
+                        }
+
+                        //save camera position
+                        if (view.editor.getLine(lineno + i).contains(`"camPosXYZ"`)) {
+                            camSetting = true;
+                            if (view.editor.getLine(lineno + i + 1).contains(`}`)) {
+                                view.editor.setLine(lineno + i, `"camPosXYZ": [${camera.position.x},${camera.position.y},${camera.position.z}]`)
+                            } else {
+                                view.editor.setLine(lineno + i, `"camPosXYZ": [${camera.position.x},${camera.position.y},${camera.position.z}],`)
+                            }
+                        }
+                    }*/
                 }
             })
 
@@ -538,9 +769,9 @@ export default class ThreeJSPlugin extends Plugin {
             cam.position.z = 10
         }
         if (config.LookatXYZ) {
-            controls.target = new THREE.Vector3(config.LookatXYZ[0], config.LookatXYZ[1], config.LookatXYZ[2])
+            controls.target.set(config.LookatXYZ[0], config.LookatXYZ[1], config.LookatXYZ[2])
         } else {
-            controls.target = new THREE.Vector3(0, 0, 0)
+            controls.target.set(0, 0, 0)
         }
     }
 
@@ -556,95 +787,3 @@ export default class ThreeJSPlugin extends Plugin {
         console.log("ThreeJS plugin unloaded");
     }
 }
-
-// class ThreeDSettingsTab extends PluginSettingTab {
-//     plugin: ThreeJSPlugin;
-
-//     constructor(app: App, plugin: ThreeJSPlugin) {
-//         super(app, plugin);
-//         this.plugin = plugin;
-//     }
-
-//     display(): void {
-//         const { containerEl } = this;
-//         containerEl.empty();
-
-//         new Setting(containerEl)
-//             .setName('Standard scene color')
-//             .setDesc('Default background color for 3D scenes')
-//             .addColorPicker(colorPicker =>
-//                 colorPicker.setValue(this.plugin.settings.standardColor)
-//                     .onChange(async (value) => {
-//                         this.plugin.settings.standardColor = value;
-//                         await this.plugin.saveSettings();
-//                     })
-//             );
-
-//         new Setting(containerEl)
-//             .setName('Standard scale of 3Dmodel')
-//             .setDesc('Default size of 3D models in scene (non whole numbers should be seperated by dot, not comma)')
-//             .addText(text =>
-//                 text
-//                     .setValue(this.plugin.settings.standardScale.toString())
-//                     .onChange(async (value) => {
-//                         const numValue = parseFloat(value)
-//                         this.plugin.settings.standardScale = numValue;
-//                         await this.plugin.saveSettings();
-//                     })
-
-//             )
-
-//         new Setting(containerEl)
-//             .setName('Standard height')
-//             .setDesc('Default height of a 3D model embed in your note (in pixels)')
-//             .addText(text =>
-//                 text
-//                     .setValue(this.plugin.settings.standardEmbedHeight.toString())
-//                     .onChange(async (value) => {
-//                         const numValue = parseFloat(value)
-//                         this.plugin.settings.standardEmbedHeight = numValue;
-//                         await this.plugin.saveSettings();
-//                     })
-
-//             )
-
-//         new Setting(containerEl)
-//             .setName('Auto Rotate Models')
-//             .setDesc('If true, will always automatically rotate the models in your scene')
-//             .addToggle(
-//                 (toggle) =>
-//                     toggle
-//                         .setValue(this.plugin.settings.autoRotate) // Set the initial value based on settings
-//                         .onChange(async (value) => {
-//                             this.plugin.settings.autoRotate = value; // Update setting when toggled
-//                             await this.plugin.saveData(this.plugin.settings); // Save the new setting value
-//                         })
-//             )
-
-//         new Setting(containerEl)
-//             .setName('Toggle Orthographic Camera')
-//             .setDesc('If true, will load all your scenes with a orthographic camera, if false, defaults to a perspective camera. You can also set this per scene, in the codeblock config')
-//             .addToggle(
-//                 (toggle) =>
-//                     toggle
-//                         .setValue(this.plugin.settings.orthographicCam) // Set the initial value based on settings
-//                         .onChange(async (value) => {
-//                             this.plugin.settings.orthographicCam = value; // Update setting when toggled
-//                             await this.plugin.saveData(this.plugin.settings); // Save the new setting value
-//                         })
-//             )
-
-//             new Setting(containerEl)
-//             .setName('Toggle Automatically show GUI')
-//             .setDesc('If true, will show basic gui options for a scene (color selector, grid checkbox) upon model load. Can also be set in the codeblock config')
-//             .addToggle(
-//                 (toggle) =>
-//                     toggle
-//                         .setValue(this.plugin.settings.autoShowGUI) // Set the initial value based on settings
-//                         .onChange(async (value) => {
-//                             this.plugin.settings.autoShowGUI = value; // Update setting when toggled
-//                             await this.plugin.saveData(this.plugin.settings); // Save the new setting value
-//                         })
-//             )
-//     }
-// }

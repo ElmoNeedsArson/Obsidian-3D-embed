@@ -18,7 +18,7 @@ export interface ThreeDEmbedSettings {
 }
 
 export const DEFAULT_SETTINGS: ThreeDEmbedSettings = {
-    showConfig: true,
+    showConfig: false,
     standardColor: "#ADD8E6",
     standardScale: 0.5,
     standardEmbedHeight: 300,
@@ -51,7 +51,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName('Load codeblock with all configurations')
-            .setDesc('If true, this setting will load the codeblocks in your markdownnotes with all the settings you can configure. ')
+            .setDesc('If true, this setting will load the codeblocks in your markdownnotes with all the settings you can configure. If false it will load only the minimally required settings')
             .addToggle(
                 (toggle) =>
                     toggle

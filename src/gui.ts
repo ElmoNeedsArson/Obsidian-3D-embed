@@ -96,14 +96,14 @@ export function gui(plugin: ThreeJSPlugin, guiShow: boolean, el: HTMLElement, sc
                             }
 
                             //save guioverlay setting
-                            if (view.editor.getLine(i).contains(`"showGuiOverlay"`)) {
-                                console.log("found gui replacing it")
-                                if (view.editor.getLine(i + 1).contains(`}`)) {
-                                    view.editor.setLine(i, `"showGuiOverlay": false`)
-                                } else {
-                                    view.editor.setLine(i, `"showGuiOverlay": false,`)
-                                }
-                            }
+                            // if (view.editor.getLine(i).contains(`"showGuiOverlay"`)) {
+                            //     console.log("found gui replacing it")
+                            //     if (view.editor.getLine(i + 1).contains(`}`)) {
+                            //         view.editor.setLine(i, `"showGuiOverlay": false`)
+                            //     } else {
+                            //         view.editor.setLine(i, `"showGuiOverlay": false,`)
+                            //     }
+                            // }
 
                             //save background color setting
                             if (view.editor.getLine(i).contains(`"backgroundColorHexString"`)) {

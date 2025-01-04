@@ -1,4 +1,4 @@
-import { MarkdownPostProcessorContext, MarkdownRenderChild } from 'obsidian';
+import { MarkdownPostProcessorContext, MarkdownRenderChild, Notice } from 'obsidian';
 import * as THREE from 'three';
 import ThreeJSPlugin from "./main"; 
 
@@ -11,22 +11,38 @@ export function getUniqueId(ctx: MarkdownPostProcessorContext, el: HTMLElement):
     return instanceId;
 }
 
+window.onerror = (message, source, lineno, colno, error) => {
+    if (message?.toString().includes("'shaderSource' on 'WebGL2RenderingContext'")) {
+        console.log("erorrrrr")
+        new Notice("A rendering error occurred, too many instances at once, reload obsidian please", 10000)
+        // disposeAllRenderers()
+        // alert("A rendering error occurred. Please reload the application.");
+    }
+};
+
+
 export function getRenderer(blockId: string, instanceId: string, el: HTMLElement): THREE.WebGLRenderer {
+    console.log("1")
     if (!rendererPool.has(blockId)) {
         rendererPool.set(blockId, new Map());
     }
 
+    console.log("2")
     const blockRenderers = rendererPool.get(blockId)!;
 
+    console.log("3")
     if (blockRenderers.has(instanceId)) {
         return blockRenderers.get(instanceId)!;
     }
 
+    console.log("4")
     const renderer = new THREE.WebGLRenderer();
     renderer.setSize(el.clientWidth, el.clientHeight);
     el.appendChild(renderer.domElement);
 
+    console.log("5")
     blockRenderers.set(instanceId, renderer);
+    console.log("6")
     return renderer;
 }
 
@@ -36,23 +52,54 @@ function disposeRenderer(blockId: string, instanceId: string) {
 
     const renderer = blockRenderers.get(instanceId);
     if (renderer) {
-        const gl = renderer.getContext();
-        if (gl) {
-            const loseContextExtension = gl.getExtension("WEBGL_lose_context");
-            if (loseContextExtension) loseContextExtension.loseContext();
+        try {
+            const gl = renderer.getContext();
+            if (gl) {
+                const loseContextExtension = gl.getExtension("WEBGL_lose_context");
+                if (loseContextExtension) loseContextExtension.loseContext();
+            }
+
+            renderer.dispose();
+            renderer.domElement?.parentNode?.removeChild(renderer.domElement);
+            blockRenderers.delete(instanceId);
+
+            console.log(`Renderer for blockId ${blockId} instanceId ${instanceId} disposed.`);
+        } catch (error) {
+            console.error("Error disposing renderer:", error);
         }
-
-        renderer.dispose();
-        renderer.domElement?.parentNode?.removeChild(renderer.domElement);
-        blockRenderers.delete(instanceId);
-
-        console.log(`Renderer for blockId ${blockId} instanceId ${instanceId} disposed.`);
     }
 
     if (blockRenderers.size === 0) {
         rendererPool.delete(blockId);
     }
 }
+
+function disposeAllRenderers() {
+    // Iterate over all blockIds in the rendererPool
+    for (const [blockId, blockRenderers] of rendererPool.entries()) {
+        // Iterate over all instanceIds in the blockRenderers map
+        for (const [instanceId, renderer] of blockRenderers.entries()) {
+            try {
+                const gl = renderer.getContext();
+                if (gl) {
+                    const loseContextExtension = gl.getExtension("WEBGL_lose_context");
+                    if (loseContextExtension) loseContextExtension.loseContext();
+                }
+
+                renderer.dispose();
+                renderer.domElement?.parentNode?.removeChild(renderer.domElement);
+                console.log(`Renderer for blockId ${blockId} instanceId ${instanceId} disposed.`);
+            } catch (error) {
+                console.error(`Error disposing renderer for blockId ${blockId} instanceId ${instanceId}:`, error);
+            }
+        }
+
+        // After disposing all renderers in the block, delete the block from the pool
+        rendererPool.delete(blockId);
+    }
+    console.log("All renderers have been disposed.");
+}
+
 
 export class ThreeJSRendererChild extends MarkdownRenderChild {
     blockId: string;

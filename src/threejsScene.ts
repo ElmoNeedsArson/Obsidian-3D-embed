@@ -28,7 +28,7 @@ export function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, c
         scene.add(gridHelper);
     }
 
-    let camera = plugin.setCameraMode(config.orthographic, width, plugin.settings.standardEmbedHeight);
+    let camera = setCameraMode(config.orthographic, width, plugin.settings.standardEmbedHeight);
 
     //const renderer = new THREE.WebGLRenderer();
     renderer.setSize(width, plugin.settings.standardEmbedHeight);
@@ -119,4 +119,25 @@ export function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, c
         }
     };
     animate();
+}
+
+function setCameraMode(orthographic: boolean, width: number, height: number) {
+    let camera: any;
+    if (!orthographic) {
+        camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+    } else if (orthographic) {
+        const aspect = width / height;
+        const distance = 10; // distance at which you want the orthographic camera to mimic the perspective camera
+
+        // Perspective camera's FOV in radians
+        const fov = THREE.MathUtils.degToRad(75);
+
+        // Frustum height at the given distance
+        const frustumHeight = 2 * distance * Math.tan(fov / 2);
+        const frustumWidth = frustumHeight * aspect;
+        camera = new THREE.OrthographicCamera(-frustumWidth / 2, frustumWidth / 2, frustumHeight / 2, -frustumHeight / 2, 1, 1000);
+    } else {
+        camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+    }
+    return camera;
 }

@@ -44,8 +44,6 @@ export function gui(plugin: ThreeJSPlugin, guiShow: boolean, el: HTMLElement, sc
             el.appendChild(TransformControlsInput)
 
             reset.addEventListener('click', () => {
-                console.log(camera.rotation)
-
                 let mdl = model
                 mdl.position.x = 0;
                 mdl.position.y = 0;
@@ -68,7 +66,6 @@ export function gui(plugin: ThreeJSPlugin, guiShow: boolean, el: HTMLElement, sc
             })
 
             applyReload.addEventListener('click', () => {
-                console.log("passed model: " + model)
                 let mdl = model
 
                 const view = plugin.app.workspace.getActiveViewOfType(MarkdownView);
@@ -84,10 +81,8 @@ export function gui(plugin: ThreeJSPlugin, guiShow: boolean, el: HTMLElement, sc
                     if (mdl) {
                         // for the codeblock at hand check each line
                         for (let i = lineno; i < lineEnd; i++) {
-                            console.log("checking line: " + i)
                             // save position settings
                             if (view.editor.getLine(i).contains(`"positionX"`)) {
-                                console.log("found position replacing it")
                                 if (view.editor.getLine(i + 1).contains(`}`)) {
                                     view.editor.setLine(i, `"positionX": ${mdl.position.x.toFixed(3)}, "positionY": ${mdl.position.y.toFixed(3)}, "positionZ": ${mdl.position.z.toFixed(3)}`)
                                 } else {
@@ -96,18 +91,16 @@ export function gui(plugin: ThreeJSPlugin, guiShow: boolean, el: HTMLElement, sc
                             }
 
                             //save guioverlay setting
-                            // if (view.editor.getLine(i).contains(`"showGuiOverlay"`)) {
-                            //     console.log("found gui replacing it")
-                            //     if (view.editor.getLine(i + 1).contains(`}`)) {
-                            //         view.editor.setLine(i, `"showGuiOverlay": false`)
-                            //     } else {
-                            //         view.editor.setLine(i, `"showGuiOverlay": false,`)
-                            //     }
-                            // }
+                            if (view.editor.getLine(i).contains(`"showGuiOverlay"`)) {
+                                if (view.editor.getLine(i + 1).contains(`}`)) {
+                                    view.editor.setLine(i, `"showGuiOverlay": false`)
+                                } else {
+                                    view.editor.setLine(i, `"showGuiOverlay": false,`)
+                                }
+                            }
 
                             //save background color setting
                             if (view.editor.getLine(i).contains(`"backgroundColorHexString"`)) {
-                                console.log("found color replacing it")
                                 if (view.editor.getLine(i + 1).contains(`}`)) {
                                     view.editor.setLine(i, `"backgroundColorHexString": "${colorValue}"`)
                                 } else {
@@ -117,7 +110,6 @@ export function gui(plugin: ThreeJSPlugin, guiShow: boolean, el: HTMLElement, sc
 
                             //save rotation settings
                             if (view.editor.getLine(i).contains(`"rotationX"`)) {
-                                console.log("found rotation replacing it")
                                 if (view.editor.getLine(i + 1).contains(`}`)) {
                                     view.editor.setLine(i, `"rotationX": ${mdl.rotation.x * (180 / Math.PI)}, "rotationY": ${mdl.rotation.y * (180 / Math.PI)}, "rotationZ": ${mdl.rotation.z * (180 / Math.PI)}`)
                                 } else {
@@ -127,7 +119,6 @@ export function gui(plugin: ThreeJSPlugin, guiShow: boolean, el: HTMLElement, sc
 
                             //save camera position
                             if (view.editor.getLine(i).contains(`"camPosXYZ"`)) {
-                                console.log("found camXYZ replacing it")
                                 if (view.editor.getLine(i + 1).contains(`}`)) {
                                     view.editor.setLine(i, `"camPosXYZ": [${camera.position.x},${camera.position.y},${camera.position.z}]`)
                                 } else {
@@ -136,7 +127,6 @@ export function gui(plugin: ThreeJSPlugin, guiShow: boolean, el: HTMLElement, sc
                             }
 
                             if (view.editor.getLine(i).contains(`"LookatXYZ"`)) {
-                                console.log("found camLookat replacing it")
                                 if (view.editor.getLine(i + 1).contains(`}`)) {
                                     view.editor.setLine(i, `"LookatXYZ": [${orbit.target.x},${orbit.target.y},${orbit.target.z}]`)
                                 } else {
@@ -151,7 +141,6 @@ export function gui(plugin: ThreeJSPlugin, guiShow: boolean, el: HTMLElement, sc
             })
 
             TransformControlsInput.addEventListener('input', () => {
-                console.log("trigger")
                 controls.addEventListener('change', render);
                 controls.addEventListener('dragging-changed', function (event) {
                     orbit.enabled = !event.value;

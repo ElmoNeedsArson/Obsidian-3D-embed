@@ -34,26 +34,89 @@ export function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, c
     renderer.setSize(width, plugin.settings.standardEmbedHeight);
     el.appendChild(renderer.domElement);
 
-    const light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.set(5, 10, 5);
-    scene.add(light);
+    //LIGHTING SETUP ----------------------------------------------------------------------
+    let lightColor;
+    let lightStrength;
 
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
-    scene.add(ambientLight);
+    if (config.lightColor) {
+        lightColor = "#" + config.lightColor
+    } else {
+        lightColor = plugin.settings.standardLightColor || 0xFFFFFF
+    }
+
+    const lightIndicator_Geometry = new THREE.SphereGeometry(1)
+    const lightIndicator_material = new THREE.MeshBasicMaterial({ color: lightColor });
+    const lightIndicator = new THREE.Mesh(lightIndicator_Geometry, lightIndicator_material);
+
+    if (config.showLight) {
+        lightIndicator.position.set(5, 10, 5);
+        scene.add(lightIndicator);
+    } else {
+        if (plugin.settings.standardshowLight) {
+            lightIndicator.position.set(5, 10, 5);
+            scene.add(lightIndicator);
+        }
+    }
+
+    if (config.lightStrength) {
+        lightStrength = config.lightStrength
+    } else {
+        lightStrength = plugin.settings.standardlightStrength || 1
+    }
+
+    const light = new THREE.DirectionalLight(lightColor, lightStrength);
+
+    if (config.lightPosXYZ) {
+        light.position.set(config.lightPosXYZ[0],config.lightPosXYZ[1],config.lightPosXYZ[2])
+        if (config.showLight) {
+            lightIndicator.position.set(config.lightPosXYZ[0],config.lightPosXYZ[1],config.lightPosXYZ[2]);
+        }
+    } else {
+        light.position.set(plugin.settings.standardlightPosX,plugin.settings.standardlightPosY,plugin.settings.standardlightPosZ)
+        if (!config.showLight && plugin.settings.standardshowLight) {
+            lightIndicator.position.set(plugin.settings.standardlightPosX,plugin.settings.standardlightPosY,plugin.settings.standardlightPosZ);
+        }
+    }
+
+    const dirLight = new THREE.DirectionalLight( lightColor, lightStrength );
+	dirLight.position.set(0, 10, 45);
+	dirLight.shadow.mapSize.set( 4096, 4096 );
+	dirLight.shadow.bias = -0.0005;
+	dirLight.shadow.camera.left =	-50;
+	dirLight.shadow.camera.right = 	50;
+	dirLight.shadow.camera.top = 	50;
+	dirLight.shadow.camera.bottom = -50;
+	dirLight.castShadow = true;
+
+    if (config.attachLightToCam) {
+        camera.add( dirLight );
+        scene.remove(lightIndicator)
+        //camera.add(light)
+    } else {
+        scene.add(light);
+    }
+
+    scene.add(camera)
+
+    // const ambientlight = new THREE.AmbientLight( 0x404040 , 10); // soft white light
+    //const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 1);
+    // ambientlight.position.set(0,10,0)
+    //scene.add( hemisphereLight );
+    //LIGHTING SETUP ----------------------------------------------------------------------
 
     const orbit = new OrbitControls(camera, renderer.domElement);
     const controls = new TransformControls(camera, renderer.domElement)
     const gizmo = controls.getHelper();
 
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
-    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    const cube = new THREE.Mesh(geometry, material);
-    cube.position.x = 5
-    scene.add(cube);
+    // const geometry = new THREE.BoxGeometry(1, 1, 1);
+    // const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    // const cube = new THREE.Mesh(geometry, material);
+    // cube.position.x = 5
+    // scene.add(cube);
 
-    const cube2 = new THREE.Mesh(geometry, material);
-    cube2.position.x = -5
-    scene.add(cube2);
+    // const cube2 = new THREE.Mesh(geometry, material);
+    // cube2.position.x = -5
+    // scene.add(cube2);
 
     // orbit.target.set(cube2.position.x, cube2.position.y, cube2.position.z)
 
@@ -117,6 +180,10 @@ export function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, c
             ThreeDmodel.rotation.x += config.AutorotateX || 0;
             ThreeDmodel.rotation.z += config.AutorotateZ || 0;
         }
+
+        dirLight.target.position.copy(camera.position);
+	    dirLight.target.position.y=0;
+	    dirLight.target.updateMatrixWorld();
     };
     animate();
 }

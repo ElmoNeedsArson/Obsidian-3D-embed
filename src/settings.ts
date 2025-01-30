@@ -15,6 +15,13 @@ export interface ThreeDEmbedSettings {
     autoShowGUI: boolean;
     stlWireframe: boolean;
     stlColor: string;
+    attachLightToCam: boolean;
+    standardLightColor: string;
+    standardlightStrength: number;
+    standardshowLight: boolean;
+    standardlightPosX: number;
+    standardlightPosY: number;
+    standardlightPosZ: number;
 }
 
 export const DEFAULT_SETTINGS: ThreeDEmbedSettings = {
@@ -30,7 +37,14 @@ export const DEFAULT_SETTINGS: ThreeDEmbedSettings = {
     cameraType: "Perspective",
     autoShowGUI: false,
     stlWireframe: false,
-    stlColor: "#606060"
+    stlColor: "#606060",
+    attachLightToCam: false,
+    standardLightColor: "#FFFFFF",
+    standardlightStrength: 1,
+    standardshowLight: false,
+    standardlightPosX: 5,
+    standardlightPosY: 10,
+    standardlightPosZ: 5
 };
 
 export class ThreeDSettingsTab extends PluginSettingTab {
@@ -44,6 +58,10 @@ export class ThreeDSettingsTab extends PluginSettingTab {
     display(): void {
         const { containerEl } = this;
         containerEl.empty();
+
+        containerEl.createEl('h6', {
+            text: 'Important Note: All the settings below are default settings, all parameters you set here can be modified in the codeblock of your embed per 3D file. These settings are here as the base value where every scene gets initialized with',
+        });
 
         containerEl.createEl('h2', {
             text: 'Config Options',
@@ -166,8 +184,6 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         })
             )
 
-            console.log(this.plugin.settings.cameraType.toString())
-
         new Setting(containerEl)
             .setName('Camera Type')
             .setDesc('Defaults a camera type. You can also set this per scene, in the codeblock config.')
@@ -225,6 +241,97 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                             this.plugin.settings.stlWireframe = value; // Update setting when toggled
                             await this.plugin.saveData(this.plugin.settings); // Save the new setting value
                         })
+            )
+
+        containerEl.createEl('h2', {
+            text: 'Lighting Settings',
+        });
+
+        new Setting(containerEl)
+        .setName('Attach a light to the camera')
+        .setDesc('If enabled, however you look at a model a light will point at it. This will overide a standard light in the scene, but will take the strength and color attributes')
+        .addToggle(
+            (toggle) =>
+                toggle
+                    .setValue(this.plugin.settings.attachLightToCam) // Set the initial value based on settings
+                    .onChange(async (value) => {
+                        this.plugin.settings.attachLightToCam = value; // Update setting when toggled
+                        await this.plugin.saveData(this.plugin.settings); // Save the new setting value
+                    })
+        )
+
+        new Setting(containerEl)
+            .setName('Standard light Color')
+            .setDesc('Default color for the lighting of the scene')
+            .addColorPicker(colorPicker =>
+                colorPicker.setValue(this.plugin.settings.standardLightColor)
+                    .onChange(async (value) => {
+                        this.plugin.settings.standardLightColor = value;
+                        await this.plugin.saveSettings();
+                    })
+
+            );
+
+        new Setting(containerEl)
+            .setName('Standard Light Strength')
+            .setDesc('The default strength of your light in the scene')
+            .addText(text =>
+                text
+                    .setValue(this.plugin.settings.standardlightStrength.toString())
+                    .onChange(async (value) => {
+                        const numValue = parseFloat(value)
+                        this.plugin.settings.standardlightStrength = numValue;
+                        await this.plugin.saveSettings();
+                    })
+
+            )
+
+        new Setting(containerEl)
+            .setName('Show the light in Scene')
+            .setDesc('If enabled, shows a sphere in the scene at the location of the light by default')
+            .addToggle(
+                (toggle) =>
+                    toggle
+                        .setValue(this.plugin.settings.standardshowLight) // Set the initial value based on settings
+                        .onChange(async (value) => {
+                            this.plugin.settings.standardshowLight = value; // Update setting when toggled
+                            await this.plugin.saveData(this.plugin.settings); // Save the new setting value
+                        })
+            )
+
+        new Setting(containerEl)
+            .setClass("ThreeDEmbed_Position_Inputs")
+            .setName('Standard Position Light')
+            .setDesc('The default position of the lightsource in your scene (X,Y,Z)')
+            .addText(text =>
+                text
+                    .setValue(this.plugin.settings.standardlightPosX.toString())
+                    .onChange(async (value) => {
+                        const numValue = parseFloat(value)
+                        this.plugin.settings.standardlightPosX = numValue;
+                        await this.plugin.saveSettings();
+                    })
+
+            )
+            .addText(text =>
+                text
+                    .setValue(this.plugin.settings.standardlightPosY.toString())
+                    .onChange(async (value) => {
+                        const numValue = parseFloat(value)
+                        this.plugin.settings.standardlightPosY = numValue;
+                        await this.plugin.saveSettings();
+                    })
+
+            )
+            .addText(text =>
+                text
+                    .setValue(this.plugin.settings.standardlightPosZ.toString())
+                    .onChange(async (value) => {
+                        const numValue = parseFloat(value)
+                        this.plugin.settings.standardlightPosZ = numValue;
+                        await this.plugin.saveSettings();
+                    })
+
             )
     }
 }

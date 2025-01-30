@@ -13,7 +13,7 @@ export function getUniqueId(ctx: MarkdownPostProcessorContext, el: HTMLElement):
 
 window.onerror = (message, source, lineno, colno, error) => {
     if (message?.toString().includes("'shaderSource' on 'WebGL2RenderingContext'")) {
-        console.log("erorrrrr")
+        // console.log("erorrrrr")
         new Notice("A rendering error occurred, too many instances at once, reload obsidian please", 10000)
         // disposeAllRenderers()
         // alert("A rendering error occurred. Please reload the application.");
@@ -22,27 +22,21 @@ window.onerror = (message, source, lineno, colno, error) => {
 
 
 export function getRenderer(blockId: string, instanceId: string, el: HTMLElement): THREE.WebGLRenderer {
-    console.log("1")
     if (!rendererPool.has(blockId)) {
         rendererPool.set(blockId, new Map());
     }
 
-    console.log("2")
     const blockRenderers = rendererPool.get(blockId)!;
 
-    console.log("3")
     if (blockRenderers.has(instanceId)) {
         return blockRenderers.get(instanceId)!;
     }
 
-    console.log("4")
     const renderer = new THREE.WebGLRenderer();
     renderer.setSize(el.clientWidth, el.clientHeight);
     el.appendChild(renderer.domElement);
 
-    console.log("5")
     blockRenderers.set(instanceId, renderer);
-    console.log("6")
     return renderer;
 }
 
@@ -63,7 +57,7 @@ function disposeRenderer(blockId: string, instanceId: string) {
             renderer.domElement?.parentNode?.removeChild(renderer.domElement);
             blockRenderers.delete(instanceId);
 
-            console.log(`Renderer for blockId ${blockId} instanceId ${instanceId} disposed.`);
+            // console.log(`Renderer for blockId ${blockId} instanceId ${instanceId} disposed.`);
         } catch (error) {
             console.error("Error disposing renderer:", error);
         }
@@ -88,7 +82,7 @@ function disposeAllRenderers() {
 
                 renderer.dispose();
                 renderer.domElement?.parentNode?.removeChild(renderer.domElement);
-                console.log(`Renderer for blockId ${blockId} instanceId ${instanceId} disposed.`);
+                // console.log(`Renderer for blockId ${blockId} instanceId ${instanceId} disposed.`);
             } catch (error) {
                 console.error(`Error disposing renderer for blockId ${blockId} instanceId ${instanceId}:`, error);
             }
@@ -97,7 +91,7 @@ function disposeAllRenderers() {
         // After disposing all renderers in the block, delete the block from the pool
         rendererPool.delete(blockId);
     }
-    console.log("All renderers have been disposed.");
+    // console.log("All renderers have been disposed.");
 }
 
 

@@ -25,13 +25,12 @@ export default class ThreeJSPlugin extends Plugin {
         ThreeD_Embed_Command(this)
 
         this.registerMarkdownCodeBlockProcessor('3D', (source, el, ctx) => {
-            console.log(el)
             // Combine file path, content, and linestart to create a unique ID
             const blockId = getUniqueId(ctx, el); // Block-level unique ID
             const instanceId = `${blockId}:${Date.now()}:${Math.random()}`; // Instance-level unique ID
 
-            const renderer = getRenderer(blockId, instanceId, el);
-            // const renderer = new THREE.WebGLRenderer
+            // const renderer = getRenderer(blockId, instanceId, el);
+            const renderer = new THREE.WebGLRenderer
 
             const child = new ThreeJSRendererChild(el, blockId, instanceId, this);
             ctx.addChild(child);
@@ -53,7 +52,7 @@ export default class ThreeJSPlugin extends Plugin {
                     showGuiOverlay: { name: "gui show", example: `"showGuiOverlay": true,` }
                 } as const;
 
-                // Validation errors
+                // Checks if required fields are there
                 const errors: string[] = [];
                 for (const [field, { name, example }] of Object.entries(requiredFields)) {
                     if (parsedData[field as keyof typeof parsedData] === undefined) {
@@ -70,7 +69,6 @@ export default class ThreeJSPlugin extends Plugin {
                     return;
                 }
 
-                // Rest of your code
                 const width = (ctx as any).el.clientWidth || 300;
                 initializeThreeJsScene(this, el, parsedData, modelPath, parsedData.name, width, ctx, renderer);
 

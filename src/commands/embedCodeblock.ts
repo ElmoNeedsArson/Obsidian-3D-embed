@@ -41,6 +41,12 @@ export function ThreeD_Embed_Command(plugin: ThreeJSPlugin) {
                 let objectColor = `,\n"stlColorHexString": "` + plugin.settings.stlColor.replace(/#/g, "") + `"`
                 let wireFrame = `,\n"stlWireframe":` + plugin.settings.stlWireframe
                 let backgroundColor = `,\n"backgroundColorHexString": "` + plugin.settings.standardColor.replace(/#/g, "") + `"`
+                
+                let attachLightToCam = `,\n"attachLightToCam": ` + plugin.settings.attachLightToCam
+                let lightColor = `,\n"lightColor": "` + plugin.settings.standardLightColor.replace(/#/g, "") + `"`
+                let lightStrength = `,\n"lightStrength":` + plugin.settings.standardlightStrength
+                let showLight = `,\n"showLight":` + plugin.settings.standardshowLight
+                let lightPos = `,\n"lightPosXYZ": [` + plugin.settings.standardlightPosX + `,` + plugin.settings.standardlightPosY + `,` + plugin.settings.standardlightPosZ + `]`
 
                 let cameraType = ""
                 if (plugin.settings.cameraType == "Orthographic") {
@@ -57,7 +63,7 @@ export function ThreeD_Embed_Command(plugin: ThreeJSPlugin) {
                 let codeBlockClosing = '\n}\n```\n'
                 let content = ""
                 if (plugin.settings.showConfig) {
-                    content = codeBlockType + name + GUI + rotation + autoRotate + position + showTransformControls + scale + objectColor + wireFrame + backgroundColor + cameraType + cameraPos + cameraLookat + showAxisHelper + showGridHelper + codeBlockClosing
+                    content = codeBlockType + name + GUI + rotation + autoRotate + position + showTransformControls + scale + objectColor + wireFrame + backgroundColor + attachLightToCam + lightColor + lightStrength + showLight + lightPos + cameraType + cameraPos + cameraLookat + showAxisHelper + showGridHelper + codeBlockClosing
                 } else if (!plugin.settings.showConfig) {
                     content = codeBlockType + name + GUI + rotation + position + backgroundColor + cameraPos + cameraLookat + codeBlockClosing
                 }

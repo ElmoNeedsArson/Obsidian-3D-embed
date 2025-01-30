@@ -80,12 +80,12 @@ export function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, c
 
     const dirLight = new THREE.DirectionalLight( lightColor, lightStrength );
 	dirLight.position.set(0, 10, 45);
-	dirLight.shadow.mapSize.set( 4096, 4096 );
-	dirLight.shadow.bias = -0.0005;
-	dirLight.shadow.camera.left =	-50;
-	dirLight.shadow.camera.right = 	50;
-	dirLight.shadow.camera.top = 	50;
-	dirLight.shadow.camera.bottom = -50;
+	// dirLight.shadow.mapSize.set( 4096, 4096 );
+	// dirLight.shadow.bias = -0.0005;
+	// dirLight.shadow.camera.left =	-50;
+	// dirLight.shadow.camera.right = 	50;
+	// dirLight.shadow.camera.top = 	50;
+	// dirLight.shadow.camera.bottom = -50;
 	dirLight.castShadow = true;
 
     if (config.attachLightToCam) {

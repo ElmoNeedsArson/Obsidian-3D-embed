@@ -120,19 +120,19 @@ export function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, c
 
     // orbit.target.set(cube2.position.x, cube2.position.y, cube2.position.z)
 
-    if (config.showTransformControls) {
+    // if (config.showTransformControls) {
 
-        controls.addEventListener('change', render);
-        controls.addEventListener('dragging-changed', function (event) {
-            orbit.enabled = !event.value;
-        });
+    //     controls.addEventListener('change', render);
+    //     controls.addEventListener('dragging-changed', function (event) {
+    //         orbit.enabled = !event.value;
+    //     });
 
-        scene.add(gizmo);
+    //     scene.add(gizmo);
 
-        function render() {
-            renderer.render(scene, camera);
-        }
-    }
+    //     function render() {
+    //         renderer.render(scene, camera);
+    //     }
+    // }
     applyCameraSettings(camera, config, orbit);
 
     // Load the model based on the extension
@@ -140,7 +140,7 @@ export function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, c
     let ThreeDmodel: THREE.Object3D | undefined;
     loadModel(plugin, scene, modelPath, modelExtension, config, (model) => {
         ThreeDmodel = model;
-        gui(plugin, config.showGuiOverlay, el, scene, axesHelper, gridHelper, controls, orbit, gizmo, camera, renderer, ctx, ThreeDmodel)
+        // gui(plugin, config.showGuiOverlay, el, scene, axesHelper, gridHelper, controls, orbit, gizmo, camera, renderer, ctx, ThreeDmodel)
     });
 
     // Resize function to update camera and renderer on container width change

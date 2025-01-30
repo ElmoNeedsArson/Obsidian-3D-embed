@@ -25,7 +25,7 @@ export interface ThreeDEmbedSettings {
 }
 
 export const DEFAULT_SETTINGS: ThreeDEmbedSettings = {
-    showConfig: false,
+    showConfig: true,
     standardColor: "#ADD8E6",
     standardScale: 0.5,
     standardEmbedHeight: 300,
@@ -136,6 +136,23 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         })
             )
 
+        // new Setting(containerEl)
+        //     .setName('Toggle Automatically show GUI (BETA) - Try playing around with this function in a seperate note')
+        //     .setDesc('If true, will show basic gui options for a scene (color selector, grid checkbox) upon model load. Can also be set in the codeblock config')
+        //     .addToggle(
+        //         (toggle) =>
+        //             toggle
+        //                 .setValue(this.plugin.settings.autoShowGUI) // Set the initial value based on settings
+        //                 .onChange(async (value) => {
+        //                     this.plugin.settings.autoShowGUI = value; // Update setting when toggled
+        //                     await this.plugin.saveData(this.plugin.settings); // Save the new setting value
+        //                 })
+        //     )
+
+        containerEl.createEl('h2', {
+            text: 'Standard Camera Settings',
+        });
+
         new Setting(containerEl)
             .setClass("ThreeDEmbed_Position_Inputs")
             .setName('Standard Position Camera')
@@ -200,19 +217,6 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                             await this.plugin.saveData(this.plugin.settings); // Save the new setting value
                         }));
 
-        new Setting(containerEl)
-            .setName('Toggle Automatically show GUI')
-            .setDesc('If true, will show basic gui options for a scene (color selector, grid checkbox) upon model load. Can also be set in the codeblock config')
-            .addToggle(
-                (toggle) =>
-                    toggle
-                        .setValue(this.plugin.settings.autoShowGUI) // Set the initial value based on settings
-                        .onChange(async (value) => {
-                            this.plugin.settings.autoShowGUI = value; // Update setting when toggled
-                            await this.plugin.saveData(this.plugin.settings); // Save the new setting value
-                        })
-            )
-
         containerEl.createEl('h2', {
             text: 'STL Type Options',
         });
@@ -248,17 +252,17 @@ export class ThreeDSettingsTab extends PluginSettingTab {
         });
 
         new Setting(containerEl)
-        .setName('Attach a light to the camera')
-        .setDesc('If enabled, however you look at a model a light will point at it. This will overide a standard light in the scene, but will take the strength and color attributes')
-        .addToggle(
-            (toggle) =>
-                toggle
-                    .setValue(this.plugin.settings.attachLightToCam) // Set the initial value based on settings
-                    .onChange(async (value) => {
-                        this.plugin.settings.attachLightToCam = value; // Update setting when toggled
-                        await this.plugin.saveData(this.plugin.settings); // Save the new setting value
-                    })
-        )
+            .setName('Attach a light to the camera')
+            .setDesc('If enabled, however you look at a model a light will point at it. This will overide a standard light in the scene, but will take the strength and color attributes')
+            .addToggle(
+                (toggle) =>
+                    toggle
+                        .setValue(this.plugin.settings.attachLightToCam) // Set the initial value based on settings
+                        .onChange(async (value) => {
+                            this.plugin.settings.attachLightToCam = value; // Update setting when toggled
+                            await this.plugin.saveData(this.plugin.settings); // Save the new setting value
+                        })
+            )
 
         new Setting(containerEl)
             .setName('Standard light Color')

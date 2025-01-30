@@ -49,7 +49,7 @@ export default class ThreeJSPlugin extends Plugin {
                     camPosXYZ: { name: "camera Position", example: `"camPosXYZ": [0,5.000000000000002,10],` },
                     LookatXYZ: { name: "camera lookAt", example: `"LookatXYZ": [0,0,0],` },
                     backgroundColorHexString: { name: "background color", example: `"backgroundColorHexString": "80bcd6",` },
-                    showGuiOverlay: { name: "gui show", example: `"showGuiOverlay": true,` }
+                    // showGuiOverlay: { name: "gui show", example: `"showGuiOverlay": true,` }
                 } as const;
 
                 // Checks if required fields are there

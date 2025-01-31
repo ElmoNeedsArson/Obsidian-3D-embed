@@ -145,7 +145,7 @@ export function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, c
     let ThreeDmodel: THREE.Object3D | undefined;
     loadModel(plugin, scene, modelPath, modelExtension, config, (model) => {
         ThreeDmodel = model;
-        // gui(plugin, config.showGuiOverlay, el, scene, axesHelper, gridHelper, controls, orbit, gizmo, camera, renderer, ctx, ThreeDmodel)
+        gui(plugin, config.showGuiOverlay, el, scene, axesHelper, gridHelper, controls, orbit, gizmo, camera, renderer, ctx, ThreeDmodel)
     });
 
     // Resize function to update camera and renderer on container width change

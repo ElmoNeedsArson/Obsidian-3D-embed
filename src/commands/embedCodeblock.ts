@@ -32,7 +32,7 @@ export function ThreeD_Embed_Command(plugin: ThreeJSPlugin) {
                 let autorotateY = plugin.settings.autoRotate ? 0.001 : 0
                 let codeBlockType = "\n```3D\n{"
                 let name = `\n"name": "` + selection + `"`
-                // let GUI = `,\n"showGuiOverlay": ` + plugin.settings.autoShowGUI
+                let GUI = `,\n"showGuiOverlay": ` + plugin.settings.autoShowGUI
                 let rotation = `,\n"rotationX": 0, "rotationY": 0, "rotationZ": 0`
                 let autoRotate = `,\n"AutorotateX": 0, "AutorotateY":` + autorotateY + `, "AutorotateZ": 0`
                 let position = `,\n"positionX": 0, "positionY": 0, "positionZ": 0`
@@ -66,7 +66,7 @@ export function ThreeD_Embed_Command(plugin: ThreeJSPlugin) {
                 let codeBlockClosing = '\n}\n```\n'
                 let content = ""
                 if (plugin.settings.showConfig) {
-                    content = codeBlockType + name + rotation + autoRotate + position + scale + objectColor + wireFrame + backgroundColor + attachLightToCam + lightColor_AttachedCam + lightStrength_AttachedCam + lightColor + lightStrength + showLight + lightPos + cameraType + cameraPos + cameraLookat + showAxisHelper + showGridHelper + codeBlockClosing
+                    content = codeBlockType + name + GUI + rotation + autoRotate + position + scale + objectColor + wireFrame + backgroundColor + attachLightToCam + lightColor_AttachedCam + lightStrength_AttachedCam + lightColor + lightStrength + showLight + lightPos + cameraType + cameraPos + cameraLookat + showAxisHelper + showGridHelper + codeBlockClosing
                 } else if (!plugin.settings.showConfig) {
                     content = codeBlockType + name + rotation + position + backgroundColor + cameraPos + cameraLookat + codeBlockClosing
                 }

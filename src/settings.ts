@@ -140,18 +140,18 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         })
             )
 
-        // new Setting(containerEl)
-        //     .setName('Toggle Automatically show GUI (BETA) - Try playing around with this function in a seperate note')
-        //     .setDesc('If true, will show basic gui options for a scene (color selector, grid checkbox) upon model load. Can also be set in the codeblock config')
-        //     .addToggle(
-        //         (toggle) =>
-        //             toggle
-        //                 .setValue(this.plugin.settings.autoShowGUI) // Set the initial value based on settings
-        //                 .onChange(async (value) => {
-        //                     this.plugin.settings.autoShowGUI = value; // Update setting when toggled
-        //                     await this.plugin.saveData(this.plugin.settings); // Save the new setting value
-        //                 })
-        //     )
+        new Setting(containerEl)
+            .setName('Toggle Automatically show GUI (BETA) - Try playing around with this function in a seperate note')
+            .setDesc('If true, will show basic gui options for a scene (color selector, grid checkbox) upon model load. Can also be set in the codeblock config')
+            .addToggle(
+                (toggle) =>
+                    toggle
+                        .setValue(this.plugin.settings.autoShowGUI) // Set the initial value based on settings
+                        .onChange(async (value) => {
+                            this.plugin.settings.autoShowGUI = value; // Update setting when toggled
+                            await this.plugin.saveData(this.plugin.settings); // Save the new setting value
+                        })
+            )
 
         containerEl.createEl('h2', {
             text: 'Standard Camera Settings',

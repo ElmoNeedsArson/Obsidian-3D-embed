@@ -12,7 +12,6 @@ If your plugin does not need CSS, delete this file.
 }
 
 .buttonInput_Reload {
-    font-size: 1rem;
     position: absolute;
     top: 9px;
     right: 10px;

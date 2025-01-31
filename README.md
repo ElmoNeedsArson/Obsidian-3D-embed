@@ -60,10 +60,13 @@ Beside the basic configuration, these are lines you can add for more control:
 #### Generic Scene Settings
 To rotate your model automatically on any axis
 `"AutorotateX": 0, "AutorotateY":0, "AutorotateZ": 0,`
+
 To set the scale of your model
 `"scale": "0.5",`
+
 To change the camera to an orthographic camera rather than a perspective camera
 `"orthographic": false,`
+
 To show scene helpers such as a grid or the main axis
 `"showAxisHelper": false, "length": 5,`
 `"showGridHelper": false, "gridSize": 10,`

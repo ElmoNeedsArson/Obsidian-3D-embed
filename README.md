@@ -120,7 +120,9 @@ Be changing this option in your config to true
 ```
 "showGuiOverlay": false,
 ```
-You can use transform controls and color pickers to finetune your scene a bit better. 
+You can use transform controls and color pickers to finetune your scene a bit better. See the images below, you have a color picker, a rotation tool, a position tool and moving the camera. When clicking 'apply&reload' the scene will be saved as is in the config. But you can also reset it if you mess up somehow.  
+![image](https://github.com/user-attachments/assets/ba911e8d-80c5-48ba-9698-bd534ffb9f4c)
+![image](https://github.com/user-attachments/assets/edcacab3-1fdb-4e4a-b742-455026eecd64)
 
 ## Standard Settings
 Use the settings tab, to alter standard settings such as background color, size of 3D embed, or scale of the model. 

@@ -80,28 +80,18 @@ export function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, c
 
     const dirLight = new THREE.DirectionalLight( lightColor, lightStrength );
 	dirLight.position.set(0, 10, 45);
-	// dirLight.shadow.mapSize.set( 4096, 4096 );
-	// dirLight.shadow.bias = -0.0005;
-	// dirLight.shadow.camera.left =	-50;
-	// dirLight.shadow.camera.right = 	50;
-	// dirLight.shadow.camera.top = 	50;
-	// dirLight.shadow.camera.bottom = -50;
 	dirLight.castShadow = true;
 
     if (config.attachLightToCam) {
         camera.add( dirLight );
-        scene.remove(lightIndicator)
-        //camera.add(light)
+        // scene.remove(lightIndicator)
     } else {
-        scene.add(light);
+        
     }
 
-    scene.add(camera)
+    scene.add(light);
 
-    // const ambientlight = new THREE.AmbientLight( 0x404040 , 10); // soft white light
-    //const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 1);
-    // ambientlight.position.set(0,10,0)
-    //scene.add( hemisphereLight );
+    scene.add(camera)
     //LIGHTING SETUP ----------------------------------------------------------------------
 
     const orbit = new OrbitControls(camera, renderer.domElement);

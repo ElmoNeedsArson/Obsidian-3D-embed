@@ -253,7 +253,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName('Attach a light to the camera')
-            .setDesc('If enabled, however you look at a model a light will point at it. This will overide a standard light in the scene, but will take the strength and color attributes')
+            .setDesc('If enabled, however you look at a model a light will point at it. It will take the strength and color attributes of the scene light')
             .addToggle(
                 (toggle) =>
                     toggle

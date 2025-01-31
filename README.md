@@ -114,6 +114,14 @@ Settings to attach a light to the camera, its color and intensity.
 "lightStrength_AttachedCam":1,
 ```
 
+### GUI (BETA)
+Now working with a codeblock might be a tad annoying to finetune your models. So I've been working on a GUI that allows you to change some of the parameters with more ease. 
+Be changing this option in your config to true
+```
+"showGuiOverlay": false,
+```
+You can use transform controls and color pickers to finetune your scene a bit better. 
+
 ## Standard Settings
 Use the settings tab, to alter standard settings such as background color, size of 3D embed, or scale of the model. 
 ![image](https://github.com/user-attachments/assets/b7df88bf-75e2-4066-a685-8dfa11478816)

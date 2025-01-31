@@ -34,16 +34,9 @@ export function getRenderer(blockId: string, instanceId: string, el: HTMLElement
 
 const disposingRenderers = new Set<string>(); // Track renderers currently being disposed
 
-async function disposeRenderer(blockId: string, instanceId: string) {
-    const key = `${blockId}:${instanceId}`;
-    if (disposingRenderers.has(key)) return; // Prevent multiple disposals at once
-    disposingRenderers.add(key);
-
+function disposeRenderer(blockId: string, instanceId: string) {
     const blockRenderers = rendererPool.get(blockId);
-    if (!blockRenderers) {
-        disposingRenderers.delete(key);
-        return;
-    }
+    if (!blockRenderers) return;
 
     const renderer = blockRenderers.get(instanceId);
     if (renderer) {
@@ -51,25 +44,22 @@ async function disposeRenderer(blockId: string, instanceId: string) {
             const gl = renderer.getContext();
             if (gl) {
                 const loseContextExtension = gl.getExtension("WEBGL_lose_context");
-                if (loseContextExtension) {
-                    loseContextExtension.loseContext();
-                    await new Promise((resolve) => setTimeout(resolve, 100)); // Ensure context is lost
-                }
+                if (loseContextExtension) loseContextExtension.loseContext();
             }
 
             renderer.dispose();
             renderer.domElement?.parentNode?.removeChild(renderer.domElement);
             blockRenderers.delete(instanceId);
+
+            // console.log(Renderer for blockId ${blockId} instanceId ${instanceId} disposed.);
         } catch (error) {
-            // console.error("Error disposing renderer:", error);
+            console.error("Error disposing renderer:", error);
         }
     }
 
     if (blockRenderers.size === 0) {
         rendererPool.delete(blockId);
     }
-
-    disposingRenderers.delete(key);
 }
 
 // function disposeAllRenderers() {

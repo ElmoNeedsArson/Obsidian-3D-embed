@@ -34,7 +34,7 @@ This codeblock will allow you to modify settings for this block only. If you wan
 
 ## Minimal Configuration
 A codeblock should minimally contain these values:
-```js
+```JSON
 ```3D
 {
 "name": "model.stl",

@@ -72,25 +72,37 @@ To change the camera to an orthographic camera rather than a perspective camera
 ```
 
 To show scene helpers such as a grid or the main axis
-`"showAxisHelper": false, "length": 5,`
-`"showGridHelper": false, "gridSize": 10,`
+```
+"showAxisHelper": false, "length": 5,
+```
+```
+"showGridHelper": false, "gridSize": 10,
+```
 
 #### STL Configurations
 To allow the stl model to be seen in wireframe mode and change the color
-`"stlColorHexString": "ffffff",`
-`"stlWireframe":true,`
+```
+"stlColorHexString": "ffffff",
+```
+```
+"stlWireframe":true,
+```
 
 #### Lighting Configuration
 Lighting settings such as color, strength, position and whether you can see a sphere at the location of the light
-`"lightColor": "ffffff",`
-`"lightStrength":1,`
-`"showLight":false,`
-`"lightPosXYZ": [5,10,5],`
+```
+"lightColor": "ffffff",
+"lightStrength":1,
+"showLight":false,
+"lightPosXYZ": [5,10,5],
+```
 
 Settings to attach a light to the camera, its color and intensity. 
-`"attachLightToCam": false,`
-`"lightColor_AttachedCam": "FFFFFF",`
-`"lightStrength_AttachedCam":1,`
+```
+"attachLightToCam": false,
+"lightColor_AttachedCam": "FFFFFF",
+"lightStrength_AttachedCam":1,
+```
 
 ## Standard Settings
 Use the settings tab, to alter standard settings such as background color, size of 3D embed, or scale of the model. 

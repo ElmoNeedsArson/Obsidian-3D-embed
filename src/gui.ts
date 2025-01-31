@@ -15,7 +15,7 @@ export function gui(plugin: ThreeJSPlugin, guiShow: boolean, el: HTMLElement, sc
 
             let reset = document.createElement('button');
             reset.addClass("buttonInput_Reset")
-            reset.innerText = "Reset Rotation/Position"
+            reset.innerText = "Reset"
             el.appendChild(reset)
 
             let colorInput = document.createElement('input');

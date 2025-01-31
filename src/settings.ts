@@ -16,6 +16,8 @@ export interface ThreeDEmbedSettings {
     stlWireframe: boolean;
     stlColor: string;
     attachLightToCam: boolean;
+    standardLightColor_AttachedCam: string;
+    standardlightStrength_AttachedCam: number;
     standardLightColor: string;
     standardlightStrength: number;
     standardshowLight: boolean;
@@ -39,6 +41,8 @@ export const DEFAULT_SETTINGS: ThreeDEmbedSettings = {
     stlWireframe: false,
     stlColor: "#606060",
     attachLightToCam: false,
+    standardLightColor_AttachedCam: "#FFFFFF",
+    standardlightStrength_AttachedCam: 1,
     standardLightColor: "#FFFFFF",
     standardlightStrength: 1,
     standardshowLight: false,
@@ -218,36 +222,6 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         }));
 
         containerEl.createEl('h2', {
-            text: 'STL Type Options',
-        });
-
-        new Setting(containerEl)
-            .setName('Standard model color')
-            .setDesc('Default the model color for stl models')
-            .addColorPicker(colorPicker =>
-                colorPicker.setValue(this.plugin.settings.stlColor)
-                    .onChange(async (value) => {
-                        this.plugin.settings.stlColor = value;
-                        await this.plugin.saveSettings();
-                    })
-
-            );
-
-
-        new Setting(containerEl)
-            .setName('Standard show wireframe mode')
-            .setDesc('If true, will show all .STL models with a wireframe mode.')
-            .addToggle(
-                (toggle) =>
-                    toggle
-                        .setValue(this.plugin.settings.stlWireframe) // Set the initial value based on settings
-                        .onChange(async (value) => {
-                            this.plugin.settings.stlWireframe = value; // Update setting when toggled
-                            await this.plugin.saveData(this.plugin.settings); // Save the new setting value
-                        })
-            )
-
-        containerEl.createEl('h2', {
             text: 'Lighting Settings',
         });
 
@@ -262,6 +236,32 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                             this.plugin.settings.attachLightToCam = value; // Update setting when toggled
                             await this.plugin.saveData(this.plugin.settings); // Save the new setting value
                         })
+            )
+
+        new Setting(containerEl)
+            .setName('Standard light Color Attached to camera')
+            .setDesc('Default color for the lightsource that is attached to the camera')
+            .addColorPicker(colorPicker =>
+                colorPicker.setValue(this.plugin.settings.standardLightColor_AttachedCam)
+                    .onChange(async (value) => {
+                        this.plugin.settings.standardLightColor_AttachedCam = value;
+                        await this.plugin.saveSettings();
+                    })
+
+            );
+
+        new Setting(containerEl)
+            .setName('Standard Light Strength')
+            .setDesc('The default strength of your light attached to the camera')
+            .addText(text =>
+                text
+                    .setValue(this.plugin.settings.standardlightStrength_AttachedCam.toString())
+                    .onChange(async (value) => {
+                        const numValue = parseFloat(value)
+                        this.plugin.settings.standardlightStrength_AttachedCam = numValue;
+                        await this.plugin.saveSettings();
+                    })
+
             )
 
         new Setting(containerEl)
@@ -336,6 +336,36 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         await this.plugin.saveSettings();
                     })
 
+            )
+
+        containerEl.createEl('h2', {
+            text: 'STL Type Options',
+        });
+
+        new Setting(containerEl)
+            .setName('Standard model color')
+            .setDesc('Default the model color for stl models')
+            .addColorPicker(colorPicker =>
+                colorPicker.setValue(this.plugin.settings.stlColor)
+                    .onChange(async (value) => {
+                        this.plugin.settings.stlColor = value;
+                        await this.plugin.saveSettings();
+                    })
+
+            );
+
+
+        new Setting(containerEl)
+            .setName('Standard show wireframe mode')
+            .setDesc('If true, will show all .STL models with a wireframe mode.')
+            .addToggle(
+                (toggle) =>
+                    toggle
+                        .setValue(this.plugin.settings.stlWireframe) // Set the initial value based on settings
+                        .onChange(async (value) => {
+                            this.plugin.settings.stlWireframe = value; // Update setting when toggled
+                            await this.plugin.saveData(this.plugin.settings); // Save the new setting value
+                        })
             )
     }
 }

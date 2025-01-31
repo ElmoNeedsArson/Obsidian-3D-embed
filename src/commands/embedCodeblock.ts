@@ -43,6 +43,9 @@ export function ThreeD_Embed_Command(plugin: ThreeJSPlugin) {
                 let backgroundColor = `,\n"backgroundColorHexString": "` + plugin.settings.standardColor.replace(/#/g, "") + `"`
                 
                 let attachLightToCam = `,\n"attachLightToCam": ` + plugin.settings.attachLightToCam
+                let lightColor_AttachedCam = `,\n"lightColor_AttachedCam": "` + plugin.settings.standardLightColor_AttachedCam.replace(/#/g, "") + `"`
+                let lightStrength_AttachedCam = `,\n"lightStrength_AttachedCam":` + plugin.settings.standardlightStrength_AttachedCam
+
                 let lightColor = `,\n"lightColor": "` + plugin.settings.standardLightColor.replace(/#/g, "") + `"`
                 let lightStrength = `,\n"lightStrength":` + plugin.settings.standardlightStrength
                 let showLight = `,\n"showLight":` + plugin.settings.standardshowLight
@@ -63,7 +66,7 @@ export function ThreeD_Embed_Command(plugin: ThreeJSPlugin) {
                 let codeBlockClosing = '\n}\n```\n'
                 let content = ""
                 if (plugin.settings.showConfig) {
-                    content = codeBlockType + name + rotation + autoRotate + position + scale + objectColor + wireFrame + backgroundColor + attachLightToCam + lightColor + lightStrength + showLight + lightPos + cameraType + cameraPos + cameraLookat + showAxisHelper + showGridHelper + codeBlockClosing
+                    content = codeBlockType + name + rotation + autoRotate + position + scale + objectColor + wireFrame + backgroundColor + attachLightToCam + lightColor_AttachedCam + lightStrength_AttachedCam + lightColor + lightStrength + showLight + lightPos + cameraType + cameraPos + cameraLookat + showAxisHelper + showGridHelper + codeBlockClosing
                 } else if (!plugin.settings.showConfig) {
                     content = codeBlockType + name + rotation + position + backgroundColor + cameraPos + cameraLookat + codeBlockClosing
                 }

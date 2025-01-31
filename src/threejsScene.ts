@@ -78,7 +78,22 @@ export function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, c
         }
     }
 
-    const dirLight = new THREE.DirectionalLight( lightColor, lightStrength );
+    let lightColor_AttachedCam;
+    let lightStrength_AttachedCam;
+
+    if (config.lightStrength_AttachedCam) {
+        lightStrength_AttachedCam = config.lightStrength_AttachedCam
+    } else {
+        lightStrength_AttachedCam = plugin.settings.standardlightStrength_AttachedCam || 1
+    }
+
+    if (config.lightColor_AttachedCam) {
+        lightColor_AttachedCam = "#" + config.lightColor_AttachedCam
+    } else {
+        lightColor_AttachedCam = plugin.settings.standardLightColor_AttachedCam || 0xFFFFFF
+    }
+
+    const dirLight = new THREE.DirectionalLight( lightColor_AttachedCam, lightStrength_AttachedCam );
 	dirLight.position.set(0, 10, 45);
 	dirLight.castShadow = true;
 

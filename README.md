@@ -35,7 +35,6 @@ This codeblock will allow you to modify settings for this block only. If you wan
 ## Minimal Configuration
 A codeblock should minimally contain these values:
 ```JSON
-```3D
 {
 "name": "model.stl",
 "rotationX": 0, "rotationY": 0, "rotationZ": 0,
@@ -44,7 +43,6 @@ A codeblock should minimally contain these values:
 "camPosXYZ": [0,5,10],
 "LookatXYZ": [0,0,0]
 }
-'''
 ```
 
 > [!Important]
@@ -59,13 +57,19 @@ Beside the basic configuration, these are lines you can add for more control:
 
 #### Generic Scene Settings
 To rotate your model automatically on any axis
-`"AutorotateX": 0, "AutorotateY":0, "AutorotateZ": 0,`
+```
+"AutorotateX": 0, "AutorotateY":0, "AutorotateZ": 0,
+```
 
 To set the scale of your model
-`"scale": "0.5",`
+```
+"scale": "0.5",
+```
 
 To change the camera to an orthographic camera rather than a perspective camera
-`"orthographic": false,`
+```
+"orthographic": false,
+```
 
 To show scene helpers such as a grid or the main axis
 `"showAxisHelper": false, "length": 5,`

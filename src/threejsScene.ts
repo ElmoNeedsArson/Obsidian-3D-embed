@@ -106,10 +106,10 @@ export function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, c
         
     }
 
-    console.log(lightStrength)
+    // console.log(lightStrength)
 
     if(lightStrength != 0){
-        console.log("Hi")
+        // console.log("Hi")
         scene.add(light);
     }
 

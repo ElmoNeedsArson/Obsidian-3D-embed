@@ -60,6 +60,8 @@ export function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, c
 
     if (config.lightStrength) {
         lightStrength = config.lightStrength
+    } else if (config.lightStrength == 0) {
+        lightStrength = 0
     } else {
         lightStrength = plugin.settings.standardlightStrength || 1
     }
@@ -104,7 +106,12 @@ export function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, c
         
     }
 
-    scene.add(light);
+    console.log(lightStrength)
+
+    if(lightStrength != 0){
+        console.log("Hi")
+        scene.add(light);
+    }
 
     scene.add(camera)
     //LIGHTING SETUP ----------------------------------------------------------------------

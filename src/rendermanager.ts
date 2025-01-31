@@ -1,6 +1,6 @@
 import { MarkdownPostProcessorContext, MarkdownRenderChild, Notice } from 'obsidian';
 import * as THREE from 'three';
-import ThreeJSPlugin from "./main"; 
+import ThreeJSPlugin from "./main";
 
 let rendererPool: Map<string, Map<string, THREE.WebGLRenderer>> = new Map();
 
@@ -11,16 +11,6 @@ export function getUniqueId(ctx: MarkdownPostProcessorContext, el: HTMLElement):
     return instanceId;
 }
 
-window.onerror = (message, source, lineno, colno, error) => {
-    if (message?.toString().includes("'shaderSource' on 'WebGL2RenderingContext'")) {
-        // console.log("erorrrrr")
-        new Notice("A rendering error occurred, too many instances at once, reload obsidian please", 10000)
-        // disposeAllRenderers()
-        // alert("A rendering error occurred. Please reload the application.");
-    }
-};
-
-
 export function getRenderer(blockId: string, instanceId: string, el: HTMLElement): THREE.WebGLRenderer {
     if (!rendererPool.has(blockId)) {
         rendererPool.set(blockId, new Map());
@@ -28,8 +18,10 @@ export function getRenderer(blockId: string, instanceId: string, el: HTMLElement
 
     const blockRenderers = rendererPool.get(blockId)!;
 
-    if (blockRenderers.has(instanceId)) {
-        return blockRenderers.get(instanceId)!;
+    // If a renderer is currently being disposed, wait before creating a new one
+    if (disposingRenderers.has(`${blockId}:${instanceId}`)) {
+        // console.warn(`Waiting for disposal to complete before creating a new renderer for ${blockId}`);
+        return blockRenderers.get(Array.from(blockRenderers.keys())[0])!; // Reuse an existing one if available
     }
 
     const renderer = new THREE.WebGLRenderer();
@@ -40,9 +32,18 @@ export function getRenderer(blockId: string, instanceId: string, el: HTMLElement
     return renderer;
 }
 
-function disposeRenderer(blockId: string, instanceId: string) {
+const disposingRenderers = new Set<string>(); // Track renderers currently being disposed
+
+async function disposeRenderer(blockId: string, instanceId: string) {
+    const key = `${blockId}:${instanceId}`;
+    if (disposingRenderers.has(key)) return; // Prevent multiple disposals at once
+    disposingRenderers.add(key);
+
     const blockRenderers = rendererPool.get(blockId);
-    if (!blockRenderers) return;
+    if (!blockRenderers) {
+        disposingRenderers.delete(key);
+        return;
+    }
 
     const renderer = blockRenderers.get(instanceId);
     if (renderer) {
@@ -50,50 +51,52 @@ function disposeRenderer(blockId: string, instanceId: string) {
             const gl = renderer.getContext();
             if (gl) {
                 const loseContextExtension = gl.getExtension("WEBGL_lose_context");
-                if (loseContextExtension) loseContextExtension.loseContext();
+                if (loseContextExtension) {
+                    loseContextExtension.loseContext();
+                    await new Promise((resolve) => setTimeout(resolve, 100)); // Ensure context is lost
+                }
             }
 
             renderer.dispose();
             renderer.domElement?.parentNode?.removeChild(renderer.domElement);
             blockRenderers.delete(instanceId);
-
-            // console.log(`Renderer for blockId ${blockId} instanceId ${instanceId} disposed.`);
         } catch (error) {
-            console.error("Error disposing renderer:", error);
+            // console.error("Error disposing renderer:", error);
         }
     }
 
     if (blockRenderers.size === 0) {
         rendererPool.delete(blockId);
     }
+
+    disposingRenderers.delete(key);
 }
 
-function disposeAllRenderers() {
-    // Iterate over all blockIds in the rendererPool
-    for (const [blockId, blockRenderers] of rendererPool.entries()) {
-        // Iterate over all instanceIds in the blockRenderers map
-        for (const [instanceId, renderer] of blockRenderers.entries()) {
-            try {
-                const gl = renderer.getContext();
-                if (gl) {
-                    const loseContextExtension = gl.getExtension("WEBGL_lose_context");
-                    if (loseContextExtension) loseContextExtension.loseContext();
-                }
+// function disposeAllRenderers() {
+//     // Iterate over all blockIds in the rendererPool
+//     for (const [blockId, blockRenderers] of rendererPool.entries()) {
+//         // Iterate over all instanceIds in the blockRenderers map
+//         for (const [instanceId, renderer] of blockRenderers.entries()) {
+//             try {
+//                 const gl = renderer.getContext();
+//                 if (gl) {
+//                     const loseContextExtension = gl.getExtension("WEBGL_lose_context");
+//                     if (loseContextExtension) loseContextExtension.loseContext();
+//                 }
 
-                renderer.dispose();
-                renderer.domElement?.parentNode?.removeChild(renderer.domElement);
-                // console.log(`Renderer for blockId ${blockId} instanceId ${instanceId} disposed.`);
-            } catch (error) {
-                console.error(`Error disposing renderer for blockId ${blockId} instanceId ${instanceId}:`, error);
-            }
-        }
+//                 renderer.dispose();
+//                 renderer.domElement?.parentNode?.removeChild(renderer.domElement);
+//                 // console.log(`Renderer for blockId ${blockId} instanceId ${instanceId} disposed.`);
+//             } catch (error) {
+//                 // console.error(`Error disposing renderer for blockId ${blockId} instanceId ${instanceId}:`, error);
+//             }
+//         }
 
-        // After disposing all renderers in the block, delete the block from the pool
-        rendererPool.delete(blockId);
-    }
-    // console.log("All renderers have been disposed.");
-}
-
+//         // After disposing all renderers in the block, delete the block from the pool
+//         rendererPool.delete(blockId);
+//     }
+//     // console.log("All renderers have been disposed.");
+// }
 
 export class ThreeJSRendererChild extends MarkdownRenderChild {
     blockId: string;

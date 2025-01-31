@@ -172,13 +172,21 @@ export function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, c
 
     // Animation loop
     const animate = () => {
+        if(renderer.getContext().isContextLost()){
+            return
+        }
         if (ThreeDmodel) {
             controls.attach(ThreeDmodel);
         }
         requestAnimationFrame(animate);
 
         orbit.update()
-        renderer.render(scene, camera);
+        if (renderer && renderer.getContext().isContextLost()) {
+            console.warn('Skipping rendering due to lost context');
+        } else {
+            renderer.render(scene, camera);
+        }
+        // renderer.render(scene, camera);
 
         if (ThreeDmodel) {
             ThreeDmodel.rotation.y += config.AutorotateY || 0;

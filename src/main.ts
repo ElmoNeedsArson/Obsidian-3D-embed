@@ -29,8 +29,8 @@ export default class ThreeJSPlugin extends Plugin {
             const blockId = getUniqueId(ctx, el); // Block-level unique ID
             const instanceId = `${blockId}:${Date.now()}:${Math.random()}`; // Instance-level unique ID
 
-            // const renderer = getRenderer(blockId, instanceId, el);
-            const renderer = new THREE.WebGLRenderer
+            const renderer = getRenderer(blockId, instanceId, el);
+            // const renderer = new THREE.WebGLRenderer
 
             const child = new ThreeJSRendererChild(el, blockId, instanceId, this);
             ctx.addChild(child);

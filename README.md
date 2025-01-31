@@ -55,7 +55,7 @@ Look at the codeblock to alter minor things in the scene. It shows all the confi
 
 Beside the basic configuration, these are lines you can add for more control:
 
-#### Generic Scene Settings
+### Generic Scene Settings
 To rotate your model automatically on any axis
 ```
 "AutorotateX": 0, "AutorotateY":0, "AutorotateZ": 0,
@@ -79,7 +79,7 @@ To show scene helpers such as a grid or the main axis
 "showGridHelper": false, "gridSize": 10,
 ```
 
-#### STL Configurations
+### STL Configurations
 To allow the stl model to be seen in wireframe mode and change the color
 ```
 "stlColorHexString": "ffffff",
@@ -88,19 +88,29 @@ To allow the stl model to be seen in wireframe mode and change the color
 "stlWireframe":true,
 ```
 
-#### Lighting Configuration
+### Lighting Configuration
 Lighting settings such as color, strength, position and whether you can see a sphere at the location of the light
 ```
 "lightColor": "ffffff",
+```
+```
 "lightStrength":1,
+```
+```
 "showLight":false,
+```
+```
 "lightPosXYZ": [5,10,5],
 ```
 
 Settings to attach a light to the camera, its color and intensity. 
 ```
 "attachLightToCam": false,
+```
+```
 "lightColor_AttachedCam": "FFFFFF",
+```
+```
 "lightStrength_AttachedCam":1,
 ```
 

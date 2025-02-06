@@ -24,6 +24,13 @@ export interface ThreeDEmbedSettings {
     standardlightPosX: number;
     standardlightPosY: number;
     standardlightPosZ: number;
+
+    lightSettings: {
+        dropdownValue: string;
+        position: [number, number, number];
+        intensity: number;
+        color: string;
+    }[];
 }
 
 export const DEFAULT_SETTINGS: ThreeDEmbedSettings = {
@@ -48,7 +55,16 @@ export const DEFAULT_SETTINGS: ThreeDEmbedSettings = {
     standardshowLight: false,
     standardlightPosX: 5,
     standardlightPosY: 10,
-    standardlightPosZ: 5
+    standardlightPosZ: 5,
+
+    lightSettings: [
+        {
+            dropdownValue: "directional", // Default light type
+            position: [0, 5, 10], // Default position
+            intensity: 1, // Default light strength
+            color: "#FFFFFF", // Default light color
+        }
+    ]
 };
 
 export class ThreeDSettingsTab extends PluginSettingTab {
@@ -65,6 +81,97 @@ export class ThreeDSettingsTab extends PluginSettingTab {
 
         containerEl.createEl('h6', {
             text: 'Important Note: All the settings below are default settings, all parameters you set here can be modified in the codeblock of your embed per 3D file. These settings are here as the base value where every scene gets initialized with',
+        });
+
+        containerEl.createEl("h2", { text: "Lighting Settings" });
+
+        new Setting(containerEl)
+            .setName("Add Lights")
+            .setDesc("Click to add a new light.")
+            .addButton((button) => {
+                button.setButtonText("+").onClick(() => {
+                    this.plugin.settings.lightSettings.push({
+                        dropdownValue: "",
+                        position: [0, 0, 0],
+                        intensity: 1,
+                        color: "#ffffff",
+                    });
+                    this.plugin.saveData(this.plugin.settings);
+                    this.display(); // Refresh UI
+                });
+            });
+
+        // Iterate over each light setting and create UI elements
+        this.plugin.settings.lightSettings.forEach((light, index) => {
+            const lightDiv = containerEl.createDiv({ cls: "light-setting" });
+
+            // Create collapsible section
+            const details = lightDiv.createEl("details");
+            const summary = details.createEl("summary", { text: `Light #${index + 1}` });
+            
+            // Light Type Dropdown
+            new Setting(details)
+                .setName("Light Type")
+                .addDropdown((dropdown) => {
+                    dropdown.addOptions({
+                        point: "Point",
+                        directional: "Directional"
+                    });
+                    dropdown.setValue(light.dropdownValue);
+                    dropdown.onChange(async (value) => {
+                        light.dropdownValue = value;
+                        await this.plugin.saveData(this.plugin.settings);
+                    });
+                });
+        
+            // Position Inputs
+            const positionDiv = details.createDiv({ cls: "position-group" });
+            ["X", "Y", "Z"].forEach((axis, i) => {
+                const input = document.createElement("input");
+                input.type = "number";
+                input.value = light.position[i].toString();
+                input.placeholder = axis;
+                input.addEventListener("change", async (event) => {
+                    light.position[i] = parseFloat((event.target as HTMLInputElement).value);
+                    await this.plugin.saveData(this.plugin.settings);
+                });
+                positionDiv.appendChild(input);
+            });
+        
+            // Light Intensity
+            new Setting(details)
+                .setName("Light Intensity")
+                .addText((text) => {
+                    text.inputEl.type = "number";
+                    text.setValue(light.intensity.toString());
+                    text.onChange(async (value) => {
+                        light.intensity = parseFloat(value);
+                        await this.plugin.saveData(this.plugin.settings);
+                    });
+                });
+        
+            // Color Picker
+            new Setting(details)
+                .setName("Light Color")
+                .addColorPicker((picker) => {
+                    picker.setValue(light.color);
+                    picker.onChange(async (value) => {
+                        light.color = value;
+                        await this.plugin.saveData(this.plugin.settings);
+                    });
+                });
+        
+            // Remove Light Button
+            new Setting(details)
+                .addButton((button) => {
+                    button.setButtonText("Remove").onClick(async () => {
+                        this.plugin.settings.lightSettings.splice(index, 1);
+                        await this.plugin.saveData(this.plugin.settings);
+                        this.display(); // Refresh UI
+                    });
+                });
+        
+            lightDiv.appendChild(details);
         });
 
         containerEl.createEl('h2', {
@@ -100,22 +207,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
             );
 
         new Setting(containerEl)
-            .setName('Standard scale of 3Dmodel')
-            .setDesc('Default size of 3D models in scene (non whole numbers should be seperated by dot, not comma)')
-            .addText(text =>
-                text
-                    .setValue(this.plugin.settings.standardScale.toString())
-                    .onChange(async (value) => {
-                        const numValue = parseFloat(value)
-                        this.plugin.settings.standardScale = numValue;
-                        await this.plugin.saveSettings();
-                    })
-
-            )
-
-        new Setting(containerEl)
             .setName('Standard height')
-            .setDesc('Default height of a 3D model embed in your note (in pixels)')
+            .setDesc('Default height of a 3D embed in your note (in pixels)')
             .addText(text =>
                 text
                     .setValue(this.plugin.settings.standardEmbedHeight.toString())
@@ -128,8 +221,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
             )
 
         new Setting(containerEl)
-            .setName('Auto Rotate Models')
-            .setDesc('If true, will always automatically rotate the models in your scene')
+            .setName('Auto Rotate Scene')
+            .setDesc('If true, will automatically rotate your scene to get a showcase effect')
             .addToggle(
                 (toggle) =>
                     toggle
@@ -151,6 +244,24 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                             this.plugin.settings.autoShowGUI = value; // Update setting when toggled
                             await this.plugin.saveData(this.plugin.settings); // Save the new setting value
                         })
+            )
+
+            containerEl.createEl('h2', {
+                text: 'Standard Model Settings',
+            });
+
+            new Setting(containerEl)
+            .setName('Standard scale of 3Dmodels')
+            .setDesc('Default size of 3D models in scene (non whole numbers should be seperated by dot, not comma)')
+            .addText(text =>
+                text
+                    .setValue(this.plugin.settings.standardScale.toString())
+                    .onChange(async (value) => {
+                        const numValue = parseFloat(value)
+                        this.plugin.settings.standardScale = numValue;
+                        await this.plugin.saveSettings();
+                    })
+
             )
 
         containerEl.createEl('h2', {
@@ -190,19 +301,6 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         await this.plugin.saveSettings();
                     })
 
-            )
-
-        new Setting(containerEl)
-            .setName('Toggle Orthographic Camera')
-            .setDesc('If true, will load all your scenes with a orthographic camera, if false, defaults to a perspective camera. You can also set this per scene, in the codeblock config')
-            .addToggle(
-                (toggle) =>
-                    toggle
-                        .setValue(this.plugin.settings.orthographicCam) // Set the initial value based on settings
-                        .onChange(async (value) => {
-                            this.plugin.settings.orthographicCam = value; // Update setting when toggled
-                            await this.plugin.saveData(this.plugin.settings); // Save the new setting value
-                        })
             )
 
         new Setting(containerEl)

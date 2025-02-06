@@ -30,6 +30,8 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
         if (config.scene.showGridHelper) {
             scene.add(gridHelper);
         }
+    } else {
+        scene.background = new THREE.Color(`#${plugin.settings.standardColor.replace(/#/g, "")}`);
     }
 
     let camera = setCameraMode(config.camera.orthographic, width, plugin.settings.standardEmbedHeight);
@@ -120,7 +122,7 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
         }
         requestAnimationFrame(animate);
 
-        if (scene && config.scene.autoRotation) {
+        if (scene && config.scene && config.scene.autoRotation != undefined) {
             parentGroup.rotation.x += config.scene.autoRotation[0];
             parentGroup.rotation.y += config.scene.autoRotation[1];
             parentGroup.rotation.z += config.scene.autoRotation[2];

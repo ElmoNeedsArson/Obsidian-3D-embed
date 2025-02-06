@@ -51,27 +51,53 @@ export default class ThreeJSPlugin extends Plugin {
                 //console.log(parsedData)
                 const modelPath = this.getModelPath(parsedData.models[0].name)
 
-                const requiredFields = {
-                    // positionX: { name: "x position", example: `"positionX": 0, "positionY": 0, "positionZ": 0,` },
-                    // positionY: { name: "y position", example: `"positionX": 0, "positionY": 0, "positionZ": 0,` },
-                    // positionZ: { name: "z position", example: `"positionX": 0, "positionY": 0, "positionZ": 0,` },
-                    // rotationX: { name: "x rotation", example: `"rotationX": 0, "rotationY": 0, "rotationZ": 0,` },
-                    // rotationY: { name: "y rotation", example: `"rotationX": 0, "rotationY": 0, "rotationZ": 0,` },
-                    // rotationZ: { name: "z rotation", example: `"rotationX": 0, "rotationY": 0, "rotationZ": 0,` },
-                    models: { name: "models", example: `"models": [{"name": "Castle.glb","scale":0.5}]`},
-                    //camPosXYZ: { name: "camera Position", example: `"camPosXYZ": [0,5.000000000000002,10],` },
-                    //LookatXYZ: { name: "camera lookAt", example: `"LookatXYZ": [0,0,0],` },
-                    //backgroundColorHexString: { name: "background color", example: `"backgroundColorHexString": "80bcd6",` },
-                    // showGuiOverlay: { name: "gui show", example: `"showGuiOverlay": true,` }
+                const requiredSubfields = {
+                    camera: {
+                        LookatXYZ: `"LookatXYZ": [0,0,0]`,
+                        camPosXYZ: `"camPosXYZ": [0,5,10]`
+                    },
+                    models: {
+                        name: `"name": "model.stl"`,
+                        scale: `"scale": 0.5`,
+                        position: `"position": [0, 0, 0]`,
+                        rotation: `"rotation": [0, 0, 0]`
+                    }
                 } as const;
-
-                // Checks if required fields are there
+                
+                // Validate required subfields
                 const errors: string[] = [];
-                for (const [field, { name, example }] of Object.entries(requiredFields)) {
-                    if (parsedData[field as keyof typeof parsedData] === undefined) {
-                        errors.push(`Please include the ${name} in the config. For example ${example}`);
+                
+                for (const [parentField, subfields] of Object.entries(requiredSubfields)) {
+                    for (const [subfield, example] of Object.entries(subfields)) {
+                        if (parentField === "models") {
+                            // Models is an array, ensure we type 'model' properly
+                            if (
+                                !Array.isArray(parsedData.models) || 
+                                parsedData.models.every((model: { [key: string]: any }) => model[subfield] === undefined)
+                            ) {
+                                errors.push(`Please include the "${subfield}" field inside each object in "models". Example: ${example}`);
+                            }
+                        } else {
+                            // Regular object field check (e.g., camera.orthographic)
+                            if (parsedData[parentField as keyof typeof parsedData]?.[subfield] === undefined) {
+                                errors.push(`Please include the "${subfield}" field inside "${parentField}". Example: ${example}`);
+                            }
+                        }
                     }
                 }
+
+                // const requiredFields = {
+                //     models: { name: "models", example: `"models": [{"name": "Castle.glb","scale":0.5}]`},
+                //     camera: { name: "camera", example: `"camera": {"camPosXYZ": [0,5,10], "LookatXYZ": [0,0,0]}`},
+                // } as const;
+
+                // // Checks if required fields are there
+                // const errors: string[] = [];
+                // for (const [field, { name, example }] of Object.entries(requiredFields)) {
+                //     if (parsedData[field as keyof typeof parsedData] === undefined) {
+                //         errors.push(`Please include the ${name} in the config. For example ${example}`);
+                //     }
+                // }
                 if (errors.length > 0) {
                     new Notice(errors.join('\n'), 10000);
                     return;

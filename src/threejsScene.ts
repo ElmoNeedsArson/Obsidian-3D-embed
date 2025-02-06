@@ -11,23 +11,28 @@ import { ThreeMFLoader } from 'three/examples/jsm/loaders/3MFLoader.js';
 import ThreeJSPlugin from './main';
 
 import { gui } from './gui'
+import { gui2 } from './gui'
 import { applyCameraSettings, applyModelConfig } from './applyConfig'
 import { /*loadModel,*/ loadModels } from './loadModelType'
 import { loadLights } from './loadLightType'
 
-export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, config: any, modelPath: string, name: string, width: number, ctx: any, renderer: THREE.WebGLRenderer) {  
+export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, config: any, modelPath: string, name: string, width: number, ctx: any, renderer: THREE.WebGLRenderer) {
     const scene = new THREE.Scene();
 
+    let axesHelper: THREE.AxesHelper | null = null;
+    let gridHelper: THREE.GridHelper | null = null;
+
     //If the config specifies scene settings, adress them here
-    if(config.scene){
+    if (config.scene) {
         scene.background = new THREE.Color(`#${config.scene.backgroundColor || plugin.settings.standardColor.replace(/#/g, "")}`);
-        const axesHelper = new THREE.AxesHelper(config.scene.length);
-        const gridHelper = new THREE.GridHelper(config.scene.gridSize, config.scene.gridSize);
-        
-        if (config.scene.showAxisHelper) {
+
+        axesHelper = new THREE.AxesHelper(config.scene.length);
+        gridHelper = new THREE.GridHelper(config.scene.gridSize, config.scene.gridSize);
+
+        if (config.scene.showAxisHelper && axesHelper) {
             scene.add(axesHelper);
         }
-        if (config.scene.showGridHelper) {
+        if (config.scene.showGridHelper && gridHelper) {
             scene.add(gridHelper);
         }
     } else {
@@ -86,6 +91,13 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
         }
     }
 
+    if (config.scene && config.scene.showGuiOverlay) {
+        axesHelper ??= new THREE.AxesHelper(10);
+        gridHelper ??= new THREE.GridHelper(10, 10);
+        gui2(plugin, el, scene, axesHelper, gridHelper, orbit, camera, renderer, ctx, modelArray)
+        //gui(plugin, config.showGuiOverlay, el, scene, axesHelper, gridHelper, controls, orbit, gizmo, camera, renderer, ctx, ThreeDmodel)
+    }
+
     // Resize function to update camera and renderer on container width change
     const onResize = () => {
         let newWidth = 0;
@@ -111,7 +123,7 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
     //Create a parent group with all models and add it to the scene
     const parentGroup = new THREE.Group();
     modelArray.forEach((child) => {
-            parentGroup.add(child);
+        parentGroup.add(child);
     });
     scene.add(parentGroup);
 

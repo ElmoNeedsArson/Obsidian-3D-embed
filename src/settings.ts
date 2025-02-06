@@ -60,7 +60,7 @@ export const DEFAULT_SETTINGS: ThreeDEmbedSettings = {
     lightSettings: [
         {
             dropdownValue: "directional", // Default light type
-            position: [0, 5, 10], // Default position
+            position: [5, 10, 5], // Default position
             intensity: 1, // Default light strength
             color: "#FFFFFF", // Default light color
         }
@@ -81,97 +81,6 @@ export class ThreeDSettingsTab extends PluginSettingTab {
 
         containerEl.createEl('h6', {
             text: 'Important Note: All the settings below are default settings, all parameters you set here can be modified in the codeblock of your embed per 3D file. These settings are here as the base value where every scene gets initialized with',
-        });
-
-        containerEl.createEl("h2", { text: "Lighting Settings" });
-
-        new Setting(containerEl)
-            .setName("Add Lights")
-            .setDesc("Click to add a new light.")
-            .addButton((button) => {
-                button.setButtonText("+").onClick(() => {
-                    this.plugin.settings.lightSettings.push({
-                        dropdownValue: "",
-                        position: [0, 0, 0],
-                        intensity: 1,
-                        color: "#ffffff",
-                    });
-                    this.plugin.saveData(this.plugin.settings);
-                    this.display(); // Refresh UI
-                });
-            });
-
-        // Iterate over each light setting and create UI elements
-        this.plugin.settings.lightSettings.forEach((light, index) => {
-            const lightDiv = containerEl.createDiv({ cls: "light-setting" });
-
-            // Create collapsible section
-            const details = lightDiv.createEl("details");
-            const summary = details.createEl("summary", { text: `Light #${index + 1}` });
-            
-            // Light Type Dropdown
-            new Setting(details)
-                .setName("Light Type")
-                .addDropdown((dropdown) => {
-                    dropdown.addOptions({
-                        point: "Point",
-                        directional: "Directional"
-                    });
-                    dropdown.setValue(light.dropdownValue);
-                    dropdown.onChange(async (value) => {
-                        light.dropdownValue = value;
-                        await this.plugin.saveData(this.plugin.settings);
-                    });
-                });
-        
-            // Position Inputs
-            const positionDiv = details.createDiv({ cls: "position-group" });
-            ["X", "Y", "Z"].forEach((axis, i) => {
-                const input = document.createElement("input");
-                input.type = "number";
-                input.value = light.position[i].toString();
-                input.placeholder = axis;
-                input.addEventListener("change", async (event) => {
-                    light.position[i] = parseFloat((event.target as HTMLInputElement).value);
-                    await this.plugin.saveData(this.plugin.settings);
-                });
-                positionDiv.appendChild(input);
-            });
-        
-            // Light Intensity
-            new Setting(details)
-                .setName("Light Intensity")
-                .addText((text) => {
-                    text.inputEl.type = "number";
-                    text.setValue(light.intensity.toString());
-                    text.onChange(async (value) => {
-                        light.intensity = parseFloat(value);
-                        await this.plugin.saveData(this.plugin.settings);
-                    });
-                });
-        
-            // Color Picker
-            new Setting(details)
-                .setName("Light Color")
-                .addColorPicker((picker) => {
-                    picker.setValue(light.color);
-                    picker.onChange(async (value) => {
-                        light.color = value;
-                        await this.plugin.saveData(this.plugin.settings);
-                    });
-                });
-        
-            // Remove Light Button
-            new Setting(details)
-                .addButton((button) => {
-                    button.setButtonText("Remove").onClick(async () => {
-                        this.plugin.settings.lightSettings.splice(index, 1);
-                        await this.plugin.saveData(this.plugin.settings);
-                        this.display(); // Refresh UI
-                    });
-                });
-        
-            lightDiv.appendChild(details);
         });
 
         containerEl.createEl('h2', {
@@ -246,11 +155,11 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         })
             )
 
-            containerEl.createEl('h2', {
-                text: 'Standard Model Settings',
-            });
+        containerEl.createEl('h2', {
+            text: 'Standard Model Settings',
+        });
 
-            new Setting(containerEl)
+        new Setting(containerEl)
             .setName('Standard scale of 3Dmodels')
             .setDesc('Default size of 3D models in scene (non whole numbers should be seperated by dot, not comma)')
             .addText(text =>
@@ -319,122 +228,121 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                             await this.plugin.saveData(this.plugin.settings); // Save the new setting value
                         }));
 
-        containerEl.createEl('h2', {
-            text: 'Lighting Settings',
+        containerEl.createEl("h2", { text: "Lighting Settings" });
+
+        new Setting(containerEl)
+            .setName("Add Lights")
+            .setDesc("It is strongly recommended to keep the 2 preloaded lights")
+            .addButton((button) => {
+                button.setButtonText("+").onClick(() => {
+                    this.plugin.settings.lightSettings.push({
+                        dropdownValue: "ambient",
+                        position: [5, 10, 5],
+                        intensity: 1,
+                        color: "#ffffff",
+                    });
+                    this.plugin.saveData(this.plugin.settings);
+                    this.display(); // Refresh UI
+                });
+            });
+
+        // Iterate over each light setting and create UI elements
+        this.plugin.settings.lightSettings.forEach((light, index) => {
+            const lightDiv = containerEl.createDiv({ cls: "light-setting" });
+
+            // Create collapsible section
+            const details = lightDiv.createEl("details");
+            const summary = details.createEl("summary", { text: `Lightsource number ${index + 1}: ` + light.dropdownValue });
+
+            // Light Type Dropdown
+            new Setting(details)
+                .setName("Light Type")
+                .addDropdown((dropdown) => {
+                    dropdown.addOptions({
+                        point: "point",
+                        directional: "directional",
+                        ambient: "ambient",
+                        attachToCam: "attach to camera"
+                    });
+                    dropdown.setValue(light.dropdownValue);
+                    dropdown.onChange(async (value) => {
+                        light.dropdownValue = value;
+                        summary.innerText = `Lightsource number ${index + 1}: ` + value
+                        await this.plugin.saveData(this.plugin.settings);
+                    });
+                });
+
+            // Position Inputs with Title
+            new Setting(details)
+                .setClass("ThreeDEmbed_Position_Inputs")
+                .setName("Light Position")
+                .setDesc("The position of the light in the scene (X, Y, Z)")
+                .addText(text =>
+                    text
+                        .setValue(light.position[0].toString())
+                        .onChange(async (value) => {
+                            const numValue = parseFloat(value);
+                            light.position[0] = numValue;
+                            await this.plugin.saveData(this.plugin.settings);
+                        })
+                )
+                .addText(text =>
+                    text
+                        .setValue(light.position[1].toString())
+                        .onChange(async (value) => {
+                            const numValue = parseFloat(value);
+                            light.position[1] = numValue;
+                            await this.plugin.saveData(this.plugin.settings);
+                        })
+                )
+                .addText(text =>
+                    text
+                        .setValue(light.position[2].toString())
+                        .onChange(async (value) => {
+                            const numValue = parseFloat(value);
+                            light.position[2] = numValue;
+                            await this.plugin.saveData(this.plugin.settings);
+                        })
+                );
+
+            // Light Intensity
+            new Setting(details)
+                .setName("Light Intensity")
+                .addText((text) => {
+                    text.inputEl.type = "number";
+                    text.setValue(light.intensity.toString());
+                    text.onChange(async (value) => {
+                        light.intensity = parseFloat(value);
+                        await this.plugin.saveData(this.plugin.settings);
+                    });
+                });
+
+            // Color Picker
+            new Setting(details)
+                .setName("Light Color")
+                .addColorPicker((picker) => {
+                    picker.setValue(light.color);
+                    picker.onChange(async (value) => {
+                        light.color = value;
+                        await this.plugin.saveData(this.plugin.settings);
+                    });
+                });
+
+            // Remove Light Button
+            new Setting(details)
+                .addButton((button) => {
+                    button.setButtonText("Remove").setClass("ThreeDEmbed_Remove_Button").onClick(async () => {
+                        this.plugin.settings.lightSettings.splice(index, 1);
+                        await this.plugin.saveData(this.plugin.settings);
+                        this.display(); // Refresh UI
+                    });
+
+                    button.buttonEl.style.backgroundColor = "red";
+                    button.buttonEl.style.color = "white"
+                });
+
+            lightDiv.appendChild(details);
         });
-
-        new Setting(containerEl)
-            .setName('Attach a light to the camera')
-            .setDesc('If enabled, however you look at a model a light will point at it. It will take the strength and color attributes of the scene light')
-            .addToggle(
-                (toggle) =>
-                    toggle
-                        .setValue(this.plugin.settings.attachLightToCam) // Set the initial value based on settings
-                        .onChange(async (value) => {
-                            this.plugin.settings.attachLightToCam = value; // Update setting when toggled
-                            await this.plugin.saveData(this.plugin.settings); // Save the new setting value
-                        })
-            )
-
-        new Setting(containerEl)
-            .setName('Standard light Color Attached to camera')
-            .setDesc('Default color for the lightsource that is attached to the camera')
-            .addColorPicker(colorPicker =>
-                colorPicker.setValue(this.plugin.settings.standardLightColor_AttachedCam)
-                    .onChange(async (value) => {
-                        this.plugin.settings.standardLightColor_AttachedCam = value;
-                        await this.plugin.saveSettings();
-                    })
-
-            );
-
-        new Setting(containerEl)
-            .setName('Standard Light Strength')
-            .setDesc('The default strength of your light attached to the camera')
-            .addText(text =>
-                text
-                    .setValue(this.plugin.settings.standardlightStrength_AttachedCam.toString())
-                    .onChange(async (value) => {
-                        const numValue = parseFloat(value)
-                        this.plugin.settings.standardlightStrength_AttachedCam = numValue;
-                        await this.plugin.saveSettings();
-                    })
-
-            )
-
-        new Setting(containerEl)
-            .setName('Standard light Color')
-            .setDesc('Default color for the lighting of the scene')
-            .addColorPicker(colorPicker =>
-                colorPicker.setValue(this.plugin.settings.standardLightColor)
-                    .onChange(async (value) => {
-                        this.plugin.settings.standardLightColor = value;
-                        await this.plugin.saveSettings();
-                    })
-
-            );
-
-        new Setting(containerEl)
-            .setName('Standard Light Strength')
-            .setDesc('The default strength of your light in the scene')
-            .addText(text =>
-                text
-                    .setValue(this.plugin.settings.standardlightStrength.toString())
-                    .onChange(async (value) => {
-                        const numValue = parseFloat(value)
-                        this.plugin.settings.standardlightStrength = numValue;
-                        await this.plugin.saveSettings();
-                    })
-
-            )
-
-        new Setting(containerEl)
-            .setName('Show the light in Scene')
-            .setDesc('If enabled, shows a sphere in the scene at the location of the light by default')
-            .addToggle(
-                (toggle) =>
-                    toggle
-                        .setValue(this.plugin.settings.standardshowLight) // Set the initial value based on settings
-                        .onChange(async (value) => {
-                            this.plugin.settings.standardshowLight = value; // Update setting when toggled
-                            await this.plugin.saveData(this.plugin.settings); // Save the new setting value
-                        })
-            )
-
-        new Setting(containerEl)
-            .setClass("ThreeDEmbed_Position_Inputs")
-            .setName('Standard Position Light')
-            .setDesc('The default position of the lightsource in your scene (X,Y,Z)')
-            .addText(text =>
-                text
-                    .setValue(this.plugin.settings.standardlightPosX.toString())
-                    .onChange(async (value) => {
-                        const numValue = parseFloat(value)
-                        this.plugin.settings.standardlightPosX = numValue;
-                        await this.plugin.saveSettings();
-                    })
-
-            )
-            .addText(text =>
-                text
-                    .setValue(this.plugin.settings.standardlightPosY.toString())
-                    .onChange(async (value) => {
-                        const numValue = parseFloat(value)
-                        this.plugin.settings.standardlightPosY = numValue;
-                        await this.plugin.saveSettings();
-                    })
-
-            )
-            .addText(text =>
-                text
-                    .setValue(this.plugin.settings.standardlightPosZ.toString())
-                    .onChange(async (value) => {
-                        const numValue = parseFloat(value)
-                        this.plugin.settings.standardlightPosZ = numValue;
-                        await this.plugin.saveSettings();
-                    })
-
-            )
 
         containerEl.createEl('h2', {
             text: 'STL Type Options',
@@ -451,7 +359,6 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                     })
 
             );
-
 
         new Setting(containerEl)
             .setName('Standard show wireframe mode')

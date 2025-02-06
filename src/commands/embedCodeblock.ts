@@ -45,7 +45,7 @@ export function ThreeD_Embed_Command(plugin: ThreeJSPlugin) {
 
                 let lights = `,\n"lights": [\n${plugin.settings.lightSettings
                     .map((light: { dropdownValue: string; color: string; position: [number, number, number]; intensity: number }) =>
-                        `   {"type":"${light.dropdownValue}", "color":"${light.color.replace("#", "")}", "pos":[${light.position.join(",")}], "strength": ${light.intensity}, "show": true}`
+                        `   {"type":"${light.dropdownValue}", "color":"${light.color.replace("#", "")}", "pos":[${light.position.join(",")}], "strength": ${light.intensity}, "show": false}`
                     )
                     .join(",\n")}\n]`;
                 

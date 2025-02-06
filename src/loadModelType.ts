@@ -95,18 +95,18 @@ import ThreeJSPlugin from './main';
 //     }
 // }
 
-export function loadModels(plugin: ThreeJSPlugin, scene: THREE.Scene, modelPath: string, extension: string, modelconfig: any): Promise<THREE.Object3D> {
+export function loadModels(plugin: ThreeJSPlugin, scene: THREE.Scene, modelPath: string, extension: string, modelconfig: any, stlconfig: any): Promise<THREE.Object3D> {
     return new Promise((resolve, reject) => {
         switch (extension) {
             case 'stl':
                 const stlLoader = new STLLoader();
                 stlLoader.load(modelPath, (geometry) => {
                     let material: any;
-                    if (modelconfig.stlColorHexString) {
+                    if (stlconfig.stlColorHexString) {
                         let col2: string;
-                        col2 = "#" + modelconfig.stlColorHexString
+                        col2 = "#" + stlconfig.stlColorHexString
                         material = new THREE.MeshStandardMaterial({ color: col2 });
-                        if (modelconfig.stlWireframe) {
+                        if (stlconfig.stlWireframe) {
                             material.wireframe = true;
                         }
                     } else {

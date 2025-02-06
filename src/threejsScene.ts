@@ -15,30 +15,30 @@ import { applyCameraSettings, applyModelConfig } from './applyConfig'
 import { /*loadModel,*/ loadModels } from './loadModelType'
 import { loadLights } from './loadLightType'
 
-export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, config: any, modelPath: string, name: string, width: number, ctx: any, renderer: THREE.WebGLRenderer) {
+export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, config: any, modelPath: string, name: string, width: number, ctx: any, renderer: THREE.WebGLRenderer) {  
     const scene = new THREE.Scene();
 
-    scene.background = new THREE.Color(`#${config.backgroundColorHexString || config.colorHexString || plugin.settings.standardColor.replace(/#/g, "")}`);
-    const axesHelper = new THREE.AxesHelper(config.length);
-    const gridHelper = new THREE.GridHelper(config.gridSize, config.gridSize);
-
-    //console.log(config)
-
-    if (config.showAxisHelper) {
-        scene.add(axesHelper);
+    //If the config specifies scene settings, adress them here
+    if(config.scene){
+        scene.background = new THREE.Color(`#${config.scene.backgroundColor || plugin.settings.standardColor.replace(/#/g, "")}`);
+        const axesHelper = new THREE.AxesHelper(config.scene.length);
+        const gridHelper = new THREE.GridHelper(config.scene.gridSize, config.scene.gridSize);
+        
+        if (config.scene.showAxisHelper) {
+            scene.add(axesHelper);
+        }
+        if (config.scene.showGridHelper) {
+            scene.add(gridHelper);
+        }
     }
-    if (config.showGridHelper) {
-        scene.add(gridHelper);
-    }
 
-    let camera = setCameraMode(config.orthographic, width, plugin.settings.standardEmbedHeight);
+    let camera = setCameraMode(config.camera.orthographic, width, plugin.settings.standardEmbedHeight);
 
     //const renderer = new THREE.WebGLRenderer();
     renderer.setSize(width, plugin.settings.standardEmbedHeight);
     el.appendChild(renderer.domElement);
 
-    //LIGHTING SETUP ----------------------------------------------------------------------
-
+    //If the config contains lighting settings, adress them here
     let lightsArray = []
     if (config.lights) {
         let lights = config.lights
@@ -49,11 +49,10 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
     }
 
     scene.add(camera)
-    //LIGHTING SETUP ----------------------------------------------------------------------
 
     const orbit = new OrbitControls(camera, renderer.domElement);
-    const controls = new TransformControls(camera, renderer.domElement)
-    const gizmo = controls.getHelper();
+    // const controls = new TransformControls(camera, renderer.domElement)
+    // const gizmo = controls.getHelper();
 
     applyCameraSettings(camera, config, orbit);
 
@@ -77,21 +76,13 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
             const modelExtensionType = models[i].name.slice(-3).toLowerCase();
 
             try {
-                let model = await loadModels(plugin, scene, pathToModel, modelExtensionType, models[i]);
+                let model = await loadModels(plugin, scene, pathToModel, modelExtensionType, models[i], config.stl);
                 modelArray.push(model);
             } catch (error) {
                 console.error(error);
             }
         }
     }
-
-    // Load the model based on the extension
-    // const modelExtension = name.slice(-3).toLowerCase();
-    // let ThreeDmodel: THREE.Object3D | undefined;
-    // loadModel(plugin, scene, modelPath, modelExtension, config, (model) => {
-    //     ThreeDmodel = model;
-    //     gui(plugin, config.showGuiOverlay, el, scene, axesHelper, gridHelper, controls, orbit, gizmo, camera, renderer, ctx, ThreeDmodel)
-    // });
 
     // Resize function to update camera and renderer on container width change
     const onResize = () => {
@@ -129,10 +120,10 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
         }
         requestAnimationFrame(animate);
 
-        if (scene && config.autoRotation) {
-            parentGroup.rotation.x += config.autoRotation[0];
-            parentGroup.rotation.y += config.autoRotation[1];
-            parentGroup.rotation.z += config.autoRotation[2];
+        if (scene && config.scene.autoRotation) {
+            parentGroup.rotation.x += config.scene.autoRotation[0];
+            parentGroup.rotation.y += config.scene.autoRotation[1];
+            parentGroup.rotation.z += config.scene.autoRotation[2];
         }
 
         orbit.update()
@@ -141,14 +132,6 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
         } else {
             renderer.render(scene, camera);
         }
-
-
-
-        // if (ThreeDmodel) {
-        //     ThreeDmodel.rotation.y += config.AutorotateY || 0;
-        //     ThreeDmodel.rotation.x += config.AutorotateX || 0;
-        //     ThreeDmodel.rotation.z += config.AutorotateZ || 0;
-        // }
 
         //Makes sure the attachToCam light rotates properly
         for (let i = 0; i < lightsArray.length; i++) {

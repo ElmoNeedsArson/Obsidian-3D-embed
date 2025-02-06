@@ -54,8 +54,9 @@ export function ThreeD_Embed_Command(plugin: ThreeJSPlugin) {
                 let scene = `,\n"scene": { 
    "showGuiOverlay": ` + plugin.settings.autoShowGUI + `, 
    "autoRotation": [0, ` + autorotateY + `, 0], 
-   "backgroundColorHexString": "` + plugin.settings.standardColor.replace(/#/g, "") + `", 
-   "showAxisHelper": false, "length": 5, "showGridHelper": false, "gridSize": 10` + `
+   "backgroundColor": "` + plugin.settings.standardColor.replace(/#/g, "") + `", 
+   "showAxisHelper": false, "length": 5, 
+   "showGridHelper": false, "gridSize": 10` + `
 }`
 
                 let stl = `,\n"stl": {

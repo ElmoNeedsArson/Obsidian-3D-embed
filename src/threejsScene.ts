@@ -11,15 +11,18 @@ import { ThreeMFLoader } from 'three/examples/jsm/loaders/3MFLoader.js';
 import ThreeJSPlugin from './main';
 
 import { gui } from './gui'
-import { applyCameraSettings, applyModelSettings } from './applyConfig'
-import { loadModel } from './loadModelType'
+import { applyCameraSettings, applyModelConfig } from './applyConfig'
+import { /*loadModel,*/ loadModels } from './loadModelType'
+import { loadLights } from './loadLightType'
 
-export function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, config: any, modelPath: string, name: string, width: number, ctx: any, renderer: THREE.WebGLRenderer) {
+export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, config: any, modelPath: string, name: string, width: number, ctx: any, renderer: THREE.WebGLRenderer) {
     const scene = new THREE.Scene();
 
     scene.background = new THREE.Color(`#${config.backgroundColorHexString || config.colorHexString || plugin.settings.standardColor.replace(/#/g, "")}`);
     const axesHelper = new THREE.AxesHelper(config.length);
     const gridHelper = new THREE.GridHelper(config.gridSize, config.gridSize);
+
+    //console.log(config)
 
     if (config.showAxisHelper) {
         scene.add(axesHelper);
@@ -35,82 +38,14 @@ export function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, c
     el.appendChild(renderer.domElement);
 
     //LIGHTING SETUP ----------------------------------------------------------------------
-    let lightColor;
-    let lightStrength;
 
-    if (config.lightColor) {
-        lightColor = "#" + config.lightColor
-    } else {
-        lightColor = plugin.settings.standardLightColor || 0xFFFFFF
-    }
-
-    const lightIndicator_Geometry = new THREE.SphereGeometry(1)
-    const lightIndicator_material = new THREE.MeshBasicMaterial({ color: lightColor });
-    const lightIndicator = new THREE.Mesh(lightIndicator_Geometry, lightIndicator_material);
-
-    if (config.showLight) {
-        lightIndicator.position.set(5, 10, 5);
-        scene.add(lightIndicator);
-    } else {
-        if (plugin.settings.standardshowLight) {
-            lightIndicator.position.set(5, 10, 5);
-            scene.add(lightIndicator);
+    let lightsArray = []
+    if (config.lights) {
+        let lights = config.lights
+        for (let i = 0; i < lights.length; i++) {
+            let light = loadLights(plugin, scene, lights[i].type, lights[i].show, lights[i].color, lights[i].pos, lights[i].strength, camera)
+            lightsArray.push({ name: lights[i].type, obj: light })
         }
-    }
-
-    if (config.lightStrength) {
-        lightStrength = config.lightStrength
-    } else if (config.lightStrength == 0) {
-        lightStrength = 0
-    } else {
-        lightStrength = plugin.settings.standardlightStrength || 1
-    }
-
-    const light = new THREE.DirectionalLight(lightColor, lightStrength);
-
-    if (config.lightPosXYZ) {
-        light.position.set(config.lightPosXYZ[0],config.lightPosXYZ[1],config.lightPosXYZ[2])
-        if (config.showLight) {
-            lightIndicator.position.set(config.lightPosXYZ[0],config.lightPosXYZ[1],config.lightPosXYZ[2]);
-        }
-    } else {
-        light.position.set(plugin.settings.standardlightPosX,plugin.settings.standardlightPosY,plugin.settings.standardlightPosZ)
-        if (!config.showLight && plugin.settings.standardshowLight) {
-            lightIndicator.position.set(plugin.settings.standardlightPosX,plugin.settings.standardlightPosY,plugin.settings.standardlightPosZ);
-        }
-    }
-
-    let lightColor_AttachedCam;
-    let lightStrength_AttachedCam;
-
-    if (config.lightStrength_AttachedCam) {
-        lightStrength_AttachedCam = config.lightStrength_AttachedCam
-    } else {
-        lightStrength_AttachedCam = plugin.settings.standardlightStrength_AttachedCam || 1
-    }
-
-    if (config.lightColor_AttachedCam) {
-        lightColor_AttachedCam = "#" + config.lightColor_AttachedCam
-    } else {
-        lightColor_AttachedCam = plugin.settings.standardLightColor_AttachedCam || 0xFFFFFF
-    }
-
-    const dirLight = new THREE.DirectionalLight( lightColor_AttachedCam, lightStrength_AttachedCam );
-	dirLight.position.set(0, 10, 45);
-	dirLight.castShadow = true;
-
-    if (config.attachLightToCam) {
-        camera.add( dirLight );
-        // scene.remove(lightIndicator)
-    } else {
-        
-    }
-
-    // console.log(lightStrength)
-
-    if(lightStrength != 0){
-        // console.log("Hi")
-        scene.add(light);
     }
 
     scene.add(camera)
@@ -120,40 +55,43 @@ export function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, c
     const controls = new TransformControls(camera, renderer.domElement)
     const gizmo = controls.getHelper();
 
-    // const geometry = new THREE.BoxGeometry(1, 1, 1);
-    // const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    // const cube = new THREE.Mesh(geometry, material);
-    // cube.position.x = 5
-    // scene.add(cube);
-
-    // const cube2 = new THREE.Mesh(geometry, material);
-    // cube2.position.x = -5
-    // scene.add(cube2);
-
-    // orbit.target.set(cube2.position.x, cube2.position.y, cube2.position.z)
-
-    // if (config.showTransformControls) {
-
-    //     controls.addEventListener('change', render);
-    //     controls.addEventListener('dragging-changed', function (event) {
-    //         orbit.enabled = !event.value;
-    //     });
-
-    //     scene.add(gizmo);
-
-    //     function render() {
-    //         renderer.render(scene, camera);
-    //     }
-    // }
     applyCameraSettings(camera, config, orbit);
 
+    let modelArray = []
+    // For each model, add it to the scene with the neccesary information
+    if (config.models) {
+        let models = config.models
+        for (let i = 0; i < models.length; i++) {
+            const pathToModel = getModelPath(models[i].name);
+
+            if (!pathToModel) {
+                new Notice("Model path for " + models[i].name + " not found", 10000);
+                return;
+            }
+
+            function getModelPath(name: string): string | null {
+                const path = this.app.metadataCache.getFirstLinkpathDest(getLinkpath(name), name);
+                return path ? this.app.vault.getResourcePath(path) : null;
+            }
+
+            const modelExtensionType = models[i].name.slice(-3).toLowerCase();
+
+            try {
+                let model = await loadModels(plugin, scene, pathToModel, modelExtensionType, models[i]);
+                modelArray.push(model);
+            } catch (error) {
+                console.error(error);
+            }
+        }
+    }
+
     // Load the model based on the extension
-    const modelExtension = name.slice(-3).toLowerCase();
-    let ThreeDmodel: THREE.Object3D | undefined;
-    loadModel(plugin, scene, modelPath, modelExtension, config, (model) => {
-        ThreeDmodel = model;
-        gui(plugin, config.showGuiOverlay, el, scene, axesHelper, gridHelper, controls, orbit, gizmo, camera, renderer, ctx, ThreeDmodel)
-    });
+    // const modelExtension = name.slice(-3).toLowerCase();
+    // let ThreeDmodel: THREE.Object3D | undefined;
+    // loadModel(plugin, scene, modelPath, modelExtension, config, (model) => {
+    //     ThreeDmodel = model;
+    //     gui(plugin, config.showGuiOverlay, el, scene, axesHelper, gridHelper, controls, orbit, gizmo, camera, renderer, ctx, ThreeDmodel)
+    // });
 
     // Resize function to update camera and renderer on container width change
     const onResize = () => {
@@ -177,15 +115,25 @@ export function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, c
         renderer.dispose();
     });
 
+    //Create a parent group with all models and add it to the scene
+    const parentGroup = new THREE.Group();
+    modelArray.forEach((child) => {
+            parentGroup.add(child);
+    });
+    scene.add(parentGroup);
+
     // Animation loop
     const animate = () => {
-        if(renderer.getContext().isContextLost()){
+        if (renderer.getContext().isContextLost()) {
             return
         }
-        if (ThreeDmodel) {
-            controls.attach(ThreeDmodel);
-        }
         requestAnimationFrame(animate);
+
+        if (scene && config.autoRotation) {
+            parentGroup.rotation.x += config.autoRotation[0];
+            parentGroup.rotation.y += config.autoRotation[1];
+            parentGroup.rotation.z += config.autoRotation[2];
+        }
 
         orbit.update()
         if (renderer && renderer.getContext().isContextLost()) {
@@ -193,17 +141,27 @@ export function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, c
         } else {
             renderer.render(scene, camera);
         }
-        // renderer.render(scene, camera);
 
-        if (ThreeDmodel) {
-            ThreeDmodel.rotation.y += config.AutorotateY || 0;
-            ThreeDmodel.rotation.x += config.AutorotateX || 0;
-            ThreeDmodel.rotation.z += config.AutorotateZ || 0;
+
+
+        // if (ThreeDmodel) {
+        //     ThreeDmodel.rotation.y += config.AutorotateY || 0;
+        //     ThreeDmodel.rotation.x += config.AutorotateX || 0;
+        //     ThreeDmodel.rotation.z += config.AutorotateZ || 0;
+        // }
+
+        //Makes sure the attachToCam light rotates properly
+        for (let i = 0; i < lightsArray.length; i++) {
+            if (lightsArray[i].name === 'attachToCam') {
+                const light = lightsArray[i].obj;
+
+                if (light instanceof THREE.DirectionalLight) {
+                    light.target.position.copy(camera.position);
+                    light.target.position.y = 0;
+                    light.target.updateMatrixWorld();
+                }
+            }
         }
-
-        dirLight.target.position.copy(camera.position);
-	    dirLight.target.position.y=0;
-	    dirLight.target.updateMatrixWorld();
     };
     animate();
 }

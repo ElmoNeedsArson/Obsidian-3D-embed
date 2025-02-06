@@ -30,45 +30,71 @@ export function ThreeD_Embed_Command(plugin: ThreeJSPlugin) {
             else if (modelPath) {
 
                 let autorotateY = plugin.settings.autoRotate ? 0.001 : 0
-                let codeBlockType = "\n```3D\n{"
-                let name = `\n"name": "` + selection + `"`
-                let GUI = `,\n"showGuiOverlay": ` + plugin.settings.autoShowGUI
-                let rotation = `,\n"rotationX": 0, "rotationY": 0, "rotationZ": 0`
-                let autoRotate = `,\n"AutorotateX": 0, "AutorotateY":` + autorotateY + `, "AutorotateZ": 0`
-                let position = `,\n"positionX": 0, "positionY": 0, "positionZ": 0`
-                // let showTransformControls = `,\n"showTransformControls": false`
-                let scale = `,\n"scale": "` + plugin.settings.standardScale + `"`
-                let objectColor = `,\n"stlColorHexString": "` + plugin.settings.stlColor.replace(/#/g, "") + `"`
-                let wireFrame = `,\n"stlWireframe":` + plugin.settings.stlWireframe
-                let backgroundColor = `,\n"backgroundColorHexString": "` + plugin.settings.standardColor.replace(/#/g, "") + `"`
-                
-                let attachLightToCam = `,\n"attachLightToCam": ` + plugin.settings.attachLightToCam
-                let lightColor_AttachedCam = `,\n"lightColor_AttachedCam": "` + plugin.settings.standardLightColor_AttachedCam.replace(/#/g, "") + `"`
-                let lightStrength_AttachedCam = `,\n"lightStrength_AttachedCam":` + plugin.settings.standardlightStrength_AttachedCam
-
-                let lightColor = `,\n"lightColor": "` + plugin.settings.standardLightColor.replace(/#/g, "") + `"`
-                let lightStrength = `,\n"lightStrength":` + plugin.settings.standardlightStrength
-                let showLight = `,\n"showLight":` + plugin.settings.standardshowLight
-                let lightPos = `,\n"lightPosXYZ": [` + plugin.settings.standardlightPosX + `,` + plugin.settings.standardlightPosY + `,` + plugin.settings.standardlightPosZ + `]`
-
+                let codeBlockType = "\n```3D"
+                //let name = `\n"name": "` + selection + `"`
+                let models = `\n"models": [
+   {"name": "` + selection + `", "scale": ` + plugin.settings.standardScale + `, 
+   "position": [0, 0, 0], "rotation": [0, 0, 0]}
+]`
+                let lights = `,\n"lights": [
+   {"type":"directional", "color":"FFFFFF", "pos":[5,10,5], "strength": 1, "show": false},
+   {"type":"ambient", "color":"FFFFFF", "pos":[5,10,5], "strength": 0.5, "show": false}
+]`              
                 let cameraType = ""
                 if (plugin.settings.cameraType == "Orthographic") {
-                    cameraType = `,\n"orthographic": true`
+                    cameraType = `"orthographic": true`
                 } else {
-                    cameraType = `,\n"orthographic": false`
+                    cameraType = `"orthographic": false`
                 }
+                let camera = `,\n"camera": {
+   ` + cameraType + `, 
+   "camPosXYZ": [0,5,10], "LookatXYZ": [0,0,0]
+}`
+                
+                let scene = `,\n"scene": { 
+   "showGuiOverlay": ` + plugin.settings.autoShowGUI + `, 
+   "autoRotation": [0, ` + autorotateY + `, 0], 
+   "backgroundColorHexString": "` + plugin.settings.standardColor.replace(/#/g, "") + `", 
+   "showAxisHelper": false, "length": 5, "showGridHelper": false, "gridSize": 10` + `
+}`
 
-                let cameraPos = `,\n"camPosXYZ": [0,5,10]`
-                //let cameraRot = `,\n"camRotXYZ": [0,0,0]`
-                let cameraLookat = `,\n"LookatXYZ": [0,0,0]`
-                let showAxisHelper = `,\n"showAxisHelper": false, "length": 5`
-                let showGridHelper = `,\n"showGridHelper": false, "gridSize": 10`
-                let codeBlockClosing = '\n}\n```\n'
+                let stl = `,\n"stl": {
+   "stlColorHexString": "` + plugin.settings.stlColor.replace(/#/g, "") + `",
+   "stlWireframe":` + plugin.settings.stlWireframe + `
+}`
+                // let cameraPos = `,\n"camPosXYZ": [0,5,10]`
+                // //let cameraRot = `,\n"camRotXYZ": [0,0,0]`
+                // let cameraLookat = `,\n"LookatXYZ": [0,0,0]`
+
+                //let GUI = `,\n"showGuiOverlay": ` + plugin.settings.autoShowGUI
+                //let rotation = `,\n"rotationX": 0, "rotationY": 0, "rotationZ": 0`
+                //let autoRotation = `,\n"autoRotation": [0, ` + autorotateY + `, 0]`
+                //let position = `,\n"positionX": 0, "positionY": 0, "positionZ": 0`
+                // let showTransformControls = `,\n"showTransformControls": false`
+                //let scale = `,\n"scale": "` + plugin.settings.standardScale + `"`
+                //let objectColor = `,\n"stlColorHexString": "` + plugin.settings.stlColor.replace(/#/g, "") + `"`
+                //let wireFrame = `,\n"stlWireframe":` + plugin.settings.stlWireframe
+                //let backgroundColor = `,\n"backgroundColorHexString": "` + plugin.settings.standardColor.replace(/#/g, "") + `"`
+                
+                // let attachLightToCam = `,\n"attachLightToCam": ` + plugin.settings.attachLightToCam
+                // let lightColor_AttachedCam = `,\n"lightColor_AttachedCam": "` + plugin.settings.standardLightColor_AttachedCam.replace(/#/g, "") + `"`
+                // let lightStrength_AttachedCam = `,\n"lightStrength_AttachedCam":` + plugin.settings.standardlightStrength_AttachedCam
+
+                // let lightColor = `,\n"lightColor": "` + plugin.settings.standardLightColor.replace(/#/g, "") + `"`
+                // let lightStrength = `,\n"lightStrength":` + plugin.settings.standardlightStrength
+                // let showLight = `,\n"showLight":` + plugin.settings.standardshowLight
+                // let lightPos = `,\n"lightPosXYZ": [` + plugin.settings.standardlightPosX + `,` + plugin.settings.standardlightPosY + `,` + plugin.settings.standardlightPosZ + `]`
+
+                //let showAxisHelper = `,\n"showAxisHelper": false, "length": 5`
+                //let showGridHelper = `,\n"showGridHelper": false, "gridSize": 10`
+                let codeBlockClosing = '\n```\n'
                 let content = ""
                 if (plugin.settings.showConfig) {
-                    content = codeBlockType + name + GUI + rotation + autoRotate + position + scale + objectColor + wireFrame + backgroundColor + attachLightToCam + lightColor_AttachedCam + lightStrength_AttachedCam + lightColor + lightStrength + showLight + lightPos + cameraType + cameraPos + cameraLookat + showAxisHelper + showGridHelper + codeBlockClosing
+                    content = codeBlockType + models + lights + camera + scene + stl + codeBlockClosing
+                    //content = codeBlockType + name + GUI + rotation + autoRotate + position + scale + objectColor + wireFrame + backgroundColor + attachLightToCam + lightColor_AttachedCam + lightStrength_AttachedCam + lightColor + lightStrength + showLight + lightPos + cameraType + cameraPos + cameraLookat + showAxisHelper + showGridHelper + codeBlockClosing
                 } else if (!plugin.settings.showConfig) {
-                    content = codeBlockType + name + rotation + position + backgroundColor + cameraPos + cameraLookat + codeBlockClosing
+                    content = codeBlockType + models + lights + codeBlockClosing
+                    //content = codeBlockType + name + rotation + position + backgroundColor + cameraPos + cameraLookat + codeBlockClosing
                 }
                 editor.replaceSelection(content);
             }

@@ -1,5 +1,3 @@
-import { MarkdownView, Notice } from 'obsidian';
-
 import * as THREE from 'three';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';

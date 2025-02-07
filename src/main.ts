@@ -61,16 +61,16 @@ export default class ThreeJSPlugin extends Plugin {
                         rotation: `"rotation": [0, 0, 0]`
                     }
                 } as const;
-                
+
                 // Validate required subfields
                 const errors: string[] = [];
-                
+
                 for (const [parentField, subfields] of Object.entries(requiredSubfields)) {
                     for (const [subfield, example] of Object.entries(subfields)) {
                         if (parentField === "models") {
                             // Models is an array, ensure we type 'model' properly
                             if (
-                                !Array.isArray(parsedData.models) || 
+                                !Array.isArray(parsedData.models) ||
                                 parsedData.models.every((model: { [key: string]: any }) => model[subfield] === undefined)
                             ) {
                                 errors.push(`Please include the "${subfield}" field inside each object in "models". Example: ${example}`);
@@ -129,25 +129,41 @@ class UpdateModal extends Modal {
 
     onOpen() {
         const { contentEl } = this;
-        contentEl.style.padding = "10px"
-        contentEl.createEl("h2", { text: "3D embed Update" });
+        contentEl.style.padding = "10px";
+        contentEl.createEl("h2", { text: "Welcome to 3D Embed" });
 
-        const messagepart1 = contentEl.createEl("p");
-        messagepart1.appendText("This is a one-time notification.")
-
+        // Introductory text with GitHub link.
         const messagepart2 = contentEl.createEl("p");
-        messagepart2.appendText("You just updated the 3D embed plugin. In this update the syntax of the codeblock with your 3D models has been slightly changed. This causes the old embeds to stop working sadly.")
+        messagepart2.appendText("You just updated/downloaded the 3D embed plugin. If you'd like to learn how to control your scenes with more details or suggest new features check out my ");
+        const GitHub = messagepart2.createEl("a", { text: "GitHub!", href: "https://github.com/ElmoNeedsArson/Obsidian-3D-embed#readme" });
+        GitHub.setAttribute("target", "_blank"); // Opens in a new tab
+
+        // Dropdown callout using a details element.
+        const detailsEl = contentEl.createEl("details");
+        const summaryEl = detailsEl.createEl("summary", { text: "If you just updated from 1.0.7 or older to a newer version, click here!" });
+
+        // The callout content – you can apply custom CSS to the classes below.
+        const calloutEl = detailsEl.createEl("div", { cls: "callout callout-warning" });
+        calloutEl.createEl("strong", { text: "Update Notice:" });
+        const calloutText = calloutEl.createEl("p");
+        calloutText.appendText("In this update the syntax of the codeblock has significantly changed. This causes the old embeds to stop working. ");
+        calloutText.appendText("To fix this, remove your old codeblock and execute the embed command again.") 
+
+        const calloutText2 = calloutEl.createEl("p");
+        calloutText2.appendText("Now there is a chance you already put a lot of effort into the current setup of your models, unfortunately if you want to keep this setup, you will have to do a bit of manual work. You can review the updated syntax in the ");
+        const readmeLink = calloutText2.createEl("a", { text: "ReadMe", href: "https://github.com/ElmoNeedsArson/Obsidian-3D-embed#readme" });
+        readmeLink.setAttribute("target", "_blank");
+        calloutText2.appendText(" and fill in your values for the new syntax.");
         
-        const messagepart3 = contentEl.createEl("p");
-        messagepart3.appendText("This was done to improve your control and streamline the configuration. You can simply fix this by simply executing the embed command again, or (if you want to keep a specific setup) look at the syntax as shown in the")
-        const link = messagepart3.createEl("a", { text: " ReadMe", href: "https://github.com/ElmoNeedsArson/Obsidian-3D-embed#readme" });
-        link.setAttribute("target", "_blank"); // Opens in a new tab
-        messagepart3.appendText(", to change it manually.")
+        const calloutText3 = calloutEl.createEl("p");
+        calloutText3.appendText("Apologies for the inconvenience. But I hope you can keep enjoying the plugin.")
 
+        // Additional apology message.
         const messagepart4 = contentEl.createEl("p");
-        messagepart4.appendText("Apologies for the inconvenience. But I hope you can keep enjoying the plugin.")
+        messagepart4.appendText("Thank you and Enjoy!");
 
-        const closeButton = contentEl.createEl("button", { text: "Okay" });
+        // Close button.
+        const closeButton = contentEl.createEl("button", { text: "Close" });
         closeButton.addEventListener("click", async () => {
             await this.onAcknowledge();
             this.close();

@@ -45,6 +45,12 @@ export const DEFAULT_SETTINGS: ThreeDEmbedSettings = {
             position: [5, 10, 5], // Default position
             intensity: 1, // Default light strength
             color: "#FFFFFF", // Default light color
+        },
+        {
+            dropdownValue: "ambient", // Default light type
+            position: [5, 10, 5], // Default position
+            intensity: 0.5, // Default light strength
+            color: "#FFFFFF", // Default light color
         }
     ]
 };

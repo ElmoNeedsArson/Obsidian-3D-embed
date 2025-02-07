@@ -47,8 +47,6 @@ export default class ThreeJSPlugin extends Plugin {
 
             try {
                 const parsedData = JSON.parse("{" + source + "}");
-                //const modelPath = this.getModelPath(parsedData.name);
-                //console.log(parsedData)
                 const modelPath = this.getModelPath(parsedData.models[0].name)
 
                 const requiredSubfields = {
@@ -86,18 +84,6 @@ export default class ThreeJSPlugin extends Plugin {
                     }
                 }
 
-                // const requiredFields = {
-                //     models: { name: "models", example: `"models": [{"name": "Castle.glb","scale":0.5}]`},
-                //     camera: { name: "camera", example: `"camera": {"camPosXYZ": [0,5,10], "LookatXYZ": [0,0,0]}`},
-                // } as const;
-
-                // // Checks if required fields are there
-                // const errors: string[] = [];
-                // for (const [field, { name, example }] of Object.entries(requiredFields)) {
-                //     if (parsedData[field as keyof typeof parsedData] === undefined) {
-                //         errors.push(`Please include the ${name} in the config. For example ${example}`);
-                //     }
-                // }
                 if (errors.length > 0) {
                     new Notice(errors.join('\n'), 10000);
                     return;
@@ -107,8 +93,6 @@ export default class ThreeJSPlugin extends Plugin {
                     new Notice("Model path not found", 10000);
                     return;
                 }
-
-                //console.log(modelPath)
 
                 const width = (ctx as any).el.clientWidth || 300;
                 initializeThreeJsScene(this, el, parsedData, modelPath, parsedData.name, width, ctx, renderer);

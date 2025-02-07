@@ -1,19 +1,12 @@
-import { App, Editor, Notice, Plugin, PluginSettingTab, Setting, View, getLinkpath, TFile, MarkdownView, MarkdownPostProcessorContext, MarkdownRenderChild } from 'obsidian';
+import { Notice, getLinkpath } from 'obsidian';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
-import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
-import { ThreeMFLoader } from 'three/examples/jsm/loaders/3MFLoader.js';
 
 import ThreeJSPlugin from './main';
 
-import { gui } from './gui'
 import { gui2 } from './gui'
-import { applyCameraSettings, applyModelConfig } from './applyConfig'
-import { /*loadModel,*/ loadModels } from './loadModelType'
+import { applyCameraSettings } from './applyConfig'
+import { loadModels } from './loadModelType'
 import { loadLights } from './loadLightType'
 
 export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, config: any, modelPath: string, name: string, width: number, ctx: any, renderer: THREE.WebGLRenderer) {
@@ -58,8 +51,6 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
     scene.add(camera)
 
     const orbit = new OrbitControls(camera, renderer.domElement);
-    // const controls = new TransformControls(camera, renderer.domElement)
-    // const gizmo = controls.getHelper();
 
     applyCameraSettings(camera, config, orbit);
 
@@ -95,7 +86,6 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
         axesHelper ??= new THREE.AxesHelper(10);
         gridHelper ??= new THREE.GridHelper(10, 10);
         gui2(plugin, el, scene, axesHelper, gridHelper, orbit, camera, renderer, ctx, modelArray, config)
-        //gui(plugin, config.showGuiOverlay, el, scene, axesHelper, gridHelper, controls, orbit, gizmo, camera, renderer, ctx, ThreeDmodel)
     }
 
     // Resize function to update camera and renderer on container width change

@@ -15,15 +15,6 @@ export interface ThreeDEmbedSettings {
     autoShowGUI: boolean;
     stlWireframe: boolean;
     stlColor: string;
-    attachLightToCam: boolean;
-    standardLightColor_AttachedCam: string;
-    standardlightStrength_AttachedCam: number;
-    standardLightColor: string;
-    standardlightStrength: number;
-    standardshowLight: boolean;
-    standardlightPosX: number;
-    standardlightPosY: number;
-    standardlightPosZ: number;
 
     lightSettings: {
         dropdownValue: string;
@@ -47,15 +38,6 @@ export const DEFAULT_SETTINGS: ThreeDEmbedSettings = {
     autoShowGUI: false,
     stlWireframe: false,
     stlColor: "#606060",
-    attachLightToCam: false,
-    standardLightColor_AttachedCam: "#FFFFFF",
-    standardlightStrength_AttachedCam: 1,
-    standardLightColor: "#FFFFFF",
-    standardlightStrength: 1,
-    standardshowLight: false,
-    standardlightPosX: 5,
-    standardlightPosY: 10,
-    standardlightPosZ: 5,
 
     lightSettings: [
         {

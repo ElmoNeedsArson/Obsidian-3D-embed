@@ -1,3 +1,5 @@
+import { MarkdownView, Notice } from 'obsidian';
+
 import * as THREE from 'three';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -20,33 +22,6 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
         orbit.enabled = !(event as { value: boolean }).value;
         isTransforming = (event as { value: boolean }).value;
     });
-
-    // Mouse click to select the whole model group
-    // function onMouseClick(event: MouseEvent) {
-    //     if (isTransforming) return; // Ignore clicks if still transforming
-
-    //     updateMousePosition(event);
-    //     raycaster.setFromCamera(mouse, camera);
-    //     const intersects = raycaster.intersectObjects(modelArr, true);
-
-    //     if (intersects.length > 0) {
-    //         const selectedMesh = intersects[0].object;
-    //         const group = findParentGroup(selectedMesh);
-
-    //         if (group) {
-    //             selectedGroup = group;
-    //             controls.attach(selectedGroup);
-    //             scene.add(gizmo);
-    //         }
-    //     } else {
-    //         // Only deselect if the user is not transforming
-    //         if (selectedGroup) {
-    //             controls.detach();
-    //             selectedGroup = null;
-    //             scene.remove(gizmo);
-    //         }
-    //     }
-    // }
 
     let isTransforming2 = false;
 
@@ -209,6 +184,38 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
     })
 
     // applyReload.addEventListener('click', () => {
+    //     //Save data for all models
+    //     modelArr.forEach((child: THREE.Group, index: number) => { })
+    //     //Save data for all lights?
+    //     //Save data for camera
+    //     //Save data for guioverlay and background color
+
+    //     const view = plugin.app.workspace.getActiveViewOfType(MarkdownView);
+
+    //     // gets line number of the codeblock that is being triggered with the button
+    //     const sec = ctx.getSectionInfo(ctx.el);
+    //     const lineno = sec?.lineStart;
+    //     const lineEnd = sec?.lineEnd
+
+    //     const colorValue = colorInput.value.replace('#', '');
+
+    //     if (view) {
+    //         for (let i = lineno; i < lineEnd; i++) {
+    //             console.log("Checking line number " + i)
+
+    //             // save position settings
+    //             if (view.editor.getLine(i).contains(`"positionX"`)) {
+    //                 if (view.editor.getLine(i + 1).contains(`}`)) {
+    //                     view.editor.setLine(i, `"positionX": ${mdl.position.x.toFixed(3)}, "positionY": ${mdl.position.y.toFixed(3)}, "positionZ": ${mdl.position.z.toFixed(3)}`)
+    //                 } else {
+    //                     view.editor.setLine(i, `"positionX": ${mdl.position.x.toFixed(3)}, "positionY": ${mdl.position.y.toFixed(3)}, "positionZ": ${mdl.position.z.toFixed(3)},`)
+    //                 }
+    //             }
+    //         }
+    //     }
+    // })
+
+    // applyReload.addEventListener('click', () => {
     //     let mdl = model
 
     //     const view = plugin.app.workspace.getActiveViewOfType(MarkdownView);
@@ -283,79 +290,147 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
     //     }
     // })
 
-    // TransformControlsInput.addEventListener('input', () => {
-    //     controls.addEventListener('change', render);
-    //     controls.addEventListener('dragging-changed', function (event) {
-    //         orbit.enabled = !event.value;
-    //     });
+    applyReload.addEventListener("click", () => {
+        console.log("Pressed Save")
+        const view = plugin.app.workspace.getActiveViewOfType(MarkdownView);
+        const sec = ctx.getSectionInfo(ctx.el);
+        const lineno = sec?.lineStart;
+        const lineEnd = sec?.lineEnd;
+        const colorValue: string = colorInput.value.replace("#", "");
 
-    //     //scene.add(gizmo);
-    //     if (TransformControlsInput.checked) {
-    //         scene.add(gizmo);
-    //         transformOptions()
-    //     } else {
-    //         scene.remove(gizmo); // or some other action for false
-    //         const radioParent = el.querySelector('.radioParent')
-    //         if (radioParent) el.removeChild(radioParent);
-    //     }
+        if (!view || modelArr.length === 0) {
+            console.error("No models found to update. Contact Developer.");
+            return;
+        }
 
-    //     function render() {
-    //         renderer.render(scene, camera);
-    //     }
+        try {
+            // Update global properties
+            if (config.scene.backgroundColor) config.scene.backgroundColor = colorValue;
+            if (config.scene.showGuiOverlay) config.scene.showGuiOverlay = false;
+            if (config.camera.camPosXYZ) config.camera.camPosXYZ = [camera.position.x, camera.position.y, camera.position.z];
+            if (config.camera.LookatXYZ) config.camera.LookatXYZ = [orbit.target.x, orbit.target.y, orbit.target.z];
 
-    //     function transformOptions() {
-    //         let radioParent = document.createElement('div');
-    //         radioParent.classList.add('radioParent');
-    //         el.appendChild(radioParent)
+            // Update models
+            config.models.forEach((model: any, index: number) => {
+                console.log("hi")
+                console.log(model)
+                console.log(modelArr[0])
+                //const matchingModel = modelArr.find((mdl: THREE.Group) => mdl.name === model.name);
+                //if (matchingModel) {
+                    console.log("hi2")
+                    model.position = [modelArr[index].position.x.toFixed(3), modelArr[index].position.y.toFixed(3), modelArr[index].position.z.toFixed(3)];
+                    model.rotation = [
+                        (modelArr[index].rotation.x * (180 / Math.PI)).toFixed(3),
+                        (modelArr[index].rotation.y * (180 / Math.PI)).toFixed(3),
+                        (modelArr[index].rotation.z * (180 / Math.PI)).toFixed(3)
+                    ];
+                //}
+            });
 
-    //         const radioData = [
-    //             { label: 'Transform', value: '1' },
-    //             { label: 'Rotate', value: '2' },
-    //             //{ label: 'Scale', value: '3' },
-    //         ];
+            /**
+    * Custom formatter that outputs JSON in a specific style.
+    * Top-level keys (first iteration) are not indented.
+    */
+            function customFormat(value: any, indent = ""): string {
+                const indentStep = "   "; // 3 spaces for each nested level
 
-    //         // Create a radio button group
-    //         radioData.forEach((data, index) => {
-    //             // Create the radio input element
-    //             const radio = document.createElement('input');
-    //             radio.type = 'radio';
-    //             radio.name = 'exampleRadio'; // Group name for the radio buttons
-    //             radio.id = `radio${index}`;
-    //             radio.value = data.value;
+                // Handle arrays
+                if (Array.isArray(value)) {
+                    // If all elements are primitives, output inline.
+                    if (value.every(isPrimitive)) {
+                        return `[${value.join(", ")}]`;
+                    }
+                    // If the array contains only “simple objects”, format each inline.
+                    if (value.every(isSimpleObject)) {
+                        const items = value.map(item => formatObjectInline(item));
+                        return `[\n${indentStep}${items.join(",\n" + indentStep)}\n]`;
+                    }
+                    // Otherwise, format each element recursively.
+                    const items = value.map(item => customFormat(item, indent));
+                    return `[\n${indentStep}${items.join(",\n" + indentStep)}\n]`;
+                }
 
-    //             if (index == 0) {
-    //                 radio.checked = true;
-    //             }
+                // Handle objects
+                if (value !== null && typeof value === "object") {
+                    const keys = Object.keys(value);
+                    // For each key, add no indent if we're at the top level (indent === ""),
+                    // or indent using indent+indentStep for nested levels.
+                    const lines = keys.map(key => {
+                        const formattedValue = customFormat(value[key], indentStep);
+                        // Use no indentation for top-level keys; add indentation for nested keys.
+                        const keyPrefix = indent === "" ? "" : indent;
+                        return `${keyPrefix}"${key}": ${formattedValue}`;
+                    });
+                    return `{\n${lines.join(",\n")}\n}`;
+                }
 
-    //             // Create the label element
-    //             const label = document.createElement('label');
-    //             label.htmlFor = `radio${index}`;
-    //             label.textContent = data.label;
+                // Handle primitives (numbers, strings, booleans, null)
+                return JSON.stringify(value);
+            }
 
-    //             // Append the radio and label to the container
-    //             radioParent.appendChild(radio);
-    //             radioParent.appendChild(label);
+            /**
+             * Determines if a value is a primitive.
+             */
+            function isPrimitive(val: any): boolean {
+                return val === null || (typeof val !== "object" && typeof val !== "function");
+            }
 
-    //             radio.addEventListener('change', (event) => {
-    //                 const target = event.target as HTMLInputElement;
+            /**
+             * Checks if an object is "simple": all of its properties are primitives
+             * or flat arrays (arrays of primitives).
+             */
+            function isSimpleObject(obj: any): boolean {
+                if (obj === null || typeof obj !== "object") return false;
+                return Object.values(obj).every(val => {
+                    if (Array.isArray(val)) {
+                        return val.every(isPrimitive);
+                    }
+                    return isPrimitive(val);
+                });
+            }
 
-    //                 switch (target.value) {
-    //                     case '1':
-    //                         controls.setMode('translate');
-    //                         break;
+            /**
+             * Formats a simple object on one line.
+             */
+            function formatObjectInline(obj: any): string {
+                const entries = Object.entries(obj).map(([key, val]) => {
+                    let formatted: string;
+                    if (Array.isArray(val)) {
+                        // If the array is flat, join it inline.
+                        if (val.every(isPrimitive)) {
+                            formatted = `[${val.join(", ")}]`;
+                        } else {
+                            formatted = JSON.stringify(val);
+                        }
+                    } else {
+                        formatted = typeof val === "string" ? JSON.stringify(val) : String(val);
+                    }
+                    return `"${key}": ${formatted}`;
+                });
+                return `{${entries.join(", ")}}`;
+            }
+            // Convert back to JSON string without outer brackets
+            //let updatedJsonText = JSON.stringify(config, null, 3).slice(1, -1).trim();
+            //let updatedJsonText = JSON.stringify(config, null, 0).slice(1, -1).trim();
 
-    //                     case '2':
-    //                         controls.setMode('rotate');
-    //                         break;
+            let formattedJson = customFormat(config);
+            // If you want to remove the outer braces (like if you're inserting it inside a code block without them)
+            formattedJson = formattedJson.slice(1, -1).trim();
 
-    //                     // case '3':
-    //                     //     controls.setMode('scale');
-    //                     //     break;
-    //                 }
-    //             })
-    //         });
-    //     }
-    // })
+            // Now insert formattedJson into your editor:
+            view.editor.replaceRange(
+                "```3D\n" + formattedJson + "\n```\n",
+                { line: lineno, ch: 0 },
+                { line: lineEnd + 1, ch: 0 }
+            );
+
+            // Replace the old JSON in the editor with proper codeblock formatting
+            //view.editor.replaceRange(`\`\`\`3D\n${updatedJsonText}\n\`\`\``, { line: lineno, ch: 0 }, { line: lineEnd, ch: 0 });
+
+        } catch (error) {
+            console.error("Error updating JSON: " + error);
+        }
+    });
 
     TransformControlsInput.addEventListener('input', () => {
         controls.addEventListener('change', render);

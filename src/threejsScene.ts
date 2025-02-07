@@ -94,7 +94,7 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
     if (config.scene && config.scene.showGuiOverlay) {
         axesHelper ??= new THREE.AxesHelper(10);
         gridHelper ??= new THREE.GridHelper(10, 10);
-        gui2(plugin, el, scene, axesHelper, gridHelper, orbit, camera, renderer, ctx, modelArray)
+        gui2(plugin, el, scene, axesHelper, gridHelper, orbit, camera, renderer, ctx, modelArray, config)
         //gui(plugin, config.showGuiOverlay, el, scene, axesHelper, gridHelper, controls, orbit, gizmo, camera, renderer, ctx, ThreeDmodel)
     }
 

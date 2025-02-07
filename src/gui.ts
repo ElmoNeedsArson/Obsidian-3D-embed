@@ -246,7 +246,7 @@ export function gui(plugin: ThreeJSPlugin, guiShow: boolean, el: HTMLElement, sc
     }
 }
 
-export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene, axesHelper: THREE.AxesHelper, gridHelper: THREE.GridHelper, orbit: OrbitControls, camera: any, renderer: any, ctx: any, modelArr: any) {
+export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene, axesHelper: THREE.AxesHelper, gridHelper: THREE.GridHelper, orbit: OrbitControls, camera: any, renderer: any, ctx: any, modelArr: any, config: any) {
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
     let selectedGroup: THREE.Group | null = null;
@@ -428,23 +428,23 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
 
     reset.addEventListener('click', () => {
         //NEEDS TO CHANGE, RESET SHOULD MEAN READ OUT THE CONFIG OR THE STANDARD SETTINGS --- Discussion Point
-        modelArr.forEach((child: THREE.Group) => {
-            child.position.x = 0;
-            child.position.y = 0;
-            child.position.z = 0;
+        modelArr.forEach((child: THREE.Group, index: number) => {
+            child.position.x = config.models[index].position[0];
+            child.position.y = config.models[index].position[1];
+            child.position.z = config.models[index].position[2];
 
-            child.rotation.x = 0;
-            child.rotation.y = 0;
-            child.rotation.z = 0;
+            child.rotation.x = THREE.MathUtils.degToRad(config.models[index].rotation[0]);
+            child.rotation.y = THREE.MathUtils.degToRad(config.models[index].rotation[1]);
+            child.rotation.z = THREE.MathUtils.degToRad(config.models[index].rotation[2]);
         });
 
-        camera.position.x = 0;
-        camera.position.y = 5;
-        camera.position.z = 10;
+        camera.position.x = config.camera.camPosXYZ[0];
+        camera.position.y = config.camera.camPosXYZ[1];
+        camera.position.z = config.camera.camPosXYZ[2];
 
-        orbit.target.x = 0;
-        orbit.target.y = 0;
-        orbit.target.z = 0;
+        orbit.target.x = config.camera.LookatXYZ[0];
+        orbit.target.y = config.camera.LookatXYZ[1];
+        orbit.target.z = config.camera.LookatXYZ[2];
 
         scene.background = new THREE.Color(plugin.settings.standardColor);
         colorInput.value = plugin.settings.standardColor

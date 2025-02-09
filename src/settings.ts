@@ -273,6 +273,13 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                     dropdown.setValue(light.dropdownValue);
                     dropdown.onChange(async (value: LightType) => {
                         light.dropdownValue = value;
+
+                        // Store open details sections before refreshing UI
+                        const openDetails = new Set();
+                        containerEl.querySelectorAll("details").forEach((detail, idx) => {
+                            if (detail.open) openDetails.add(idx);
+                        });
+
                         // When the type changes, initialize or remove fields as needed.
                         if (value === "hemisphere") {
                             // Hemisphere lights do not need a position or target
@@ -296,6 +303,11 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         summary.innerText = `Lightsource number ${index + 1}: ${value}`;
                         await this.plugin.saveData(this.plugin.settings);
                         this.display(); // Refresh UI to show/hide fields accordingly
+
+                        // Restore open details sections
+                        containerEl.querySelectorAll("details").forEach((detail, idx) => {
+                            if (openDetails.has(idx)) detail.open = true;
+                        });
                     });
                 });
 
@@ -401,7 +413,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                             await this.plugin.saveData(this.plugin.settings);
                         });
                     });
-            
+
                 new Setting(details)
                     .setName("Spotlight Angle")
                     .setDesc("Angle of the spotlight (in radians).")

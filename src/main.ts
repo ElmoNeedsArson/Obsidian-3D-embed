@@ -24,15 +24,35 @@ export default class ThreeJSPlugin extends Plugin {
         //adds a code block that instantly adds the 3D scene to your note
         ThreeD_Embed_Command(this)
 
-        const storedData = await this.loadData();
-        let hasSeenModal = storedData?.hasSeenUpdateModal || false;
-        //hasSeenModal = false //enable it to see the message
+        // const storedData = await this.loadData();
+        // let hasSeenModal = storedData?.hasSeenUpdateModal || false;
+        // //hasSeenModal = false //enable it to see the message
 
-        if (!hasSeenModal) {
-            new UpdateModal(this.app, async () => {
-                await this.saveData({ hasSeenUpdateModal: true });
-            }).open();
+        // if (!hasSeenModal) {
+        //     new UpdateModal(this.app, async () => {
+        //         await this.saveData({ hasSeenUpdateModal: true });
+        //     }).open();
+        // }
+
+        const data = await this.loadData();
+        if (data) {
+            if (data.version) {
+                console.log("Loaded version:", data.version);
+                //Potential future option for showing an installation modal
+            } else {
+                console.log("No version found showing modal")
+
+                new UpdateModal(this.app, async () => {
+                    await this.saveData({ hasSeenUpdateModal: true });
+                }).open();
+
+                const existingData = await this.loadData() || {};
+                const updatedData = { ...existingData, version: "1.0.8" };
+                await this.saveData(updatedData);
+            }
         }
+
+
 
         this.registerMarkdownCodeBlockProcessor('3D', (source, el, ctx) => {
             // Combine file path, content, and linestart to create a unique ID
@@ -147,14 +167,14 @@ class UpdateModal extends Modal {
         calloutEl.createEl("strong", { text: "Update Notice:" });
         const calloutText = calloutEl.createEl("p");
         calloutText.appendText("In this update the syntax of the codeblock has significantly changed. This causes the old embeds to stop working. ");
-        calloutText.appendText("To fix this, remove your old codeblock and execute the embed command again.") 
+        calloutText.appendText("To fix this, remove your old codeblock and execute the embed command again.")
 
         const calloutText2 = calloutEl.createEl("p");
         calloutText2.appendText("Now there is a chance you already put a lot of effort into the current setup of your models, unfortunately if you want to keep this setup, you will have to do a bit of manual work. You can review the updated syntax in the ");
         const readmeLink = calloutText2.createEl("a", { text: "ReadMe", href: "https://github.com/ElmoNeedsArson/Obsidian-3D-embed#readme" });
         readmeLink.setAttribute("target", "_blank");
         calloutText2.appendText(" and fill in your values for the new syntax.");
-        
+
         const calloutText3 = calloutEl.createEl("p");
         calloutText3.appendText("Apologies for the inconvenience. But I hope you can keep enjoying the plugin.")
 

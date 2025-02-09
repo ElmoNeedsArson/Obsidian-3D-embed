@@ -115,7 +115,14 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
     modelArray.forEach((child) => {
         parentGroup.add(child);
     });
+    console.log(lightsArray)
+    lightsArray.forEach((child) => {
+        if (child.obj && child.name != "attachToCam") {
+            parentGroup.add(child.obj);
+        }
+    });
     scene.add(parentGroup);
+    console.log(parentGroup)
 
     // Animation loop
     const animate = () => {

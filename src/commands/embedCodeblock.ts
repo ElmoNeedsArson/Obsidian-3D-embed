@@ -1,6 +1,8 @@
 import { Editor, Notice } from 'obsidian';
 
 import ThreeJSPlugin from '../main';
+// For example, in convertLights.ts
+import { LightSetting } from '../settings'; // Adjust the path as necessary
 
 export function ThreeD_Embed_Command(plugin: ThreeJSPlugin) {
     plugin.addCommand({
@@ -32,8 +34,9 @@ export function ThreeD_Embed_Command(plugin: ThreeJSPlugin) {
 
                 let autorotateY = plugin.settings.autoRotate ? 0.001 : 0
                 let cameraType = ""
-                if (plugin.settings.cameraType == "Orthographic") {cameraType = `"orthographic": true`
-                } else {cameraType = `"orthographic": false`}
+                if (plugin.settings.cameraType == "Orthographic") {
+                    cameraType = `"orthographic": true`
+                } else { cameraType = `"orthographic": false` }
 
                 let codeBlockType = "\n```3D"
                 let models = `\n"models": [\n   {"name": "` + selection + `", "scale": ` + plugin.settings.standardScale + `, "position": [0, 0, 0], "rotation": [0, 0, 0]}\n]`
@@ -43,13 +46,38 @@ export function ThreeD_Embed_Command(plugin: ThreeJSPlugin) {
                 let stl = `,\n"stl": {\n   "stlColorHexString": "` + plugin.settings.stlColor.replace(/#/g, "") + `",\n   "stlWireframe":` + plugin.settings.stlWireframe + `\n}`
                 let codeBlockClosing = '\n```\n'
 
+                // let lights = `,\n"lights": [\n${plugin.settings.lightSettings
+                //     .map((light: { dropdownValue: string; color: string; position: [number, number, number]; intensity: number }) =>
+                //         `   {"type":"${light.dropdownValue}", "color":"${light.color.replace("#", "")}", "pos":[${light.position.join(",")}], "strength": ${light.intensity}, "show": false}`
+                //     )
+                //     .join(",\n")}\n]`;
+
+                // Assuming you have imported or defined the updated LightSetting type:
                 let lights = `,\n"lights": [\n${plugin.settings.lightSettings
-                    .map((light: { dropdownValue: string; color: string; position: [number, number, number]; intensity: number }) =>
-                        `   {"type":"${light.dropdownValue}", "color":"${light.color.replace("#", "")}", "pos":[${light.position.join(",")}], "strength": ${light.intensity}, "show": false}`
-                    )
+                    .map((light: LightSetting) => {
+                      const defaultColor = "#FFFFFF";
+                      const colorString = (light.color ?? defaultColor).replace("#", "");
+                      const posString = light.position ? light.position.join(",") : "0,0,0";
+                  
+                      if (light.dropdownValue === "hemisphere") {
+                        const groundColor = (light.secondaryColor ?? defaultColor).replace("#", "");
+                        return `   {"type": "hemisphere", "skyColor": "${colorString}", "groundColor": "${groundColor}", "strength": ${light.intensity}, "show": false}`;
+                      } else if (light.dropdownValue === "directional" || light.dropdownValue === "spot") {
+                        const targetString = light.targetPosition ? light.targetPosition.join(",") : "0,0,0";
+                        if (light.dropdownValue === "spot") {
+                          // For spotlights, include distance and angle.
+                          const distanceValue = light.distance !== undefined ? light.distance : 0;
+                          const angleValue = light.angle !== undefined ? light.angle : 0;
+                          return `   {"type": "spot", "color": "${colorString}", "pos": [${posString}], "target": [${targetString}], "distance": ${distanceValue}, "angle": ${angleValue}, "strength": ${light.intensity}, "show": false}`;
+                        } else {
+                          return `   {"type": "directional", "color": "${colorString}", "pos": [${posString}], "target": [${targetString}], "strength": ${light.intensity}, "show": false}`;
+                        }
+                      } else {
+                        return `   {"type": "${light.dropdownValue}", "color": "${colorString}", "pos": [${posString}], "strength": ${light.intensity}, "show": false}`;
+                      }
+                    })
                     .join(",\n")}\n]`;
-                
-                
+
                 let content = ""
                 if (plugin.settings.showConfig) {
                     content = codeBlockType + models + lights + camera + scene + stl + codeBlockClosing

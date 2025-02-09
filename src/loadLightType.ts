@@ -44,7 +44,7 @@ export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: stri
             if (position) {
                 point.position.set(position[0], position[1], position[2])
             } else {
-                point.position.set(plugin.settings.lightSettings[0].position[0], plugin.settings.lightSettings[0].position[1], plugin.settings.lightSettings[0].position[2])
+                //point.position.set(plugin.settings.lightSettings[0].position[0], plugin.settings.lightSettings[0].position[1], plugin.settings.lightSettings[0].position[2])
             }
 
             scene.add(point)
@@ -61,7 +61,7 @@ export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: stri
             if (position) {
                 ambient.position.set(position[0], position[1], position[2])
             } else {
-                ambient.position.set(plugin.settings.lightSettings[0].position[0], plugin.settings.lightSettings[0].position[1], plugin.settings.lightSettings[0].position[2])
+                //ambient.position.set(plugin.settings.lightSettings[0].position[0], plugin.settings.lightSettings[0].position[1], plugin.settings.lightSettings[0].position[2])
             }
 
             scene.add(ambient)
@@ -74,7 +74,7 @@ export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: stri
             if (position) {
                 directional.position.set(position[0], position[1], position[2])
             } else {
-                directional.position.set(plugin.settings.lightSettings[0].position[0], plugin.settings.lightSettings[0].position[1], plugin.settings.lightSettings[0].position[2])
+                //directional.position.set(plugin.settings.lightSettings[0].position[0], plugin.settings.lightSettings[0].position[1], plugin.settings.lightSettings[0].position[2])
             }
 
             if (lightconfig.target) {
@@ -125,7 +125,7 @@ export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: stri
             if (position) {
                 spot.position.set(position[0], position[1], position[2])
             } else {
-                spot.position.set(plugin.settings.lightSettings[0].position[0], plugin.settings.lightSettings[0].position[1], plugin.settings.lightSettings[0].position[2])
+                //spot.position.set(plugin.settings.lightSettings[0].position[0], plugin.settings.lightSettings[0].position[1], plugin.settings.lightSettings[0].position[2])
             }
 
             scene.add(spot);

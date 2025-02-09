@@ -1,8 +1,29 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
 import ThreeJSPlugin from './main';
 
+// First, update the interface to allow for the new optional fields:
+export type LightType =
+    | "point"
+    | "directional"
+    | "ambient"
+    | "attachToCam"
+    | "spot"
+    | "hemisphere";
+
+//Contains all the possible settings for the lights, if its not a certain a ? is added
+export interface LightSetting {
+    dropdownValue: LightType;
+    position?: [number, number, number];
+    targetPosition?: [number, number, number];
+    color?: string;
+    secondaryColor?: string;
+    intensity: number;
+    distance?: number;
+    angle?: number;
+}
+
 export interface ThreeDEmbedSettings {
-    showConfig: boolean,
+    showConfig: boolean;
     standardColor: string;
     standardScale: number;
     standardEmbedHeight: number;
@@ -15,15 +36,10 @@ export interface ThreeDEmbedSettings {
     autoShowGUI: boolean;
     stlWireframe: boolean;
     stlColor: string;
-
-    lightSettings: {
-        dropdownValue: string;
-        position: [number, number, number];
-        intensity: number;
-        color: string;
-    }[];
+    lightSettings: LightSetting[];
 }
 
+// Update your defaults accordingly. (Here I left the default lights as before.)
 export const DEFAULT_SETTINGS: ThreeDEmbedSettings = {
     showConfig: true,
     standardColor: "#ADD8E6",
@@ -38,21 +54,21 @@ export const DEFAULT_SETTINGS: ThreeDEmbedSettings = {
     autoShowGUI: false,
     stlWireframe: false,
     stlColor: "#606060",
-
     lightSettings: [
         {
-            dropdownValue: "directional", // Default light type
-            position: [5, 10, 5], // Default position
-            intensity: 1, // Default light strength
-            color: "#FFFFFF", // Default light color
+            dropdownValue: "directional",
+            position: [5, 10, 5],
+            // directional lights can also have a target position
+            targetPosition: [0, 0, 0],
+            intensity: 1,
+            color: "#FFFFFF",
         },
         {
-            dropdownValue: "ambient", // Default light type
-            position: [5, 10, 5], // Default position
-            intensity: 0.5, // Default light strength
-            color: "#FFFFFF", // Default light color
-        }
-    ]
+            dropdownValue: "ambient",
+            intensity: 0.5,
+            color: "#FFFFFF",
+        },
+    ],
 };
 
 export class ThreeDSettingsTab extends PluginSettingTab {
@@ -223,9 +239,9 @@ export class ThreeDSettingsTab extends PluginSettingTab {
             .setDesc("It is strongly recommended to keep the 2 preloaded lights")
             .addButton((button) => {
                 button.setButtonText("+").onClick(() => {
+                    // When adding a new light, we use a default that makes sense.
                     this.plugin.settings.lightSettings.push({
                         dropdownValue: "ambient",
-                        position: [5, 10, 5],
                         intensity: 1,
                         color: "#ffffff",
                     });
@@ -237,12 +253,12 @@ export class ThreeDSettingsTab extends PluginSettingTab {
         // Iterate over each light setting and create UI elements
         this.plugin.settings.lightSettings.forEach((light, index) => {
             const lightDiv = containerEl.createDiv({ cls: "light-setting" });
-
-            // Create collapsible section
             const details = lightDiv.createEl("details");
-            const summary = details.createEl("summary", { text: `Lightsource number ${index + 1}: ` + light.dropdownValue });
+            const summary = details.createEl("summary", {
+                text: `Lightsource number ${index + 1}: ${light.dropdownValue}`,
+            });
 
-            // Light Type Dropdown
+            // Light Type Dropdown (include our two new types)
             new Setting(details)
                 .setName("Light Type")
                 .addDropdown((dropdown) => {
@@ -250,50 +266,190 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         point: "point",
                         directional: "directional",
                         ambient: "ambient",
-                        attachToCam: "attach to camera"
+                        attachToCam: "attach to camera",
+                        spot: "spot",
+                        hemisphere: "hemisphere",
                     });
                     dropdown.setValue(light.dropdownValue);
-                    dropdown.onChange(async (value) => {
+                    dropdown.onChange(async (value: LightType) => {
                         light.dropdownValue = value;
-                        summary.innerText = `Lightsource number ${index + 1}: ` + value
+                        // When the type changes, initialize or remove fields as needed.
+                        if (value === "hemisphere") {
+                            // Hemisphere lights do not need a position or target
+                            delete light.position;
+                            delete light.targetPosition;
+                            light.secondaryColor = light.secondaryColor || "#FFFFFF";
+                        } else {
+                            // Ensure we have a default position
+                            if (!light.position) {
+                                light.position = [5, 10, 5];
+                            }
+                        }
+                        if (value === "directional" || value === "spot") {
+                            // Initialize target position if needed
+                            if (!light.targetPosition) {
+                                light.targetPosition = [0, 0, 0];
+                            }
+                        } else {
+                            delete light.targetPosition;
+                        }
+                        summary.innerText = `Lightsource number ${index + 1}: ${value}`;
                         await this.plugin.saveData(this.plugin.settings);
+                        this.display(); // Refresh UI to show/hide fields accordingly
                     });
                 });
 
-            // Position Inputs with Title
-            new Setting(details)
-                .setClass("ThreeDEmbed_Position_Inputs")
-                .setName("Light Position")
-                .setDesc("The position of the light in the scene (X, Y, Z)")
-                .addText(text =>
-                    text
-                        .setValue(light.position[0].toString())
-                        .onChange(async (value) => {
-                            const numValue = parseFloat(value);
-                            light.position[0] = numValue;
-                            await this.plugin.saveData(this.plugin.settings);
-                        })
-                )
-                .addText(text =>
-                    text
-                        .setValue(light.position[1].toString())
-                        .onChange(async (value) => {
-                            const numValue = parseFloat(value);
-                            light.position[1] = numValue;
-                            await this.plugin.saveData(this.plugin.settings);
-                        })
-                )
-                .addText(text =>
-                    text
-                        .setValue(light.position[2].toString())
-                        .onChange(async (value) => {
-                            const numValue = parseFloat(value);
-                            light.position[2] = numValue;
-                            await this.plugin.saveData(this.plugin.settings);
-                        })
-                );
+            // For lights other than hemisphere, show the position input.
+            if (light.dropdownValue !== "hemisphere") {
+                new Setting(details)
+                    .setClass("ThreeDEmbed_Position_Inputs")
+                    .setName("Light Position")
+                    .setDesc("The position of the light in the scene (X, Y, Z)")
+                    .addText((text) =>
+                        text
+                            .setValue(light.position ? light.position[0].toString() : "0")
+                            .onChange(async (value) => {
+                                const numValue = parseFloat(value);
+                                if (!light.position) {
+                                    light.position = [0, 0, 0];
+                                }
+                                light.position[0] = numValue;
+                                await this.plugin.saveData(this.plugin.settings);
+                            })
+                    )
+                    .addText((text) =>
+                        text
+                            .setValue(light.position ? light.position[1].toString() : "0")
+                            .onChange(async (value) => {
+                                const numValue = parseFloat(value);
+                                if (!light.position) {
+                                    light.position = [0, 0, 0];
+                                }
+                                light.position[1] = numValue;
+                                await this.plugin.saveData(this.plugin.settings);
+                            })
+                    )
+                    .addText((text) =>
+                        text
+                            .setValue(light.position ? light.position[2].toString() : "0")
+                            .onChange(async (value) => {
+                                const numValue = parseFloat(value);
+                                if (!light.position) {
+                                    light.position = [0, 0, 0];
+                                }
+                                light.position[2] = numValue;
+                                await this.plugin.saveData(this.plugin.settings);
+                            })
+                    );
+            }
 
-            // Light Intensity
+            // For directional and spot lights, add target position inputs.
+            if (light.dropdownValue === "directional" || light.dropdownValue === "spot") {
+                new Setting(details)
+                    .setClass("ThreeDEmbed_Position_Inputs")
+                    .setName("Target Position")
+                    .setDesc("The target position of the light in the scene (X, Y, Z)")
+                    .addText((text) =>
+                        text
+                            .setValue(light.targetPosition ? light.targetPosition[0].toString() : "0")
+                            .onChange(async (value) => {
+                                const numValue = parseFloat(value);
+                                if (!light.targetPosition) {
+                                    light.targetPosition = [0, 0, 0];
+                                }
+                                light.targetPosition[0] = numValue;
+                                await this.plugin.saveData(this.plugin.settings);
+                            })
+                    )
+                    .addText((text) =>
+                        text
+                            .setValue(light.targetPosition ? light.targetPosition[1].toString() : "0")
+                            .onChange(async (value) => {
+                                const numValue = parseFloat(value);
+                                if (!light.targetPosition) {
+                                    light.targetPosition = [0, 0, 0];
+                                }
+                                light.targetPosition[1] = numValue;
+                                await this.plugin.saveData(this.plugin.settings);
+                            })
+                    )
+                    .addText((text) =>
+                        text
+                            .setValue(light.targetPosition ? light.targetPosition[2].toString() : "0")
+                            .onChange(async (value) => {
+                                const numValue = parseFloat(value);
+                                if (!light.targetPosition) {
+                                    light.targetPosition = [0, 0, 0];
+                                }
+                                light.targetPosition[2] = numValue;
+                                await this.plugin.saveData(this.plugin.settings);
+                            })
+                    );
+            }
+
+            // For the spotlights add a distance and angle setting
+            if (light.dropdownValue === "spot") {
+                new Setting(details)
+                    .setName("Spotlight Distance")
+                    .setDesc("Distance from the spotlight to the target.")
+                    .addText((text) => {
+                        text.inputEl.type = "number";
+                        // If distance is undefined, default to 0
+                        text.setValue(light.distance !== undefined ? light.distance.toString() : "0");
+                        text.onChange(async (value) => {
+                            light.distance = parseFloat(value);
+                            await this.plugin.saveData(this.plugin.settings);
+                        });
+                    });
+            
+                new Setting(details)
+                    .setName("Spotlight Angle")
+                    .setDesc("Angle of the spotlight (in radians).")
+                    .addText((text) => {
+                        text.inputEl.type = "number";
+                        // If angle is undefined, default to 0
+                        text.setValue(light.angle !== undefined ? light.angle.toString() : "0");
+                        text.onChange(async (value) => {
+                            light.angle = parseFloat(value);
+                            await this.plugin.saveData(this.plugin.settings);
+                        });
+                    });
+            }
+
+            // For hemisphere lights, do not show a position but show two color pickers.
+            if (light.dropdownValue === "hemisphere") {
+                new Setting(details)
+                    .setName("Sky Color")
+                    .addColorPicker((picker) => {
+                        picker.setValue(light.color || "#FFFFFF");
+                        picker.onChange(async (value) => {
+                            light.color = value;
+                            await this.plugin.saveData(this.plugin.settings);
+                        });
+                    });
+                new Setting(details)
+                    .setName("Ground Color")
+                    .addColorPicker((picker) => {
+                        picker.setValue(light.secondaryColor || "#FFFFFF");
+                        picker.onChange(async (value) => {
+                            light.secondaryColor = value;
+                            await this.plugin.saveData(this.plugin.settings);
+                        });
+                    });
+            } else {
+                // For all other light types, show a single color picker.
+                new Setting(details)
+                    .setName("Light Color")
+                    .addColorPicker((picker) => {
+                        picker.setValue(light.color ?? "#FFFFFF");
+                        picker.onChange(async (value) => {
+                            light.color = value;
+                            await this.plugin.saveData(this.plugin.settings);
+                        });
+                    });
+            }
+
+            // Light Intensity (always shown)
             new Setting(details)
                 .setName("Light Intensity")
                 .addText((text) => {
@@ -305,29 +461,19 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                     });
                 });
 
-            // Color Picker
-            new Setting(details)
-                .setName("Light Color")
-                .addColorPicker((picker) => {
-                    picker.setValue(light.color);
-                    picker.onChange(async (value) => {
-                        light.color = value;
-                        await this.plugin.saveData(this.plugin.settings);
-                    });
-                });
-
             // Remove Light Button
-            new Setting(details)
-                .addButton((button) => {
-                    button.setButtonText("Remove").setClass("ThreeDEmbed_Remove_Button").onClick(async () => {
+            new Setting(details).addButton((button) => {
+                button
+                    .setButtonText("Remove")
+                    .setClass("ThreeDEmbed_Remove_Button")
+                    .onClick(async () => {
                         this.plugin.settings.lightSettings.splice(index, 1);
                         await this.plugin.saveData(this.plugin.settings);
                         this.display(); // Refresh UI
                     });
-
-                    button.buttonEl.style.backgroundColor = "red";
-                    button.buttonEl.style.color = "white"
-                });
+                button.buttonEl.style.backgroundColor = "red";
+                button.buttonEl.style.color = "white";
+            });
 
             lightDiv.appendChild(details);
         });

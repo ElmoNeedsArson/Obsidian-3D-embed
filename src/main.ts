@@ -1,5 +1,4 @@
 import { Editor, Notice, Plugin, getLinkpath, Modal, App } from 'obsidian';
-import * as THREE from 'three';
 
 import { DEFAULT_SETTINGS, ThreeDEmbedSettings, ThreeDSettingsTab } from './settings';
 import { ThreeJSRendererChild, getUniqueId, getRenderer } from './rendermanager'
@@ -14,7 +13,11 @@ export default class ThreeJSPlugin extends Plugin {
     }
 
     async saveSettings() {
-        await this.saveData(this.settings);
+        const existingData = await this.loadData() || {};
+        const updatedData = { ...existingData, ...this.settings };
+        await this.saveData(updatedData);
+
+       // await this.saveData(this.settings);
     }
 
     async onload() {
@@ -43,7 +46,7 @@ export default class ThreeJSPlugin extends Plugin {
                 console.log("No version found showing modal")
 
                 new UpdateModal(this.app, async () => {
-                    await this.saveData({ hasSeenUpdateModal: true });
+                    //await this.saveData({ hasSeenUpdateModal: true });
                 }).open();
 
                 const existingData = await this.loadData() || {};
@@ -91,7 +94,7 @@ export default class ThreeJSPlugin extends Plugin {
                             // Models is an array, ensure we type 'model' properly
                             if (
                                 !Array.isArray(parsedData.models) ||
-                                parsedData.models.every((model: { [key: string]: any }) => model[subfield] === undefined)
+                                parsedData.models.some((model: { [key: string]: any }) => model[subfield] === undefined)
                             ) {
                                 errors.push(`Please include the "${subfield}" field inside each object in "models". Example: ${example}`);
                             }

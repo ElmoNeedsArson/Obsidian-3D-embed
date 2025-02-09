@@ -100,7 +100,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         .setValue(this.plugin.settings.showConfig) // Set the initial value based on settings
                         .onChange(async (value) => {
                             this.plugin.settings.showConfig = value; // Update setting when toggled
-                            await this.plugin.saveData(this.plugin.settings); // Save the new setting value
+                            // await this.plugin.saveData(this.plugin.settings); // Save the new setting value
+                            await this.plugin.saveSettings();
                         })
             )
 
@@ -142,7 +143,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         .setValue(this.plugin.settings.autoRotate) // Set the initial value based on settings
                         .onChange(async (value) => {
                             this.plugin.settings.autoRotate = value; // Update setting when toggled
-                            await this.plugin.saveData(this.plugin.settings); // Save the new setting value
+                            //await this.plugin.saveData(this.plugin.settings); // Save the new setting value
+                            await this.plugin.saveSettings();
                         })
             )
 
@@ -155,7 +157,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         .setValue(this.plugin.settings.autoShowGUI) // Set the initial value based on settings
                         .onChange(async (value) => {
                             this.plugin.settings.autoShowGUI = value; // Update setting when toggled
-                            await this.plugin.saveData(this.plugin.settings); // Save the new setting value
+                            //await this.plugin.saveData(this.plugin.settings); // Save the new setting value
+                            await this.plugin.saveSettings();
                         })
             )
 
@@ -229,7 +232,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         .setValue(this.plugin.settings.cameraType.toString())
                         .onChange(async (value) => {
                             this.plugin.settings.cameraType = value; // Update setting when toggled
-                            await this.plugin.saveData(this.plugin.settings); // Save the new setting value
+                            //await this.plugin.saveData(this.plugin.settings); // Save the new setting value
+                            await this.plugin.saveSettings();
                         }));
 
         containerEl.createEl("h2", { text: "Lighting Settings" });
@@ -238,14 +242,15 @@ export class ThreeDSettingsTab extends PluginSettingTab {
             .setName("Add Lights")
             .setDesc("It is strongly recommended to keep the 2 preloaded lights")
             .addButton((button) => {
-                button.setButtonText("+").onClick(() => {
+                button.setButtonText("+").onClick(async () => {
                     // When adding a new light, we use a default that makes sense.
                     this.plugin.settings.lightSettings.push({
                         dropdownValue: "ambient",
                         intensity: 1,
                         color: "#ffffff",
                     });
-                    this.plugin.saveData(this.plugin.settings);
+                    //this.plugin.saveData(this.plugin.settings);
+                    await this.plugin.saveSettings();
                     this.display(); // Refresh UI
                 });
             });
@@ -301,7 +306,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                             delete light.targetPosition;
                         }
                         summary.innerText = `Lightsource number ${index + 1}: ${value}`;
-                        await this.plugin.saveData(this.plugin.settings);
+                        //await this.plugin.saveData(this.plugin.settings);
+                        await this.plugin.saveSettings();
                         this.display(); // Refresh UI to show/hide fields accordingly
 
                         // Restore open details sections
@@ -326,7 +332,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                                     light.position = [0, 0, 0];
                                 }
                                 light.position[0] = numValue;
-                                await this.plugin.saveData(this.plugin.settings);
+                                //await this.plugin.saveData(this.plugin.settings);
+                                await this.plugin.saveSettings();
                             })
                     )
                     .addText((text) =>
@@ -338,7 +345,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                                     light.position = [0, 0, 0];
                                 }
                                 light.position[1] = numValue;
-                                await this.plugin.saveData(this.plugin.settings);
+                                //await this.plugin.saveData(this.plugin.settings);
+                                await this.plugin.saveSettings();
                             })
                     )
                     .addText((text) =>
@@ -350,7 +358,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                                     light.position = [0, 0, 0];
                                 }
                                 light.position[2] = numValue;
-                                await this.plugin.saveData(this.plugin.settings);
+                                //await this.plugin.saveData(this.plugin.settings);
+                                await this.plugin.saveSettings();
                             })
                     );
             }
@@ -370,7 +379,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                                     light.targetPosition = [0, 0, 0];
                                 }
                                 light.targetPosition[0] = numValue;
-                                await this.plugin.saveData(this.plugin.settings);
+                                //await this.plugin.saveData(this.plugin.settings);
+                                await this.plugin.saveSettings();
                             })
                     )
                     .addText((text) =>
@@ -382,7 +392,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                                     light.targetPosition = [0, 0, 0];
                                 }
                                 light.targetPosition[1] = numValue;
-                                await this.plugin.saveData(this.plugin.settings);
+                                //await this.plugin.saveData(this.plugin.settings);
+                                await this.plugin.saveSettings();
                             })
                     )
                     .addText((text) =>
@@ -394,7 +405,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                                     light.targetPosition = [0, 0, 0];
                                 }
                                 light.targetPosition[2] = numValue;
-                                await this.plugin.saveData(this.plugin.settings);
+                                //await this.plugin.saveData(this.plugin.settings);
+                                await this.plugin.saveSettings();
                             })
                     );
             }
@@ -410,7 +422,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         text.setValue(light.distance !== undefined ? light.distance.toString() : "0");
                         text.onChange(async (value) => {
                             light.distance = parseFloat(value);
-                            await this.plugin.saveData(this.plugin.settings);
+                            //await this.plugin.saveData(this.plugin.settings);
+                            await this.plugin.saveSettings();
                         });
                     });
 
@@ -423,7 +436,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         text.setValue(light.angle !== undefined ? light.angle.toString() : "0");
                         text.onChange(async (value) => {
                             light.angle = parseFloat(value);
-                            await this.plugin.saveData(this.plugin.settings);
+                            //await this.plugin.saveData(this.plugin.settings);
+                            await this.plugin.saveSettings();
                         });
                     });
             }
@@ -436,7 +450,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         picker.setValue(light.color || "#FFFFFF");
                         picker.onChange(async (value) => {
                             light.color = value;
-                            await this.plugin.saveData(this.plugin.settings);
+                            //await this.plugin.saveData(this.plugin.settings);
+                            await this.plugin.saveSettings();
                         });
                     });
                 new Setting(details)
@@ -445,7 +460,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         picker.setValue(light.secondaryColor || "#FFFFFF");
                         picker.onChange(async (value) => {
                             light.secondaryColor = value;
-                            await this.plugin.saveData(this.plugin.settings);
+                            //await this.plugin.saveData(this.plugin.settings);
+                            await this.plugin.saveSettings();
                         });
                     });
             } else {
@@ -456,7 +472,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         picker.setValue(light.color ?? "#FFFFFF");
                         picker.onChange(async (value) => {
                             light.color = value;
-                            await this.plugin.saveData(this.plugin.settings);
+                            //await this.plugin.saveData(this.plugin.settings);
+                            await this.plugin.saveSettings();
                         });
                     });
             }
@@ -469,7 +486,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                     text.setValue(light.intensity.toString());
                     text.onChange(async (value) => {
                         light.intensity = parseFloat(value);
-                        await this.plugin.saveData(this.plugin.settings);
+                        //await this.plugin.saveData(this.plugin.settings);
+                        await this.plugin.saveSettings();
                     });
                 });
 
@@ -480,7 +498,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                     .setClass("ThreeDEmbed_Remove_Button")
                     .onClick(async () => {
                         this.plugin.settings.lightSettings.splice(index, 1);
-                        await this.plugin.saveData(this.plugin.settings);
+                        //await this.plugin.saveData(this.plugin.settings);
+                        await this.plugin.saveSettings();
                         this.display(); // Refresh UI
                     });
                 button.buttonEl.style.backgroundColor = "red";
@@ -515,7 +534,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         .setValue(this.plugin.settings.stlWireframe) // Set the initial value based on settings
                         .onChange(async (value) => {
                             this.plugin.settings.stlWireframe = value; // Update setting when toggled
-                            await this.plugin.saveData(this.plugin.settings); // Save the new setting value
+                            //await this.plugin.saveData(this.plugin.settings); // Save the new setting value
+                            await this.plugin.saveSettings();
                         })
             )
     }

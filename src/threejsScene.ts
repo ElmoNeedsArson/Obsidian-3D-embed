@@ -43,7 +43,7 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
     if (config.lights) {
         let lights = config.lights
         for (let i = 0; i < lights.length; i++) {
-            let light = loadLights(plugin, scene, lights[i].type, lights[i].show, lights[i].color, lights[i].pos, lights[i].strength, camera)
+            let light = loadLights(plugin, scene, lights[i].type, lights[i].show, lights[i].color, lights[i].pos, lights[i].strength, camera, lights[i])
             lightsArray.push({ name: lights[i].type, obj: light })
         }
     }

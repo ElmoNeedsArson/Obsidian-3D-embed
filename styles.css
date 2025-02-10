@@ -2,21 +2,7 @@
     width: 50px;
 }
 
-.buttonInput_Reload {
-    position: absolute;
-    top: 9px;
-    right: 10px;
-    z-index: 100;
-}
-
-.buttonInput_Reset {
-    position: absolute;
-    top: 9px;
-    left: 50px;
-    z-index: 100;
-}
-
-input[type="color"] {
+/* input[type="color"] {
     border: solid 1px black;
 }
 
@@ -40,44 +26,7 @@ input[type="color"]::-webkit-color-swatch-wrapper {
 
 input[type="color"]::-webkit-color-swatch {
     border: none;
-}
-
-.colorInput {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    z-index: 100;
-}
-
-.axisInput {
-    position: absolute !important;
-    bottom: 10px;
-    right: 10px;
-    z-index: 100;
-}
-
-.gridInput {
-    position: absolute !important;
-    bottom: 10px;
-    right: 30px;
-    z-index: 100;
-}
-
-.TransformControlsInput {
-    position: absolute !important;
-    bottom: 10px;
-    right: 50px;
-    z-index: 100;
-}
-
-.radioParent {
-    position: absolute !important;
-    bottom: 10px;
-    left: 0px;
-    z-index: 100;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-}
+} */
 
 .ThreeDEmbed_Position_Inputs input {
     width: 30%;
@@ -113,4 +62,66 @@ input[type="color"]::-webkit-color-swatch {
     .position-group input {
         width: 100%;
     }
+}
+
+/*Settings For GUI*/
+.ThreeD_embed_sidebar {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: auto;
+    height: 100%;
+    background-color: var(--background-secondary);
+    display: grid;
+    grid-template-columns: 1fr;
+    padding: 5px;
+    grid-template-areas: "options" "footer";
+}
+
+.ThreeD_embed_sidebar_footer {
+    height: auto;
+    align-self: end;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-area: footer;
+    row-gap: 3px;
+}
+
+.ThreeD_embed_sidebar_options {
+    height: auto;
+    align-self: start;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-area: options;
+    justify-items: start;
+    row-gap: 3px;
+}
+
+.ThreeD_embed_seperator {
+    border: none;
+    border-top: var(--background-primary);
+    margin: 20px 0;
+    width: 100%;
+}
+
+.ThreeD_embed_colorInput {
+    justify-self: center;
+    margin-bottom: 5px;
+}
+
+.ThreeD_embed_gridAxis, .ThreeD_embed_radioButton {
+    width: 100%;
+}
+
+.ThreeD_embed_gridAxis.active, .ThreeD_embed_radioButton.active {
+    background-color: green !important;
+}
+
+.radioParent {
+    position: absolute !important;
+    bottom: 10px;
+    left: 0px;
+    z-index: 100;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
 }

@@ -37,7 +37,7 @@ export default class ThreeJSPlugin extends Plugin {
         //     }).open();
         // }
 
-        const data = await this.loadData();
+        const data = await this.loadData(); //delete version from data.json to trigger modal again
         if (data) {
             if (data.version) {
                 console.log("Loaded version:", data.version);
@@ -157,16 +157,17 @@ class UpdateModal extends Modal {
 
         // Introductory text with GitHub link.
         const messagepart2 = contentEl.createEl("p");
-        messagepart2.appendText("You just updated/downloaded the 3D embed plugin. If you'd like to learn how to control your scenes with more details or suggest new features check out my ");
+        messagepart2.appendText("You just updated the 3D embed plugin. If you'd like to learn how to control your scenes with more details or suggest new features check out my ");
         const GitHub = messagepart2.createEl("a", { text: "GitHub!", href: "https://github.com/ElmoNeedsArson/Obsidian-3D-embed#readme" });
         GitHub.setAttribute("target", "_blank"); // Opens in a new tab
 
         // Dropdown callout using a details element.
-        const detailsEl = contentEl.createEl("details");
-        const summaryEl = detailsEl.createEl("summary", { text: "If you just updated from 1.0.7 or older to a newer version, click here!" });
+        //const detailsEl = contentEl.createEl("details");
+        //const summaryEl = detailsEl.createEl("summary", { text: "If you just updated from 1.0.7 or older to a newer version, click here!" });
 
+        const warning = contentEl.createEl("p")
         // The callout content – you can apply custom CSS to the classes below.
-        const calloutEl = detailsEl.createEl("div", { cls: "callout callout-warning" });
+        const calloutEl = warning.createEl("div", { cls: "callout callout-warning" });
         calloutEl.createEl("strong", { text: "Update Notice:" });
         const calloutText = calloutEl.createEl("p");
         calloutText.appendText("In this update the syntax of the codeblock has significantly changed. This causes the old embeds to stop working. ");

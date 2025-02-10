@@ -6,7 +6,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 import ThreeJSPlugin from './main';
 
-export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene, axesHelper: THREE.AxesHelper, gridHelper: THREE.GridHelper, orbit: OrbitControls, camera: any, renderer: any, ctx: any, modelArr: any, config: any) {
+export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene, axesHelper: THREE.AxesHelper, gridHelper: THREE.GridHelper, orbit: OrbitControls, camera: any, renderer: any, ctx: any, modelArr: any, config: any, lightsArr: any) {
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
     let selectedGroup: THREE.Group | null = null;
@@ -34,12 +34,15 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
         isTransforming2 = false;
     });
 
+    let lastSelectedMode: "translate" | "rotate" = "translate"; // Default mode
+
     // Mouse click to select the whole model group
     function onMouseClick(event: MouseEvent) {
         if (isTransforming2) return; // Ignore clicks if still transforming
 
         updateMousePosition(event);
         raycaster.setFromCamera(mouse, camera);
+
         const intersects = raycaster.intersectObjects(modelArr, true);
 
         if (intersects.length > 0) {
@@ -49,6 +52,7 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
             if (group) {
                 selectedGroup = group;
                 controls.attach(selectedGroup);
+                controls.setMode(lastSelectedMode);
                 scene.add(gizmo);
             }
         } else if (!isTransforming2) { // Only deselect if the user is not using controls
@@ -123,42 +127,65 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
 
     const gizmo = controls.getHelper();
 
-    //if (guiShow) {
-    let applyReload = document.createElement('button');
-    applyReload.addClass("buttonInput_Reload")
-    applyReload.innerText = "Apply & Reload"
-    el.appendChild(applyReload)
+    //Parent element sidebar
+    let sidebar = document.createElement('div')
+    sidebar.addClass("ThreeD_embed_sidebar")
+    el.appendChild(sidebar)
 
+    //Footer and options
+    let footer = document.createElement('div')
+    footer.addClass("ThreeD_embed_sidebar_footer")
+    sidebar.appendChild(footer)
+    let options = document.createElement('div')
+    options.addClass("ThreeD_embed_sidebar_options")
+    sidebar.appendChild(options)
+
+    //Seperator line
+    let seperator = document.createElement('hr');
+    seperator.addClass("ThreeD_embed_seperator")
+    footer.appendChild(seperator)
+
+    //Reset button
     let reset = document.createElement('button');
-    reset.addClass("buttonInput_Reset")
-    reset.innerText = "Reset"
-    el.appendChild(reset)
+    reset.addClass("ThreeD_embed_reset")
+    reset.innerText = "↩"
+    reset.title = "Resrt to codeblock config (can only do this once)"
+    footer.appendChild(reset)
 
+    //Reload button
+    let applyReload = document.createElement('button');
+    applyReload.addClass("ThreeD_embed_reload")
+    applyReload.innerText = "✔"
+    applyReload.title = "Permanentally save all your modifications to the scene"
+    footer.appendChild(applyReload)
+
+    //color input
     let colorInput = document.createElement('input');
-    colorInput.addClass("colorInput")
+    colorInput.addClass("ThreeD_embed_colorInput")
     colorInput.type = 'color'
     colorInput.value = plugin.settings.standardColor
     colorInput.title = "Set the Scene Color"
-    el.appendChild(colorInput)
+    options.appendChild(colorInput)
 
-    let axisInput = document.createElement('input');
-    axisInput.classList.add('axisInput');
-    axisInput.type = 'checkbox'
-    axisInput.title = "Show the basic axis in the scene"
-    el.appendChild(axisInput)
+    //Grid and Axis button
+    let gridAxis = document.createElement('button');
+    gridAxis.addClass("ThreeD_embed_gridAxis")
+    gridAxis.innerText = "⛶"
+    gridAxis.title = "Toggle a grid and axis"
+    options.appendChild(gridAxis)
 
-    let gridInput = document.createElement('input');
-    gridInput.classList.add('gridInput');
-    gridInput.type = 'checkbox'
-    gridInput.title = "Show a grid in the scene"
-    el.appendChild(gridInput)
+    //Radio buttons for transformcontrols
+    let transformBtn = document.createElement('button')
+    transformBtn.classList.add("ThreeD_embed_radioButton", "transformBtn", "active")
+    transformBtn.innerText = "✣"
+    options.appendChild(transformBtn)
 
-    let TransformControlsInput = document.createElement('input');
-    TransformControlsInput.classList.add('TransformControlsInput');
-    TransformControlsInput.type = 'checkbox'
-    TransformControlsInput.title = "Show transform controls on the objects"
-    el.appendChild(TransformControlsInput)
+    let rotationBtn = document.createElement('button')
+    rotationBtn.classList.add("ThreeD_embed_radioButton", "rotationBtn")
+    rotationBtn.innerText = "⟲"
+    options.appendChild(rotationBtn)
 
+    //Resets to settings from codeblock
     reset.addEventListener('click', () => {
         //NEEDS TO CHANGE, RESET SHOULD MEAN READ OUT THE CONFIG OR THE STANDARD SETTINGS --- Discussion Point
         modelArr.forEach((child: THREE.Group, index: number) => {
@@ -183,113 +210,7 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
         colorInput.value = plugin.settings.standardColor
     })
 
-    // applyReload.addEventListener('click', () => {
-    //     //Save data for all models
-    //     modelArr.forEach((child: THREE.Group, index: number) => { })
-    //     //Save data for all lights?
-    //     //Save data for camera
-    //     //Save data for guioverlay and background color
-
-    //     const view = plugin.app.workspace.getActiveViewOfType(MarkdownView);
-
-    //     // gets line number of the codeblock that is being triggered with the button
-    //     const sec = ctx.getSectionInfo(ctx.el);
-    //     const lineno = sec?.lineStart;
-    //     const lineEnd = sec?.lineEnd
-
-    //     const colorValue = colorInput.value.replace('#', '');
-
-    //     if (view) {
-    //         for (let i = lineno; i < lineEnd; i++) {
-    //             console.log("Checking line number " + i)
-
-    //             // save position settings
-    //             if (view.editor.getLine(i).contains(`"positionX"`)) {
-    //                 if (view.editor.getLine(i + 1).contains(`}`)) {
-    //                     view.editor.setLine(i, `"positionX": ${mdl.position.x.toFixed(3)}, "positionY": ${mdl.position.y.toFixed(3)}, "positionZ": ${mdl.position.z.toFixed(3)}`)
-    //                 } else {
-    //                     view.editor.setLine(i, `"positionX": ${mdl.position.x.toFixed(3)}, "positionY": ${mdl.position.y.toFixed(3)}, "positionZ": ${mdl.position.z.toFixed(3)},`)
-    //                 }
-    //             }
-    //         }
-    //     }
-    // })
-
-    // applyReload.addEventListener('click', () => {
-    //     let mdl = model
-
-    //     const view = plugin.app.workspace.getActiveViewOfType(MarkdownView);
-
-    //     //gets line number of the codeblock that is being triggered with the button
-    //     const sec = ctx.getSectionInfo(ctx.el);
-    //     const lineno = sec?.lineStart;
-    //     const lineEnd = sec?.lineEnd
-
-    //     const colorValue = colorInput.value.replace('#', '');
-
-    //     if (view) {
-    //         if (mdl) {
-    //             // for the codeblock at hand check each line
-    //             for (let i = lineno; i < lineEnd; i++) {
-    //                 // save position settings
-    //                 if (view.editor.getLine(i).contains(`"positionX"`)) {
-    //                     if (view.editor.getLine(i + 1).contains(`}`)) {
-    //                         view.editor.setLine(i, `"positionX": ${mdl.position.x.toFixed(3)}, "positionY": ${mdl.position.y.toFixed(3)}, "positionZ": ${mdl.position.z.toFixed(3)}`)
-    //                     } else {
-    //                         view.editor.setLine(i, `"positionX": ${mdl.position.x.toFixed(3)}, "positionY": ${mdl.position.y.toFixed(3)}, "positionZ": ${mdl.position.z.toFixed(3)},`)
-    //                     }
-    //                 }
-
-    //                 //save guioverlay setting
-    //                 if (view.editor.getLine(i).contains(`"showGuiOverlay"`)) {
-    //                     if (view.editor.getLine(i + 1).contains(`}`)) {
-    //                         view.editor.setLine(i, `"showGuiOverlay": false`)
-    //                     } else {
-    //                         view.editor.setLine(i, `"showGuiOverlay": false,`)
-    //                     }
-    //                 }
-
-    //                 //save background color setting
-    //                 if (view.editor.getLine(i).contains(`"backgroundColorHexString"`)) {
-    //                     if (view.editor.getLine(i + 1).contains(`}`)) {
-    //                         view.editor.setLine(i, `"backgroundColorHexString": "${colorValue}"`)
-    //                     } else {
-    //                         view.editor.setLine(i, `"backgroundColorHexString": "${colorValue}",`)
-    //                     }
-    //                 }
-
-    //                 //save rotation settings
-    //                 if (view.editor.getLine(i).contains(`"rotationX"`)) {
-    //                     if (view.editor.getLine(i + 1).contains(`}`)) {
-    //                         view.editor.setLine(i, `"rotationX": ${mdl.rotation.x * (180 / Math.PI)}, "rotationY": ${mdl.rotation.y * (180 / Math.PI)}, "rotationZ": ${mdl.rotation.z * (180 / Math.PI)}`)
-    //                     } else {
-    //                         view.editor.setLine(i, `"rotationX": ${mdl.rotation.x * (180 / Math.PI)}, "rotationY": ${mdl.rotation.y * (180 / Math.PI)}, "rotationZ": ${mdl.rotation.z * (180 / Math.PI)},`)
-    //                     }
-    //                 }
-
-    //                 //save camera position
-    //                 if (view.editor.getLine(i).contains(`"camPosXYZ"`)) {
-    //                     if (view.editor.getLine(i + 1).contains(`}`)) {
-    //                         view.editor.setLine(i, `"camPosXYZ": [${camera.position.x},${camera.position.y},${camera.position.z}]`)
-    //                     } else {
-    //                         view.editor.setLine(i, `"camPosXYZ": [${camera.position.x},${camera.position.y},${camera.position.z}],`)
-    //                     }
-    //                 }
-
-    //                 if (view.editor.getLine(i).contains(`"LookatXYZ"`)) {
-    //                     if (view.editor.getLine(i + 1).contains(`}`)) {
-    //                         view.editor.setLine(i, `"LookatXYZ": [${orbit.target.x},${orbit.target.y},${orbit.target.z}]`)
-    //                     } else {
-    //                         view.editor.setLine(i, `"LookatXYZ": [${orbit.target.x},${orbit.target.y},${orbit.target.z}],`)
-    //                     }
-    //                 }
-    //             }
-    //         } else {
-    //             new Notice("Failed to find a model to apply settings to. Contact Developer");
-    //         }
-    //     }
-    // })
-
+    //Saves settings to codeblock
     applyReload.addEventListener("click", () => {
         console.log("Pressed Save")
         const view = plugin.app.workspace.getActiveViewOfType(MarkdownView);
@@ -312,18 +233,14 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
 
             // Update models
             config.models.forEach((model: any, index: number) => {
-                console.log("hi")
-                console.log(model)
-                console.log(modelArr[0])
                 //const matchingModel = modelArr.find((mdl: THREE.Group) => mdl.name === model.name);
                 //if (matchingModel) {
-                    console.log("hi2")
-                    model.position = [modelArr[index].position.x.toFixed(3), modelArr[index].position.y.toFixed(3), modelArr[index].position.z.toFixed(3)];
-                    model.rotation = [
-                        (modelArr[index].rotation.x * (180 / Math.PI)).toFixed(3),
-                        (modelArr[index].rotation.y * (180 / Math.PI)).toFixed(3),
-                        (modelArr[index].rotation.z * (180 / Math.PI)).toFixed(3)
-                    ];
+                model.position = [modelArr[index].position.x.toFixed(3), modelArr[index].position.y.toFixed(3), modelArr[index].position.z.toFixed(3)];
+                model.rotation = [
+                    (modelArr[index].rotation.x * (180 / Math.PI)).toFixed(3),
+                    (modelArr[index].rotation.y * (180 / Math.PI)).toFixed(3),
+                    (modelArr[index].rotation.z * (180 / Math.PI)).toFixed(3)
+                ];
                 //}
             });
 
@@ -432,95 +349,56 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
         }
     });
 
-    TransformControlsInput.addEventListener('input', () => {
-        controls.addEventListener('change', render);
+    controls.addEventListener('change', render);
 
-        // Disable OrbitControls when TransformControls is actively dragging
-        controls.addEventListener('dragging-changed', function (event) {
-            orbit.enabled = !event.value;
-        });
-
-        if (TransformControlsInput.checked) {
-            scene.add(gizmo);
-            transformOptions();
-        } else {
-            scene.remove(gizmo);
-            const radioParent = el.querySelector('.radioParent');
-            if (radioParent) el.removeChild(radioParent);
-        }
-
-        function render() {
-            renderer.render(scene, camera);
-        }
-
-        function transformOptions() {
-            let radioParent = document.createElement('div');
-            radioParent.classList.add('radioParent');
-            el.appendChild(radioParent);
-
-            const radioData = [
-                { label: 'Transform', value: '1' },
-                { label: 'Rotate', value: '2' },
-            ];
-
-            radioData.forEach((data, index) => {
-                const radio = document.createElement('input');
-                radio.type = 'radio';
-                radio.name = 'transformMode';
-                radio.id = `radio${index}`;
-                radio.value = data.value;
-                if (index === 0) radio.checked = true;
-
-                const label = document.createElement('label');
-                label.htmlFor = `radio${index}`;
-                label.textContent = data.label;
-
-                radioParent.appendChild(radio);
-                radioParent.appendChild(label);
-
-                radio.addEventListener('change', (event) => {
-                    const target = event.target as HTMLInputElement;
-                    switch (target.value) {
-                        case '1':
-                            controls.setMode('translate');
-                            break;
-                        case '2':
-                            controls.setMode('rotate');
-                            break;
-                    }
-                });
-            });
-        }
+    // Disable OrbitControls when TransformControls is actively dragging
+    controls.addEventListener('dragging-changed', function (event) {
+        orbit.enabled = !event.value;
     });
 
-    gridInput.addEventListener('input', () => {
-        if (gridInput.checked) {
-            scene.add(gridHelper);
-        } else {
-            scene.remove(gridHelper); // or some other action for false
-        }
-    })
+    scene.add(gizmo);
 
-    axisInput.addEventListener('input', () => {
-        if (axisInput.checked) {
-            scene.add(axesHelper);
+    function render() {
+        renderer.render(scene, camera);
+    }
+
+    document.querySelectorAll('.ThreeD_embed_radioButton').forEach(button => {
+        button.addEventListener('click', () => {
+            document.querySelectorAll('.ThreeD_embed_radioButton').forEach(btn => btn.classList.remove('active'));
+
+            const btnElement = button as HTMLButtonElement;
+            let classes = button.classList
+            console.log(classes)
+
+            if (classes.contains("rotationBtn")) { 
+                    controls.setMode('rotate');
+                    lastSelectedMode = "rotate"
+            } else if (classes.contains("transformBtn")) {
+                    controls.setMode('translate');
+                    lastSelectedMode = "translate"
+            }
+
+            btnElement.classList.add('active');
+        });
+    });
+
+    //Toggle for grid
+    let toggled = false
+    gridAxis.addEventListener('click', () => {
+        if (toggled) {
+            scene.remove(axesHelper);
+            scene.remove(gridHelper);
+            gridAxis.classList.remove('active')
+            toggled = false
         } else {
-            scene.remove(axesHelper); // or some other action for false
+            scene.add(gridHelper);
+            scene.add(axesHelper);
+            gridAxis.classList.add('active')
+            toggled = true;
         }
     })
 
     colorInput.addEventListener('input', () => {
         scene.background = new THREE.Color(colorInput.value);
     })
-    // } else {
-    //     const colorInput = el.querySelector('.colorInput');
-    //     const axisInput = el.querySelector('.axisInput');
-    //     const gridInput = el.querySelector('.gridInput');
-    //     const TransformControlsInput = el.querySelector('.TransformControlsInput')
-
-    //     if (colorInput) el.removeChild(colorInput);
-    //     if (axisInput) el.removeChild(axisInput);
-    //     if (gridInput) el.removeChild(gridInput);
-    //     if (TransformControlsInput) el.removeChild(TransformControlsInput);
-    // }
 }

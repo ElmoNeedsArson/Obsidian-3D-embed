@@ -85,7 +85,7 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
     if (config.scene && config.scene.showGuiOverlay) {
         axesHelper ??= new THREE.AxesHelper(10);
         gridHelper ??= new THREE.GridHelper(10, 10);
-        gui2(plugin, el, scene, axesHelper, gridHelper, orbit, camera, renderer, ctx, modelArray, config)
+        gui2(plugin, el, scene, axesHelper, gridHelper, orbit, camera, renderer, ctx, modelArray, config, lightsArray)
     }
 
     // Resize function to update camera and renderer on container width change
@@ -115,14 +115,14 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
     modelArray.forEach((child) => {
         parentGroup.add(child);
     });
-    console.log(lightsArray)
+    //console.log(lightsArray)
     lightsArray.forEach((child) => {
         if (child.obj && child.name != "attachToCam") {
             parentGroup.add(child.obj);
         }
     });
     scene.add(parentGroup);
-    console.log(parentGroup)
+    //console.log(parentGroup)
 
     // Animation loop
     const animate = () => {

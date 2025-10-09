@@ -25,7 +25,7 @@ https://github.com/user-attachments/assets/9b10c36c-36c3-4bc1-a4a7-f5d00f735ec7
 3.2) position cursor on line with 3D model embed
 ![Screenshot 2024-11-03 184225](https://github.com/user-attachments/assets/cad3f9f5-d1bd-4b61-a816-79ce3fc0a00e)
 
-3.3) On line with embed execute the embed 3D command (ctrl+p) -> embed 3D: 3DModel
+3.3) On line with embed execute the embed 3D command (ctrl+p) -> Embed 3D: Add a 3D embed at cursor position
 ![image](https://github.com/user-attachments/assets/c75579e8-a051-433c-ab64-486aa30fd9da)
 
 3.4) Voila a 3D model
@@ -33,6 +33,8 @@ https://github.com/user-attachments/assets/9b10c36c-36c3-4bc1-a4a7-f5d00f735ec7
 
 # Additional Information
 Each embed will contain a codeblock of information. You can access this by clicking in the top right of the scene or my moving your type cursor into the codeblock
+
+![image](https://github.com/user-attachments/assets/427a00bc-faa0-4764-8e9b-0302a1712553)
 
 This codeblock will allow you to modify settings for this block only. If you want settings to be generally applied to all scenes you embed you should go to the settings tab. 
 
@@ -159,8 +161,7 @@ By changing this option in your config of the scene to true
 ```
 You can use transform controls and color pickers to finetune your scene a bit better. See the images below, you have a color picker (becomes unavailable when your background color is set to `transparent`), a rotation tool, a position tool and moving the camera. When clicking the checkmark, the scene will be saved as is in the config. But you can also reset it if you mess up somehow. 
 [OUTDATED IMAGES] 
-![image](https://github.com/user-attachments/assets/ba911e8d-80c5-48ba-9698-bd534ffb9f4c)
-![image](https://github.com/user-attachments/assets/edcacab3-1fdb-4e4a-b742-455026eecd64)
+![image](https://github.com/user-attachments/assets/3b594b76-234d-40a0-bac2-356b95150df8)
 
 ## Standard Settings
 Use the settings tab, to alter standard settings for how all the models are initially loaded. The settings tab has the same options as the codeblock above, but are global settings, the codeblock for each model will override the global setting if they are different. But the codeblocks initial values will be filled according to the global settings. Such as background color, size of 3D embed, or scale of the model. 

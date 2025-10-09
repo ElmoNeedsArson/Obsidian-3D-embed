@@ -116,9 +116,21 @@ export default class ThreeJSPlugin extends Plugin {
                     new Notice("Model path not found", 10000);
                     return;
                 }
+                //console.log("width:" + this.settings.standardEmbedWidthPercentage)
 
-                const width = (ctx as any).el.clientWidth || 300;
-                initializeThreeJsScene(this, el, parsedData, modelPath, parsedData.name, width, ctx, renderer);
+                //Send through the width and height from settings, but in initializeThreeJsScene check if the json contains overrides for it
+                let widthPercentage = this.settings.standardEmbedWidthPercentage / 100;
+                const width = (ctx as any).el.clientWidth * widthPercentage || (ctx as any).el.clientWidth || 300;
+                const height = this.settings.standardEmbedHeight || 300;
+                const alignment = this.settings.alignment || "center";
+
+                //codeblock[0].style.maxWidth = "50%";
+
+                //console.log("Calculated width: " + width)
+                //console.log("Calculated width_el: " + (ctx as any).el.clientWidth)
+
+                //get width percentage from settings, or from json block, multiply el width with it. 
+                initializeThreeJsScene(this, el, parsedData, modelPath, parsedData.name, width, widthPercentage, height, alignment, ctx, renderer);
 
             } catch (error) {
                 let message = error.toString().includes("Expected ',' or '}'")

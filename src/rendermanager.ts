@@ -24,7 +24,7 @@ export function getRenderer(blockId: string, instanceId: string, el: HTMLElement
         return blockRenderers.get(Array.from(blockRenderers.keys())[0])!; // Reuse an existing one if available
     }
 
-    const renderer = new THREE.WebGLRenderer();
+    const renderer = new THREE.WebGLRenderer({ alpha: true });
     renderer.setSize(el.clientWidth, el.clientHeight);
     el.appendChild(renderer.domElement);
 

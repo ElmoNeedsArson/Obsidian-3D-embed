@@ -9,7 +9,7 @@ import { applyCameraSettings } from './applyConfig'
 import { loadModels } from './loadModelType'
 import { loadLights } from './loadLightType'
 
-export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, config: any, modelPath: string, name: string, width: number, ctx: any, renderer: THREE.WebGLRenderer) {
+export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, config: any, modelPath: string, name: string, setting_width: number, setting_width_percentage: number, setting_height: number, setting_alignment: string, ctx: any, renderer: THREE.WebGLRenderer) {
     const scene = new THREE.Scene();
 
     let axesHelper: THREE.AxesHelper | null = null;
@@ -17,8 +17,12 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
 
     //If the config specifies scene settings, adress them here
     if (config.scene) {
-        scene.background = new THREE.Color(`#${config.scene.backgroundColor || plugin.settings.standardColor.replace(/#/g, "")}`);
-
+        if (config.scene.backgroundColor == "transparent") {
+            scene.background = null;
+        } else {
+            scene.background = new THREE.Color(`#${config.scene.backgroundColor || plugin.settings.standardColor.replace(/#/g, "")}`);
+        }
+        //scene.background = null;
         axesHelper = new THREE.AxesHelper(config.scene.length);
         gridHelper = new THREE.GridHelper(config.scene.gridSize, config.scene.gridSize);
 
@@ -32,10 +36,51 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
         scene.background = new THREE.Color(`#${plugin.settings.standardColor.replace(/#/g, "")}`);
     }
 
-    let camera = setCameraMode(config.camera.orthographic, width, plugin.settings.standardEmbedHeight);
+    let width = setting_width;
+    let height;
+    let widthPercentage;
+    let alignment;
+
+    //console.log(config.renderBlock)
+
+    if (config.renderBlock) {
+
+        if (config.renderBlock.alignment) {
+            alignment = config.renderBlock.alignment;
+        } else {
+            alignment = setting_alignment;
+        }
+
+        if (config.renderBlock.widthPercentage) {
+            //console.log("config.widthPercentage exists" + config.widthPercentage)
+            widthPercentage = config.renderBlock.widthPercentage / 100;
+        } else {
+            widthPercentage = setting_width_percentage;
+        };
+
+        // if (config.renderBlock.width) {
+        //     width = config.renderBlock.width;
+        // } else {
+        //     width = setting_width;
+        // }
+
+        if (config.renderBlock.height) {
+            height = config.renderBlock.height;
+        } else {
+            height = setting_height;
+        }
+    } else {
+        alignment = setting_alignment;
+        widthPercentage = setting_width_percentage;
+        height = setting_height;
+    }
+
+    let camera = setCameraMode(config.camera.orthographic, width, height);
+
+    console.log("width in threejsscene: " + width)
 
     //const renderer = new THREE.WebGLRenderer();
-    renderer.setSize(width, plugin.settings.standardEmbedHeight);
+    renderer.setSize(width, height);
     el.appendChild(renderer.domElement);
 
     //If the config contains lighting settings, adress them here
@@ -88,15 +133,29 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
         gui2(plugin, el, scene, axesHelper, gridHelper, orbit, camera, renderer, ctx, modelArray, config, lightsArray)
     }
 
+    //let widthPercentage = this.settings.standardEmbedWidthPercentage / 100;
+
+    let flag = false;
+
     // Resize function to update camera and renderer on container width change
     const onResize = () => {
         let newWidth = 0;
+
+        // Ensure the widthPercentage is applied only once (the flag is reset upon every rerender needed, because the whole threejs scene is redrawn)
+        if (!flag) {
+            let codeblock = document.querySelectorAll<HTMLElement>(".cm-lang-3D")
+            console.log("t1:" + (ctx as any).el.clientWidth)
+            codeblock[0].style.width = (ctx as any).el.clientWidth * widthPercentage + "px";
+            codeblock[0].style.justifySelf = alignment || "center";
+            flag = true;
+        }
+
         //ensures that the browser has completed its rendering and layout process before you attempt to access ctx.el.clientWidth
         requestAnimationFrame(() => {
             newWidth = (ctx as any).el.clientWidth || 300
 
-            renderer.setSize(newWidth, plugin.settings.standardEmbedHeight);
-            camera.aspect = newWidth / plugin.settings.standardEmbedHeight;
+            renderer.setSize(newWidth, height);
+            camera.aspect = newWidth / height;
             camera.updateProjectionMatrix();
         });
     };

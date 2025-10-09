@@ -161,11 +161,13 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
 
     //color input
     let colorInput = document.createElement('input');
-    colorInput.addClass("ThreeD_embed_colorInput")
-    colorInput.type = 'color'
-    colorInput.value = plugin.settings.standardColor
-    colorInput.title = "Set the Scene Color"
-    options.appendChild(colorInput)
+    if (config.scene.backgroundColor != "transparent") {
+        colorInput.addClass("ThreeD_embed_colorInput")
+        colorInput.type = 'color'
+        colorInput.value = "#" + config.scene.backgroundColor || plugin.settings.standardColor
+        colorInput.title = "Set the Scene Color"
+        options.appendChild(colorInput)
+    }
 
     //Grid and Axis button
     let gridAxis = document.createElement('button');
@@ -220,7 +222,7 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
         const colorValue: string = colorInput.value.replace("#", "");
 
         if (!view || modelArr.length === 0) {
-            console.error("No models found to update. Contact Developer.");
+            console.error("No models found to update. Contact Developer, because this is most likely a bug.");
             return;
         }
 
@@ -370,12 +372,12 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
             let classes = button.classList
             console.log(classes)
 
-            if (classes.contains("rotationBtn")) { 
-                    controls.setMode('rotate');
-                    lastSelectedMode = "rotate"
+            if (classes.contains("rotationBtn")) {
+                controls.setMode('rotate');
+                lastSelectedMode = "rotate"
             } else if (classes.contains("transformBtn")) {
-                    controls.setMode('translate');
-                    lastSelectedMode = "translate"
+                controls.setMode('translate');
+                lastSelectedMode = "translate"
             }
 
             btnElement.classList.add('active');

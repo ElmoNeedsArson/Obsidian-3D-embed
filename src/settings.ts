@@ -27,6 +27,8 @@ export interface ThreeDEmbedSettings {
     standardColor: string;
     standardScale: number;
     standardEmbedHeight: number;
+    standardEmbedWidthPercentage: number;
+    alignment: string;
     autoRotate: boolean;
     camPosX: number;
     camPosY: number;
@@ -45,6 +47,8 @@ export const DEFAULT_SETTINGS: ThreeDEmbedSettings = {
     standardColor: "#ADD8E6",
     standardScale: 0.5,
     standardEmbedHeight: 300,
+    standardEmbedWidthPercentage: 100,
+    alignment: "center",
     autoRotate: false,
     camPosX: 0,
     camPosY: 5,
@@ -133,6 +137,37 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                     })
 
             )
+
+        new Setting(containerEl)
+            .setName('Standard width percentage')
+            .setDesc('Default width percentage of a 3D embed in your note (in percentage of the note width)')
+            .addSlider(slider =>
+                slider
+                    .setValue(this.plugin.settings.standardEmbedWidthPercentage)
+                    .onChange(async (value) => {
+                        //const numValue = parseFloat(value)
+                        this.plugin.settings.standardEmbedWidthPercentage = value;
+                        await this.plugin.saveSettings();
+                    })
+                    .setDynamicTooltip()
+            );
+
+        new Setting(containerEl)
+            .setName('Alignment of 3D scenes')
+            .addDropdown((dropdown) =>
+                dropdown
+                    .addOptions({
+                        begin: "Left",
+                        center: "Center",
+                        end: "Right"
+                    })
+                    .setValue(this.plugin.settings.alignment.toString())
+                    .onChange(async (value) => {
+                        this.plugin.settings.alignment = value; // Update setting when toggled
+                        //await this.plugin.saveData(this.plugin.settings); // Save the new setting value
+                        await this.plugin.saveSettings();
+                    }));
+
 
         new Setting(containerEl)
             .setName('Auto Rotate Scene')

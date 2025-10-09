@@ -44,6 +44,7 @@ export function ThreeD_Embed_Command(plugin: ThreeJSPlugin) {
                 let camera = `,\n"camera": {\n   ` + cameraType + `,\n   "camPosXYZ": [` + plugin.settings.camPosX + `,` + plugin.settings.camPosY + `,` + plugin.settings.camPosZ + `], "LookatXYZ": [0,0,0]\n}`
                 let scene = `,\n"scene": {\n   "showGuiOverlay": ` + plugin.settings.autoShowGUI + `,\n   "autoRotation": [0, ` + autorotateY + `, 0],\n   "backgroundColor": "` + plugin.settings.standardColor.replace(/#/g, "") + `",\n   "showAxisHelper": false, "length": 5,\n   "showGridHelper": false, "gridSize": 10` + `\n}`
                 let stl = `,\n"stl": {\n   "stlColorHexString": "` + plugin.settings.stlColor.replace(/#/g, "") + `",\n   "stlWireframe":` + plugin.settings.stlWireframe + `\n}`
+                let ThreeD_block = `,\n"renderBlock": {\n   "widthPercentage": ` + plugin.settings.standardEmbedWidthPercentage + `,\n   "height": ` + plugin.settings.standardEmbedHeight + `,\n   "alignment": "` + plugin.settings.alignment + `"\n}`
                 let codeBlockClosing = '\n```\n'
 
                 // let lights = `,\n"lights": [\n${plugin.settings.lightSettings
@@ -80,7 +81,7 @@ export function ThreeD_Embed_Command(plugin: ThreeJSPlugin) {
 
                 let content = ""
                 if (plugin.settings.showConfig) {
-                    content = codeBlockType + models + lights + camera + scene + stl + codeBlockClosing
+                    content = codeBlockType + models + lights + camera + scene + stl + ThreeD_block + codeBlockClosing
                 } else if (!plugin.settings.showConfig) {
                     content = codeBlockType + models + camera + lights + codeBlockClosing
                 }

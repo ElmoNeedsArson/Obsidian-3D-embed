@@ -1,6 +1,10 @@
 # 3D Embed Plugin - How to use
 
-Currently supported filetypes: stl,glb,obj,fbx,3mf
+Currently supported filetypes: `stl, glb, obj, fbx, 3mf`
+
+This plugin allows you to showcase all sorts of 3D models in your vault and notes using the infamous three.js library. As opposed to other plugins this plugin allows you to embed your 3D models locally. This means you **won't** have to upload your models to some other website and embed that in your note, but rather just have the file in your vault and the plugin does all the other work for you.
+
+This plugin also allows you to make your scene with the whole model look as nice as possible. Influencing a lot of variables such as background colors, autorotation, lighting, scales, etc. [Look at the documentation below for all the options]
 
 ## 1. Showing all filetypes in obsidian:
 Go to the settings tab of obsidian -> 'Files and Links' -> toggle the 'Detect all file extensions'
@@ -35,97 +39,131 @@ This codeblock will allow you to modify settings for this block only. If you wan
 ## Minimal Configuration
 A codeblock should minimally contain these values:
 ```JSON
-{
-"name": "model.stl",
-"rotationX": 0, "rotationY": 0, "rotationZ": 0,
-"positionX": 0, "positionY": 0, "positionZ": 0,
-"backgroundColorHexString": "80bcd6",
-"camPosXYZ": [0,5,10],
-"LookatXYZ": [0,0,0]
-}
+"models": [
+   {"name": "Airship.glb", "scale": 0.7, "position": [0, 0, 0], "rotation": [0, 0, 0]}
+],
+"camera": {
+   "orthographic": false,
+   "camPosXYZ": [0,5,10], "LookatXYZ": [0,0,0]
+},
+"lights": [
+   {"type": "directional", "color": "FFFFFF", "pos": [5,10,5], "target": [0,0,0], "strength": 1, "show": false},
+   {"type": "ambient", "color": "FFFFFF", "pos": [0,0,0], "strength": 0.5, "show": false}
+]
 ```
 
 > [!Important]
 > The last line of the codeblock should not end on a comma, all other lines should
 
-But the codeblock can receive a lot more variables to modify the scene and give you more control. 
+But this is just the tip of the iceberg! The codeblock can receive a lot more variables to modify the scene and give you more control. 
 
 ## Additional Configuration
 Look at the codeblock to alter minor things in the scene. It shows all the config options of a 3D scene for now. 
 
 Beside the basic configuration, these are lines you can add for more control:
 
+### Model settings
+This will come preloaded when entering the command, but this config allows you to change elements about the model(s).
+You can add multiple models in this array to render multiple models in one scene at the same time. 
+```JSON
+"models": [
+   {"name": "Airship.glb", "scale": 0.7, "position": [0, 0, 0], "rotation": [0, 0, 0]}
+],
+```
+- `name` is the name of the file of the 3D model in your vault
+- `scale` is the scale of the object related to your export size
+- `position` allows you to change the position of the model in the scene
+- `rotation` allows you to change the rotation of the model in the scene 
+
+### Render block settings
+To change the width or height, or the css alignment of a block:
+```JSON
+"renderBlock": {
+   "widthPercentage": 100,
+   "height": 300,
+   "alignment": "center"
+}
+```
+- `widthPercentage` goes from 1 - 100
+- `height` is in pixels
+- `alignment` has 3 options (begin, center, end)
+
 ### Generic Scene Settings
-To rotate your model automatically on any axis
+To change some other scene settings:
+```JSON
+"scene": {
+   "showGuiOverlay": false,
+   "autoRotation": [0, 0, 0],
+   "backgroundColor": "4bb8dd",
+   "showAxisHelper": false, "length": 5,
+   "showGridHelper": false, "gridSize": 10
+},
 ```
-"AutorotateX": 0, "AutorotateY":0, "AutorotateZ": 0,
-```
-
-To set the scale of your model
-```
-"scale": "0.5",
-```
-
-To change the camera to an orthographic camera rather than a perspective camera
-```
-"orthographic": false,
-```
-
-To show scene helpers such as a grid or the main axis
-```
-"showAxisHelper": false, "length": 5,
-```
-```
-"showGridHelper": false, "gridSize": 10,
-```
+- `showGuiOverlay` provides you with a gui (see further down)
+- `autoRotation` rotates your model automatically on any axis
+- `backgroundColor` can also be set to `transparent` or any hexvalue for a color. 
+- `showAxisHelper` and `showGridHelper` show scene helpers such as a grid or the main axis
 
 ### STL Configurations
-To allow the stl model to be seen in wireframe mode and change the color
+Specifically for stl model files, I added some additional configuration
+```JSON
+"stl": {
+   "stlColorHexString": "ff0000",
+   "stlWireframe":false
+},
 ```
-"stlColorHexString": "ffffff",
-```
-```
-"stlWireframe":true,
-```
+- `stlColorHexString` allows you to set the color of an stl model itself
+- `stlWireframe` allows you to show the stl as a wireframe
 
 ### Lighting Configuration
-Lighting settings such as color, strength, position and whether you can see a sphere at the location of the light
+Lighting settings such as type, color, position, strength and whether you can see a sphere at the location of the light
+```JSON
+"lights": [
+   {"type": "directional", "color": "FFFFFF", "pos": [5,10,5], "target": [0,0,0], "strength": 1, "show": false},
+   {"type": "ambient", "color": "FFFFFF", "pos": [0,0,0], "strength": 0.5, "show": false},
+   {"type": "attachToCam", "color": "ffffff", "pos": [5,10,5], "strength": 1, "show": false},
+   {"type": "point", "color": "ffffff", "pos": [5,10,5], "strength": 1, "show": false},
+   {"type": "spot", "color": "ffffff", "pos": [5,10,5], "target": [0,0,0], "distance": 0, "angle": 0, "strength": 1, "show": false},
+   {"type": "hemisphere", "skyColor": "ffffff", "groundColor": "FFFFFF", "strength": 1, "show": false}
+],
 ```
-"lightColor": "ffffff",
-```
-```
-"lightStrength":1,
-```
-```
-"showLight":false,
-```
-```
-"lightPosXYZ": [5,10,5],
-```
+- `type` has 6 options `directional, ambient, attachToCam, point, spot, hemisphere` (each of them can be found in the three.js documentation if you want to read more. Except for `attachToCam` which just attaches a lightsource to the camera)
+- `color` allows you to set a hexvalue for the color of the light
+- `position` allows you to set the position of the lightsource
+- `strength` allows you to set the strength of the lightsource
+- `show` allows you to physically see the lightsource position by placing a sphere at the position coordinates you provide (can be usefull for setting up your scene)
+- `target` only available in the `directional` and `spot` lightsource, to aim it at a point
+- `distance` only available in the `spot` lightsource, allows you to say how far the light projects
+- `angle` only available in the `spot` lightsource, allows you to adjust the angle of the spotlight
+- `skycolor` and `groundColor` are part of the `hemisphere` lightsource, for a color transition. (look at three.js documentation for more details)
 
-Settings to attach a light to the camera, its color and intensity. 
+### Camera configuration
+To change camera settings:
+```JSON
+"camera": {
+   "orthographic": false,
+   "camPosXYZ": [0,5,10], "LookatXYZ": [0,0,0]
+},
 ```
-"attachLightToCam": false,
-```
-```
-"lightColor_AttachedCam": "FFFFFF",
-```
-```
-"lightStrength_AttachedCam":1,
-```
+- `orthographic` allows you to switch between a perspective and orthographic camera
+- `camPosXYZ` allows you to set the camera position
+- `LookatXYZ` allows you to aim the camera at a specific point
 
 ### GUI (BETA)
 Now working with a codeblock might be a tad annoying to finetune your models. So I've been working on a GUI that allows you to change some of the parameters with more ease. 
-Be changing this option in your config to true
+By changing this option in your config of the scene to true
+```JSON
+"scene": {
+   "showGuiOverlay": false | true,
+},
 ```
-"showGuiOverlay": false,
-```
-You can use transform controls and color pickers to finetune your scene a bit better. See the images below, you have a color picker, a rotation tool, a position tool and moving the camera. When clicking 'apply&reload' the scene will be saved as is in the config. But you can also reset it if you mess up somehow.  
+You can use transform controls and color pickers to finetune your scene a bit better. See the images below, you have a color picker (becomes unavailable when your background color is set to `transparent`), a rotation tool, a position tool and moving the camera. When clicking the checkmark, the scene will be saved as is in the config. But you can also reset it if you mess up somehow. 
+[OUTDATED IMAGES] 
 ![image](https://github.com/user-attachments/assets/ba911e8d-80c5-48ba-9698-bd534ffb9f4c)
 ![image](https://github.com/user-attachments/assets/edcacab3-1fdb-4e4a-b742-455026eecd64)
 
 ## Standard Settings
-Use the settings tab, to alter standard settings such as background color, size of 3D embed, or scale of the model. 
+Use the settings tab, to alter standard settings for how all the models are initially loaded. The settings tab has the same options as the codeblock above, but are global settings, the codeblock for each model will override the global setting if they are different. But the codeblocks initial values will be filled according to the global settings. Such as background color, size of 3D embed, or scale of the model. 
 ![image](https://github.com/user-attachments/assets/b7df88bf-75e2-4066-a685-8dfa11478816)
 
 ## Precautions:
@@ -134,8 +172,6 @@ Use the settings tab, to alter standard settings such as background color, size 
 3) If your model is not showing up in the scene, half of the time the scale of the model is the cause, so try playing around with sizes both large and small. 
 
 ## Future plans:
-1) Use one renderer instead of a new renderer with introduction of a new model. (Uncertain of achievability)
-2) Load textures in 3D models
-3) Load multiple objects in one scene
-4) Be able to run custom three.js script for a scene. 
+1) Load textures in 3D models
+2) Be able to run custom three.js script for a scene. 
 

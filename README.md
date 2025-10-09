@@ -34,6 +34,8 @@ https://github.com/user-attachments/assets/9b10c36c-36c3-4bc1-a4a7-f5d00f735ec7
 # Additional Information
 Each embed will contain a codeblock of information. You can access this by clicking in the top right of the scene or my moving your type cursor into the codeblock
 
+![image](https://github.com/user-attachments/assets/427a00bc-faa0-4764-8e9b-0302a1712553)
+
 This codeblock will allow you to modify settings for this block only. If you want settings to be generally applied to all scenes you embed you should go to the settings tab. 
 
 ## Minimal Configuration

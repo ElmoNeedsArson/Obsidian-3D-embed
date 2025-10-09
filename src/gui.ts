@@ -214,7 +214,7 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
 
     //Saves settings to codeblock
     applyReload.addEventListener("click", () => {
-        console.log("Pressed Save")
+        //console.log("Pressed Save")
         const view = plugin.app.workspace.getActiveViewOfType(MarkdownView);
         const sec = ctx.getSectionInfo(ctx.el);
         const lineno = sec?.lineStart;
@@ -370,7 +370,7 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
 
             const btnElement = button as HTMLButtonElement;
             let classes = button.classList
-            console.log(classes)
+            //console.log(classes)
 
             if (classes.contains("rotationBtn")) {
                 controls.setMode('rotate');

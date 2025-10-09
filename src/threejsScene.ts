@@ -77,7 +77,7 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
 
     let camera = setCameraMode(config.camera.orthographic, width, height);
 
-    console.log("width in threejsscene: " + width)
+    //console.log("width in threejsscene: " + width)
 
     //const renderer = new THREE.WebGLRenderer();
     renderer.setSize(width, height);
@@ -144,7 +144,7 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
         // Ensure the widthPercentage is applied only once (the flag is reset upon every rerender needed, because the whole threejs scene is redrawn)
         if (!flag) {
             let codeblock = document.querySelectorAll<HTMLElement>(".cm-lang-3D")
-            console.log("t1:" + (ctx as any).el.clientWidth)
+            //console.log("t1:" + (ctx as any).el.clientWidth)
             codeblock[0].style.width = (ctx as any).el.clientWidth * widthPercentage + "px";
             codeblock[0].style.justifySelf = alignment || "center";
             flag = true;

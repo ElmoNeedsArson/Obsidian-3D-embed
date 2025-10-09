@@ -1,9 +1,9 @@
 {
 	"id": "3d_embeds",
 	"name": "Embed 3D",
-	"version": "1.0.7",
+	"version": "1.0.8",
 	"minAppVersion": "0.15.0",
-	"description": "Embed 3DModels in markdown notes.",
+	"description": "Embed and view 3DModels in markdown notes.",
 	"author": "Jesse Strijker",
 	"authorUrl": "https://jessestrijker.com",
 	"isDesktopOnly": false

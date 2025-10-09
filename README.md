@@ -163,9 +163,6 @@ You can use transform controls and color pickers to finetune your scene a bit be
 [OUTDATED IMAGES] 
 ![image](https://github.com/user-attachments/assets/3b594b76-234d-40a0-bac2-356b95150df8)
 
-![image](https://github.com/user-attachments/assets/ba911e8d-80c5-48ba-9698-bd534ffb9f4c)
-![image](https://github.com/user-attachments/assets/edcacab3-1fdb-4e4a-b742-455026eecd64)
-
 ## Standard Settings
 Use the settings tab, to alter standard settings for how all the models are initially loaded. The settings tab has the same options as the codeblock above, but are global settings, the codeblock for each model will override the global setting if they are different. But the codeblocks initial values will be filled according to the global settings. Such as background color, size of 3D embed, or scale of the model. 
 ![image](https://github.com/user-attachments/assets/b7df88bf-75e2-4066-a685-8dfa11478816)

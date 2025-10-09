@@ -183,7 +183,7 @@ class UpdateModal extends Modal {
         calloutEl.createEl("strong", { text: "Update Notice:" });
         const calloutText = calloutEl.createEl("p");
         calloutText.appendText("In this update the syntax of the codeblock has significantly changed. This causes the old embeds to stop working. ");
-        calloutText.appendText("To fix this, remove your old codeblock and execute the embed command again.")
+        calloutText.appendText("To fix this, remove your old codeblock and execute the 3D embed command again.")
 
         const calloutText2 = calloutEl.createEl("p");
         calloutText2.appendText("Now there is a chance you already put a lot of effort into the current setup of your models, unfortunately if you want to keep this setup, you will have to do a bit of manual work. You can review the updated syntax in the ");
@@ -192,7 +192,7 @@ class UpdateModal extends Modal {
         calloutText2.appendText(" and fill in your values for the new syntax.");
 
         const calloutText3 = calloutEl.createEl("p");
-        calloutText3.appendText("Apologies for the inconvenience. But I hope you can keep enjoying the plugin.")
+        calloutText3.appendText("Apologies for the inconvenience. But I hope you can keep enjoying the plugin with all its new functions.")
 
         // Additional apology message.
         const messagepart4 = contentEl.createEl("p");

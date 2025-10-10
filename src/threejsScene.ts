@@ -139,14 +139,19 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
 
     // Resize function to update camera and renderer on container width change
     const onResize = () => {
+        console.log("resize")
         let newWidth = 0;
 
         // Ensure the widthPercentage is applied only once (the flag is reset upon every rerender needed, because the whole threejs scene is redrawn)
         if (!flag) {
             let codeblock = document.querySelectorAll<HTMLElement>(".cm-lang-3D")
+            const index = Array.from(codeblock).findIndex(cb => cb.contains(el));
+            console.log("Index:" + index)
             //console.log("t1:" + (ctx as any).el.clientWidth)
-            codeblock[0].style.width = (ctx as any).el.clientWidth * widthPercentage + "px";
-            codeblock[0].style.justifySelf = alignment || "center";
+            //codeblock[0].style.width = (ctx as any).el.clientWidth * widthPercentage + "px";
+            codeblock[index].style.width = widthPercentage * 100 + "%";
+
+            codeblock[index].style.justifySelf = alignment || "center";
             flag = true;
         }
 
@@ -159,6 +164,15 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
             camera.updateProjectionMatrix();
         });
     };
+
+    const onResize2 = () => {
+        console.log("resize2")
+        // flag = false;
+        // onResize();
+    }
+
+    const resizeObserverParentEl = new ResizeObserver(onResize2);
+    resizeObserverParentEl.observe(document.querySelectorAll<HTMLElement>(".cm-lang-3D")[0]); // Observe the container element for resize events
 
     const resizeObserver = new ResizeObserver(onResize);
     resizeObserver.observe(el); // Observe the container element for resize events

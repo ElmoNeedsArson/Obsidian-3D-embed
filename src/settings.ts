@@ -37,6 +37,8 @@ export interface ThreeDEmbedSettings {
     cameraType: string;
     autoShowGUI: boolean;
     stlWireframe: boolean;
+    columnsAmount: number;
+    rowHeight: number;
     stlColor: string;
     lightSettings: LightSetting[];
 }
@@ -56,6 +58,8 @@ export const DEFAULT_SETTINGS: ThreeDEmbedSettings = {
     orthographicCam: false,
     cameraType: "Perspective",
     autoShowGUI: false,
+    columnsAmount: 3,
+    rowHeight: 200,
     stlWireframe: false,
     stlColor: "#606060",
     lightSettings: [
@@ -543,6 +547,38 @@ export class ThreeDSettingsTab extends PluginSettingTab {
 
             lightDiv.appendChild(details);
         });
+
+        containerEl.createEl('h2', {
+            text: 'Standard Grid Settings',
+        });
+
+        new Setting(containerEl)
+            .setName('Columns in grid view')
+            .setDesc('Default amount of columns when using grid view for multiple models')
+            .addText(text =>
+                text
+                    .setValue(this.plugin.settings.columnsAmount.toString())
+                    .onChange(async (value) => {
+                        const numValue = parseFloat(value)
+                        this.plugin.settings.columnsAmount = numValue;
+                        await this.plugin.saveSettings();
+                    })
+
+            )
+
+        new Setting(containerEl)
+            .setName('Cellheight')
+            .setDesc('height of all cells in grid view (in pixels)')
+            .addText(text =>
+                text
+                    .setValue(this.plugin.settings.rowHeight.toString())
+                    .onChange(async (value) => {
+                        const numValue = parseFloat(value)
+                        this.plugin.settings.rowHeight = numValue;
+                        await this.plugin.saveSettings();
+                    })
+
+            )
 
         containerEl.createEl('h2', {
             text: 'STL Type Options',

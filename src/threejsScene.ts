@@ -9,7 +9,7 @@ import { applyCameraSettings } from './applyConfig'
 import { loadModels } from './loadModelType'
 import { loadLights } from './loadLightType'
 
-export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, config: any, modelPath: string, name: string, setting_width: number, setting_width_percentage: number, setting_height: number, setting_alignment: string, ctx: any, renderer: THREE.WebGLRenderer) {
+export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, config: any, setting_width: number, setting_width_percentage: number, setting_height: number, setting_alignment: string, ctx: any, renderer: THREE.WebGLRenderer, grid: boolean) {
     const scene = new THREE.Scene();
 
     let axesHelper: THREE.AxesHelper | null = null;
@@ -41,8 +41,6 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
     let widthPercentage;
     let alignment;
 
-    //console.log(config.renderBlock)
-
     if (config.renderBlock) {
 
         if (config.renderBlock.alignment) {
@@ -52,7 +50,6 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
         }
 
         if (config.renderBlock.widthPercentage) {
-            //console.log("config.widthPercentage exists" + config.widthPercentage)
             widthPercentage = config.renderBlock.widthPercentage / 100;
         } else {
             widthPercentage = setting_width_percentage;
@@ -77,11 +74,7 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
 
     let camera = setCameraMode(config.camera.orthographic, width, height);
 
-    //console.log("width in threejsscene: " + width)
-
-    //const renderer = new THREE.WebGLRenderer();
     renderer.setSize(width, height);
-    el.appendChild(renderer.domElement);
 
     //If the config contains lighting settings, adress them here
     let lightsArray = []
@@ -133,49 +126,42 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
         gui2(plugin, el, scene, axesHelper, gridHelper, orbit, camera, renderer, ctx, modelArray, config, lightsArray)
     }
 
-    //let widthPercentage = this.settings.standardEmbedWidthPercentage / 100;
-
-    let flag = false;
-
-    // Resize function to update camera and renderer on container width change
-    const onResize = () => {
-        console.log("resize")
-        let newWidth = 0;
-
-        // Ensure the widthPercentage is applied only once (the flag is reset upon every rerender needed, because the whole threejs scene is redrawn)
-        if (!flag) {
-            let codeblock = document.querySelectorAll<HTMLElement>(".cm-lang-3D")
-            const index = Array.from(codeblock).findIndex(cb => cb.contains(el));
-            console.log("Index:" + index)
-            //console.log("t1:" + (ctx as any).el.clientWidth)
-            //codeblock[0].style.width = (ctx as any).el.clientWidth * widthPercentage + "px";
-            codeblock[index].style.width = widthPercentage * 100 + "%";
-
-            codeblock[index].style.justifySelf = alignment || "center";
-            flag = true;
-        }
-
-        //ensures that the browser has completed its rendering and layout process before you attempt to access ctx.el.clientWidth
-        requestAnimationFrame(() => {
-            newWidth = (ctx as any).el.clientWidth || 300
-
-            renderer.setSize(newWidth, height);
-            camera.aspect = newWidth / height;
-            camera.updateProjectionMatrix();
-        });
-    };
-
-    const onResize2 = () => {
-        console.log("resize2")
-        // flag = false;
-        // onResize();
+    function findContainerElement(el: HTMLElement): HTMLElement | null {
+        // For embedded or preview notes, look for these parent classes:
+        return el.closest('.cm-content, markdown-preview-section, .markdown-preview-section');
     }
 
-    const resizeObserverParentEl = new ResizeObserver(onResize2);
-    resizeObserverParentEl.observe(document.querySelectorAll<HTMLElement>(".cm-lang-3D")[0]); // Observe the container element for resize events
+    const onResize = () => {
+        const container = findContainerElement(el);
+        if (!container) return;
+
+        const containerWidth = container.clientWidth;
+        const newWidth = containerWidth * widthPercentage;
+        const align = alignment || "center";
+
+        // Apply style directly to your block container
+        const parent = el.parentElement;
+        if (parent && !grid) {
+            parent.style.display = "flex";
+            if (widthPercentage == 1) {
+                parent.style.justifyContent = "center";
+            } else {
+                parent.style.justifyContent = align;
+            }
+            parent.style.width = "100%";
+        }
+
+        el.style.width = `${newWidth}px`;
+
+        renderer.setSize(newWidth, height);
+        camera.aspect = newWidth / height;
+        camera.updateProjectionMatrix();
+    };
 
     const resizeObserver = new ResizeObserver(onResize);
-    resizeObserver.observe(el); // Observe the container element for resize events
+    //cases: triggers upon note resize, pane resize, but not in reading mode 
+    const container = findContainerElement(el);
+    if (container) resizeObserver.observe(container);
 
     // Clean up on plugin unload
     plugin.register(() => {
@@ -188,14 +174,12 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
     modelArray.forEach((child) => {
         parentGroup.add(child);
     });
-    //console.log(lightsArray)
     lightsArray.forEach((child) => {
         if (child.obj && child.name != "attachToCam") {
             parentGroup.add(child.obj);
         }
     });
     scene.add(parentGroup);
-    //console.log(parentGroup)
 
     // Animation loop
     const animate = () => {

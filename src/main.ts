@@ -4,6 +4,7 @@ import { DEFAULT_SETTINGS, ThreeDEmbedSettings, ThreeDSettingsTab } from './sett
 import { ThreeJSRendererChild, getUniqueId, getRenderer } from './rendermanager'
 import { initializeThreeJsScene } from './threejsScene';
 import { ThreeD_Embed_Command } from './commands/embedCodeblock'
+import { ThreeD_Embed_Grid_Command } from './commands/embedGridCodeblock'
 
 export default class ThreeJSPlugin extends Plugin {
     settings: ThreeDEmbedSettings;
@@ -16,8 +17,6 @@ export default class ThreeJSPlugin extends Plugin {
         const existingData = await this.loadData() || {};
         const updatedData = { ...existingData, ...this.settings };
         await this.saveData(updatedData);
-
-       // await this.saveData(this.settings);
     }
 
     async onload() {
@@ -26,21 +25,12 @@ export default class ThreeJSPlugin extends Plugin {
 
         //adds a code block that instantly adds the 3D scene to your note
         ThreeD_Embed_Command(this)
-
-        // const storedData = await this.loadData();
-        // let hasSeenModal = storedData?.hasSeenUpdateModal || false;
-        // //hasSeenModal = false //enable it to see the message
-
-        // if (!hasSeenModal) {
-        //     new UpdateModal(this.app, async () => {
-        //         await this.saveData({ hasSeenUpdateModal: true });
-        //     }).open();
-        // }
+        ThreeD_Embed_Grid_Command(this)
 
         const data = await this.loadData(); //delete version from data.json to trigger modal again
         if (data) {
             if (data.version) {
-                console.log("Loaded version:", data.version);
+                console.log("Loaded version:" + data.version + " of 3D embed plugin");
                 //Potential future option for showing an installation modal
             } else {
                 console.log("No version found showing modal")
@@ -54,8 +44,6 @@ export default class ThreeJSPlugin extends Plugin {
                 await this.saveData(updatedData);
             }
         }
-
-
 
         this.registerMarkdownCodeBlockProcessor('3D', (source, el, ctx) => {
             // Combine file path, content, and linestart to create a unique ID
@@ -116,7 +104,6 @@ export default class ThreeJSPlugin extends Plugin {
                     new Notice("Model path not found", 10000);
                     return;
                 }
-                //console.log("width:" + this.settings.standardEmbedWidthPercentage)
 
                 //Send through the width and height from settings, but in initializeThreeJsScene check if the json contains overrides for it
                 let widthPercentage = this.settings.standardEmbedWidthPercentage / 100;
@@ -124,14 +111,9 @@ export default class ThreeJSPlugin extends Plugin {
                 const height = this.settings.standardEmbedHeight || 300;
                 const alignment = this.settings.alignment || "center";
 
-                //codeblock[0].style.maxWidth = "50%";
+                const grid = false;
 
-                //console.log("Calculated width: " + width)
-                //console.log("Calculated width_el: " + (ctx as any).el.clientWidth)
-
-                //get width percentage from settings, or from json block, multiply el width with it. 
-                initializeThreeJsScene(this, el, parsedData, modelPath, parsedData.name, width, widthPercentage, height, alignment, ctx, renderer);
-
+                initializeThreeJsScene(this, el, parsedData, width, widthPercentage, height, alignment, ctx, renderer, grid);
             } catch (error) {
                 let message = error.toString().includes("Expected ',' or '}'")
                     ? "Please make sure that every line BUT the last one ends with a comma ','"
@@ -142,6 +124,119 @@ export default class ThreeJSPlugin extends Plugin {
                 new Notice("Failed to render 3D model: " + message, 10000);
             }
         });
+
+        this.registerMarkdownCodeBlockProcessor('3D-grid', (source, el, ctx) => {
+            try {
+                const parsedData = JSON.parse("{" + source + "}");
+
+                const requiredSubfields = {
+                    camera: {
+                        LookatXYZ: `"LookatXYZ": [0,0,0]`,
+                        camPosXYZ: `"camPosXYZ": [0,5,10]`
+                    },
+                    models: {
+                        name: `"name": "model.stl"`,
+                        scale: `"scale": 0.5`,
+                        position: `"position": [0, 0, 0]`,
+                        rotation: `"rotation": [0, 0, 0]`
+                    }
+                } as const;
+
+                // Validate required subfields
+                const errors: string[] = [];
+                const validCells: Record<string, any> = {};
+
+                const validateScene = (sceneData: any, cellName: string) => {
+                    let cellIsValid = true;
+
+                    for (const [parentField, subfields] of Object.entries(requiredSubfields)) {
+                        for (const [subfield, example] of Object.entries(subfields)) {
+                            const value = sceneData[parentField];
+
+                            if (parentField === "models") {
+                                if (!Array.isArray(value)) {
+                                    errors.push(`In "${cellName}", "${parentField}" must be an array.`);
+                                    cellIsValid = false;
+                                    continue;
+                                }
+
+                                value.forEach((obj: any, i: number) => {
+                                    if (obj[subfield] === undefined) {
+                                        errors.push(
+                                            `In "${cellName}", please include "${subfield}" inside each object in "${parentField}" (item ${i}). Example: ${example}`
+                                        );
+                                        cellIsValid = false;
+                                    }
+                                });
+                            } else {
+                                if (value?.[subfield] === undefined) {
+                                    errors.push(
+                                        `In "${cellName}", please include "${subfield}" inside "${parentField}". Example: ${example}`
+                                    );
+                                    cellIsValid = false;
+                                }
+                            }
+                        }
+                    }
+
+                    if (cellIsValid) validCells[cellName] = sceneData;
+                };
+
+                // 🩻 Step 1 — Validation loop
+                for (const [cellName, cellData] of Object.entries(parsedData)) {
+                    if (!cellName.startsWith("cell")) continue;
+                    validateScene(cellData, cellName);
+                }
+
+                if (errors.length > 0) {
+                    console.error("Validation errors:", errors);
+                    throw new Error(errors.join("\n"));
+                }
+
+                //Send through the width and height from settings, but in initializeThreeJsScene check if the json contains overrides for it
+                let widthPercentage = this.settings.standardEmbedWidthPercentage / 100;
+                const width = (ctx as any).el.clientWidth * widthPercentage || (ctx as any).el.clientWidth || 300;
+                const height = this.settings.standardEmbedHeight || 300;
+                const alignment = this.settings.alignment || "center";
+
+                // Step 2 — Initialization loop (your renderer logic per cell)
+                for (const [cellName, cellData] of Object.entries(validCells)) {
+                    if (!cellName.startsWith("cell")) continue;
+
+                    // This is your original logic, now inside the per-cell loop
+                    const blockId = getUniqueId(ctx, el);
+                    const instanceId = `${blockId}:${Date.now()}:${Math.random()}`;
+
+                    const renderer = getRenderer(blockId, instanceId, el);
+                    const child = new ThreeJSRendererChild(el, blockId, instanceId, this);
+                    ctx.addChild(child);
+
+                    //const columns = 4; // desired number of columns
+                    const columns = parsedData.gridSettings?.columns || this.settings.columnsAmount || 4;
+                    el.style.display = 'grid';
+                    el.style.gridTemplateColumns = `repeat(${columns}, 1fr)`; 
+                    el.style.gap = '1rem'; 
+
+                    const modelPath = this.getModelPath(cellData.models[0].name);
+                    const width = 50;           
+                    const widthPercentage = 1 / columns;     
+                    const height = parsedData.gridSettings?.rowHeight || this.settings.rowHeight || 200;            
+                    const alignment = "irrelevant";         
+                    const grid = true;
+                    initializeThreeJsScene(this, el, cellData, width, widthPercentage, height, alignment, ctx, renderer, grid);
+                }
+            } catch (error) {
+                let message = error.toString().includes("Expected ',' or '}'")
+                    ? "Please make sure that every line BUT the last one ends with a comma ','"
+                    : error.toString().includes("Expected double")
+                        ? "The last line should not end with a comma"
+                        : error.message;
+
+                new Notice("Failed to render 3D model: " + message, 10000);
+            }
+        });
+
+
     }
 
     getModelPath(name: string): string | null {

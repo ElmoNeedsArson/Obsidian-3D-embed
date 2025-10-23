@@ -30,7 +30,7 @@ export default class ThreeJSPlugin extends Plugin {
         const data = await this.loadData(); //delete version from data.json to trigger modal again
         if (data) {
             if (data.version) {
-                console.log("Loaded version:" + data.version + " of 3D embed plugin");
+                console.log("Loaded version: " + data.version + " of 3D embed plugin");
                 //Potential future option for showing an installation modal
             } else {
                 console.log("No version found showing modal")

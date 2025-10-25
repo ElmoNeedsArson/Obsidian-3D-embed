@@ -215,28 +215,37 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
                 v.controls.update();
 
                 let left = col * cellW;
-                //let bottom = rect.height - (row + 1) * cellH;
                 let bottom = (cellH * rows - (row + 1) * cellH);
-                let width = cellW;
-                let height = cellH - gapY/2;
+                let width = cellW - gapX / 2;
+                let height = cellH - gapY;
 
                 // Apply horizontal gap only between cells (not on edges)
                 if (col > 0) {
                     left += gapX / 2;
-                    width -= gapX / 2;
+                    //width -= gapX / 2;
                 }
                 if (col < columns - 1) {
-                    width -= gapX / 2;
+                    //width -= gapX / 2;
+                }
+
+                if (row < rows - 1) {
+                    bottom += (rows-row)* (gapY / rows)
                 }
 
                 // Apply vertical gap only between cells (not on edges)
-                if (row < rows - 1) {
-                    bottom += gapY / 2
-                    //height -= gapY / 2;
-                }
-                if (row >= rows - 1){
-                    //height -= gapY/2
-                } 
+                // if (row == 0) {
+
+                //     //bottom += gapY / 2
+                //     //height -= gapY / 2;
+                // }
+                // if (row >= 0) {
+                //     bottom += gapY / 2
+                //     //height -= gapY/2
+                // }
+
+                // if (row > -1) {
+                //     bottom -= gapY / 2
+                // }
 
                 v.viewport = { left, bottom, width, height };
 
@@ -253,11 +262,7 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
                 }
 
                 v.camera.updateProjectionMatrix();
-
                 adjustControlSpeed(v)
-
-
-
                 //renderer.render(v.scene, v.camera);
             }
         }

@@ -112,8 +112,9 @@ export default class ThreeJSPlugin extends Plugin {
                 const alignment = this.settings.alignment || "center";
 
                 const grid = false;
+                const scissor = false;
 
-                initializeThreeJsScene(this, el, parsedData, width, widthPercentage, height, alignment, ctx, renderer, grid);
+                initializeThreeJsScene(this, el, parsedData, width, widthPercentage, height, alignment, ctx, renderer, grid, scissor);
             } catch (error) {
                 let message = error.toString().includes("Expected ',' or '}'")
                     ? "Please make sure that every line BUT the last one ends with a comma ','"
@@ -211,19 +212,20 @@ export default class ThreeJSPlugin extends Plugin {
                     const child = new ThreeJSRendererChild(el, blockId, instanceId, this);
                     ctx.addChild(child);
 
-                    //const columns = 4; // desired number of columns
+                    //const columns = 4; // desired number of columns // SHOULD THIS BE MOVED OUTSIDE LOOP?
                     const columns = parsedData.gridSettings?.columns || this.settings.columnsAmount || 4;
                     el.style.display = 'grid';
-                    el.style.gridTemplateColumns = `repeat(${columns}, 1fr)`; 
-                    el.style.gap = '1rem'; 
+                    el.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+                    el.style.gap = '1rem';
 
                     const modelPath = this.getModelPath(cellData.models[0].name);
-                    const width = 50;           
-                    const widthPercentage = 1 / columns;     
-                    const height = parsedData.gridSettings?.rowHeight || this.settings.rowHeight || 200;            
-                    const alignment = "irrelevant";         
+                    const width = 50;
+                    const widthPercentage = 1 / columns;
+                    const height = parsedData.gridSettings?.rowHeight || this.settings.rowHeight || 200;
+                    const alignment = "irrelevant";
                     const grid = true;
-                    initializeThreeJsScene(this, el, cellData, width, widthPercentage, height, alignment, ctx, renderer, grid);
+                    const scissor = false;
+                    initializeThreeJsScene(this, el, cellData, width, widthPercentage, height, alignment, ctx, renderer, grid, scissor);
                 }
             } catch (error) {
                 let message = error.toString().includes("Expected ',' or '}'")
@@ -236,6 +238,106 @@ export default class ThreeJSPlugin extends Plugin {
             }
         });
 
+        this.registerMarkdownCodeBlockProcessor('3D-grid2', (source, el, ctx) => {
+            // Combine file path, content, and linestart to create a unique ID
+            const blockId = getUniqueId(ctx, el); // Block-level unique ID
+            const instanceId = `${blockId}:${Date.now()}:${Math.random()}`; // Instance-level unique ID
+
+            const renderer = getRenderer(blockId, instanceId, el);
+            // const renderer = new THREE.WebGLRenderer
+
+            // Doing this because the child needs to be registered before initializeThreeJsScene is called or smth, i dont recall tbh
+            const child = new ThreeJSRendererChild(el, blockId, instanceId, this);
+            ctx.addChild(child);
+
+            try {
+                const parsedData = JSON.parse("{" + source + "}");
+
+                const requiredSubfields = {
+                    camera: {
+                        LookatXYZ: `"LookatXYZ": [0,0,0]`,
+                        camPosXYZ: `"camPosXYZ": [0,5,10]`
+                    },
+                    models: {
+                        name: `"name": "model.stl"`,
+                        scale: `"scale": 0.5`,
+                        position: `"position": [0, 0, 0]`,
+                        rotation: `"rotation": [0, 0, 0]`
+                    }
+                } as const;
+
+                // Validate required subfields
+                const errors: string[] = [];
+                const validCells: Record<string, any> = {};
+
+                const validateScene = (sceneData: any, cellName: string) => {
+                    let cellIsValid = true;
+
+                    for (const [parentField, subfields] of Object.entries(requiredSubfields)) {
+                        for (const [subfield, example] of Object.entries(subfields)) {
+                            const value = sceneData[parentField];
+
+                            if (parentField === "models") {
+                                if (!Array.isArray(value)) {
+                                    errors.push(`In "${cellName}", "${parentField}" must be an array.`);
+                                    cellIsValid = false;
+                                    continue;
+                                }
+
+                                value.forEach((obj: any, i: number) => {
+                                    if (obj[subfield] === undefined) {
+                                        errors.push(
+                                            `In "${cellName}", please include "${subfield}" inside each object in "${parentField}" (item ${i}). Example: ${example}`
+                                        );
+                                        cellIsValid = false;
+                                    }
+                                });
+                            } else {
+                                if (value?.[subfield] === undefined) {
+                                    errors.push(
+                                        `In "${cellName}", please include "${subfield}" inside "${parentField}". Example: ${example}`
+                                    );
+                                    cellIsValid = false;
+                                }
+                            }
+                        }
+                    }
+
+                    if (cellIsValid) validCells[cellName] = sceneData;
+                };
+
+                // 🩻 Step 1 — Validation loop
+                for (const [cellName, cellData] of Object.entries(parsedData)) {
+                    if (!cellName.startsWith("cell")) continue;
+                    validateScene(cellData, cellName);
+                }
+
+                if (errors.length > 0) {
+                    console.error("Validation errors:", errors);
+                    throw new Error(errors.join("\n"));
+                }
+
+                const columns = parsedData.gridSettings?.columns || this.settings.columnsAmount || 4;
+                const width = 50;
+                const widthPercentage = 1 / columns;
+                const height = 400;
+                const alignment = "irrelevant";
+                const grid = true;
+                const scissor = true;
+
+                //renderer.setScissorTest(true);
+
+                initializeThreeJsScene(this, el, parsedData, width, widthPercentage, height, alignment, ctx, renderer, grid, scissor);
+            } catch (error) {
+                let message = error.toString().includes("Expected ',' or '}'")
+                    ? "Please make sure that every line BUT the last one ends with a comma ','"
+                    : error.toString().includes("Expected double")
+                        ? "The last line should not end with a comma"
+                        : error.message;
+
+                new Notice("Failed to render 3D model: " + message, 10000);
+            }
+        });
 
     }
 

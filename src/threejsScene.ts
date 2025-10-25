@@ -42,6 +42,9 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
 
         const views: SceneView[] = [];
 
+        let axesHelper: THREE.AxesHelper | null = null;
+        let gridHelper: THREE.GridHelper | null = null;
+
         // --- Create each scene ---
         for (let i = 0; i < numScenes; i++) {
             const [cellName, cellData] = cells[i];
@@ -53,6 +56,20 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
             } else {
                 const bg = cellData.scene?.backgroundColor || plugin.settings.standardColor;
                 scene.background = new THREE.Color(`#${bg.replace(/#/g, "")}`);
+            }
+
+            axesHelper = new THREE.AxesHelper(cellData.scene.length);
+            gridHelper = new THREE.GridHelper(cellData.scene.gridSize, cellData.scene.gridSize);
+
+            if (cellData.scene.showAxisHelper && axesHelper) {
+                scene.add(axesHelper);
+            }
+            if (cellData.scene.showGridHelper && gridHelper) {
+                scene.add(gridHelper);
+            }
+
+            if (cellData.scene?.showGuiOverlay == true) {
+                new Notice(`GUI cannot be shown for grid cells\nOne of your grid cells has the scene -> showGuiOverlay set to true`, 8000);
             }
 
             // Camera setup
@@ -179,21 +196,16 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
 
             const containerWidth = container.clientWidth
             const rect = renderer.domElement.getBoundingClientRect();
-            // if (rect.width <= 0 || rect.height <= 0) {
-            //     console.warn("⚠️ Renderer not ready yet, skipping layout", rect);
-            //     return;
-            // }
             if (containerWidth <= 0 || height_gl <= 0) {
                 console.warn("⚠️ RendererOpt2 not ready yet, skipping layout", rect);
                 return;
             }
-            //const cellW = rect.width / columns;
-            //console.log("rect.height vs height_gl: " + rect.height + " | " + height_gl)
-            //const cellH = rect.height / rows;
             const cellW = containerWidth / columns
             const cellH = height_gl;
 
-            const gapPx = 10; // 2 pixels gap between cells
+            //const gapPx = 10; // 2 pixels gap between cells
+            const gapX = config.gridSettings?.gapX || plugin.settings.gapX || 10
+            const gapY = config.gridSettings?.gapY || plugin.settings.gapY || 10
 
             for (let i = 0; i < views.length; i++) {
                 const v = views[i];
@@ -204,30 +216,29 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
 
                 let left = col * cellW;
                 //let bottom = rect.height - (row + 1) * cellH;
-                let bottom = height_gl * rows - (row + 1) * cellH;
+                let bottom = (cellH * rows - (row + 1) * cellH);
                 let width = cellW;
-                let height = cellH;
+                let height = cellH - gapY/2;
 
                 // Apply horizontal gap only between cells (not on edges)
                 if (col > 0) {
-                    left += gapPx / 2;
-                    width -= gapPx / 2;
+                    left += gapX / 2;
+                    width -= gapX / 2;
                 }
                 if (col < columns - 1) {
-                    width -= gapPx / 2;
+                    width -= gapX / 2;
                 }
 
                 // Apply vertical gap only between cells (not on edges)
-                if (row > 0) {
-                    height -= gapPx;
+                if (row < rows - 1) {
+                    bottom += gapY / 2
+                    //height -= gapY / 2;
                 }
-
-                //renderer.setViewport(left, bottom, width, height);
-                //renderer.setScissor(left, bottom, width, height);
+                if (row >= rows - 1){
+                    //height -= gapY/2
+                } 
 
                 v.viewport = { left, bottom, width, height };
-
-                console.log("Height:", height, "Width:", width);
 
                 if (v.camera instanceof THREE.PerspectiveCamera) {
                     v.camera.aspect = width / height;
@@ -262,17 +273,18 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
             v.controls.zoomSpeed = 1.0 * Math.sqrt(scale);
         }
 
-
         const animate = (): void => {
             if (renderer.getContext().isContextLost()) return;
             requestAnimationFrame(animate);
 
             for (let i = 0; i < views.length; i++) {
                 const v = views[i];
+                const [cellName, cellData] = cells[i];
+                //console.log(cellData.scene.autoRotation)
 
                 // Optional model rotation
-                if (config.scene?.autoRotation) {
-                    const [rx, ry, rz] = config.scene.autoRotation;
+                if (cellData.scene?.autoRotation) {
+                    const [rx, ry, rz] = cellData.scene.autoRotation;
                     v.group.rotation.x += rx;
                     v.group.rotation.y += ry;
                     v.group.rotation.z += rz;
@@ -293,7 +305,6 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
 
         // --- Resize handling ---
         const onResize = (): void => {
-            console.log("Resize")
             // renderer.setSize(el.clientWidth, el.clientHeight);
             updateViewLayout();
             for (const v of views) {

@@ -57,27 +57,26 @@ ${plugin.settings.lightSettings.map((light: LightSetting) => {
             default:
               return `      {"type": "${light.dropdownValue}", "color": "${colorString}", "pos": [${posString}], "strength": ${light.intensity}, "show": false}`;
           }
-        }).join(",\n")}
-      ],
-      "camera": {
-          "orthographic": ${cameraType},
-          "camPosXYZ": [${plugin.settings.camPosX}, ${plugin.settings.camPosY}, ${plugin.settings.camPosZ}],
-          "LookatXYZ": [0,0,0]
-      },
-      "scene": {
-          "showGuiOverlay": ${plugin.settings.autoShowGUI},
-          "autoRotation": [0, ${autorotateY}, 0],
-          "backgroundColor": "${plugin.settings.standardColor.replace(/#/g, "")}",
-          "showAxisHelper": false,
-          "length": 5,
-          "showGridHelper": false,
-          "gridSize": 10
-      },
-      "stl": {
-          "stlColorHexString": "${plugin.settings.stlColor.replace(/#/g, "")}",
-          "stlWireframe": ${plugin.settings.stlWireframe}
-      }
-    }`;
+        }).join(",\n")}\n   ],
+  "camera": {
+      "orthographic": ${cameraType},
+      "camPosXYZ": [${plugin.settings.camPosX}, ${plugin.settings.camPosY}, ${plugin.settings.camPosZ}],
+      "LookatXYZ": [0,0,0]
+  },
+  "scene": {
+      "showGuiOverlay": false,
+      "autoRotation": [0, ${autorotateY}, 0],
+      "backgroundColor": "${plugin.settings.standardColor.replace(/#/g, "")}",
+      "showAxisHelper": false,
+      "length": 5,
+      "showGridHelper": false,
+      "gridSize": 10
+  },
+  "stl": {
+      "stlColorHexString": "${plugin.settings.stlColor.replace(/#/g, "")}",
+      "stlWireframe": ${plugin.settings.stlWireframe}
+  }
+}`;
         cells.push(cellJSON);
         cellIndex++;
       });

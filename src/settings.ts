@@ -39,6 +39,9 @@ export interface ThreeDEmbedSettings {
     stlWireframe: boolean;
     columnsAmount: number;
     rowHeight: number;
+    gapX: number;
+    gapY: number;
+    scissor: boolean;
     stlColor: string;
     lightSettings: LightSetting[];
 }
@@ -60,6 +63,9 @@ export const DEFAULT_SETTINGS: ThreeDEmbedSettings = {
     autoShowGUI: false,
     columnsAmount: 3,
     rowHeight: 200,
+    gapX: 10,
+    gapY: 10,
+    scissor: true,
     stlWireframe: false,
     stlColor: "#606060",
     lightSettings: [
@@ -578,6 +584,48 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         await this.plugin.saveSettings();
                     })
 
+            )
+
+        new Setting(containerEl)
+            .setName('Horizontal Gap width')
+            .setDesc('Width of gaps between scenes in grid view (in Pixels)')
+            .addText(text =>
+                text
+                    .setValue(this.plugin.settings.gapX.toString())
+                    .onChange(async (value) => {
+                        const numValue = parseFloat(value)
+                        this.plugin.settings.gapX = numValue;
+                        await this.plugin.saveSettings();
+                    })
+
+            )
+
+        new Setting(containerEl)
+            .setName('Vertical Gap width')
+            .setDesc('Height of gaps between scenes in grid view (in Pixels)')
+            .addText(text =>
+                text
+                    .setValue(this.plugin.settings.gapY.toString())
+                    .onChange(async (value) => {
+                        const numValue = parseFloat(value)
+                        this.plugin.settings.gapY = numValue;
+                        await this.plugin.saveSettings();
+                    })
+
+            )
+
+        new Setting(containerEl)
+            .setName('Three.js Scissor mode')
+            .setDesc('Advanced option: If enabled uses scissoring to use one renderer for the grid (More resource friendly). If disabled uses one renderer for each grid cell. Requires restart to take effect')
+            .addToggle(
+                (toggle) =>
+                    toggle
+                        .setValue(this.plugin.settings.scissor) // Set the initial value based on settings
+                        .onChange(async (value) => {
+                            this.plugin.settings.scissor = value; // Update setting when toggled
+                            //await this.plugin.saveData(this.plugin.settings); // Save the new setting value
+                            await this.plugin.saveSettings();
+                        })
             )
 
         containerEl.createEl('h2', {

@@ -117,9 +117,30 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
                         continue;
                     }
 
+                    let pathToMaterial;
+
+                    if (model.name.endsWith(".obj")) {
+                        let mtlname = model.name.replace(/\.obj$/, ".mtl");
+
+                        pathToMaterial = (() => {
+                            const path = plugin.app.metadataCache.getFirstLinkpathDest(
+                                getLinkpath(mtlname),
+                                mtlname
+                            );
+                            return path ? plugin.app.vault.getResourcePath(path) : null;
+                        })();
+
+                        if (!pathToMaterial) {
+                            new Notice(`Material path for ${mtlname} not found`, 8000);
+                            continue;
+                        }
+                    } else {
+                        pathToMaterial = "unknown"
+                    }
+
                     try {
                         const ext = model.name.slice(-3).toLowerCase();
-                        const loaded = await loadModels(plugin, scene, pathToModel, ext, model, cellData.stl);
+                        const loaded = await loadModels(plugin, scene, pathToModel, ext, model, cellData.stl, pathToMaterial);
                         modelArray.push(loaded);
                     } catch (err) {
                         console.error(err);
@@ -428,8 +449,32 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
 
                 const modelExtensionType = models[i].name.slice(-3).toLowerCase();
 
+                let pathToMaterial;
+
+                console.log("Ext type: " + modelExtensionType)
+
+                if (modelExtensionType == "obj") {
+                    console.log("extension type ends with obj")
+                    let mtlname = models[i].name.replace(/\.obj$/, ".mtl");
+
+                    pathToMaterial = (() => {
+                        const path = plugin.app.metadataCache.getFirstLinkpathDest(
+                            getLinkpath(mtlname),
+                            mtlname
+                        );
+                        return path ? plugin.app.vault.getResourcePath(path) : null;
+                    })();
+
+                    if (!pathToMaterial) {
+                        new Notice(`Material path for ${mtlname} not found`, 8000);
+                        continue;
+                    }
+                } else {
+                    pathToMaterial = "unknown"
+                }
+
                 try {
-                    let model = await loadModels(plugin, scene, pathToModel, modelExtensionType, models[i], config.stl);
+                    let model = await loadModels(plugin, scene, pathToModel, modelExtensionType, models[i], config.stl, pathToMaterial);
                     modelArray.push(model);
                 } catch (error) {
                     console.error(error);

@@ -177,4 +177,7 @@ Use the settings tab, to alter standard settings for how all the models are init
 ## Future plans:
 1) Load textures in 3D models
 2) Be able to run custom three.js script for a scene. 
+3) Camera Path Animations
+4) More intuitive GUI for editing scenes
+5) Loading .blend files (Unsure of possibility)
 

@@ -9,7 +9,7 @@ import { applyCameraSettings } from './applyConfig'
 import { loadModels } from './loadModelType'
 import { loadLights } from './loadLightType'
 
-export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, config: any, setting_width: number, setting_width_percentage: number, setting_height: number, setting_alignment: string, ctx: any, renderer: THREE.WebGLRenderer, grid: boolean, scissor: boolean) {
+export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, config: any, setting_width: number, setting_width_percentage: number, setting_height: number, setting_alignment: string, ctx: any, renderer: THREE.WebGLRenderer, grid: boolean, scissor: boolean, jic_gridSettings?: any) {
 
     if (scissor) {
         renderer.setScissorTest(true);
@@ -190,7 +190,6 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
         }
 
         waitForCanvasReady(renderer).then(() => {
-            console.log("[Init] Running first layout + listeners");
             updateViewLayout();
             setupInteractionHandlers();
         });
@@ -406,9 +405,7 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
         scene.add(camera)
 
         const orbit = new OrbitControls(camera, renderer.domElement);
-        console.log("config: " + config.scene?.orbitControlDamping + "\nsettings: " + plugin.settings.dampedOrbit)
         orbit.enableDamping = config.scene?.orbitControlDamping ?? plugin.settings.dampedOrbit ?? true
-        console.log("Orbit: " + orbit.enableDamping)
 
         applyCameraSettings(camera, config, orbit);
 
@@ -451,7 +448,12 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
             if (!container) return;
 
             const containerWidth = container.clientWidth;
-            const newWidth = containerWidth * widthPercentage;
+            let newWidth;
+            if (jic_gridSettings) {
+                newWidth = (containerWidth - ((jic_gridSettings.columns - 1) * jic_gridSettings.gapX)) * widthPercentage
+            } else {
+                newWidth = containerWidth * widthPercentage;
+            }
             const align = alignment || "center";
 
             // Apply style directly to your block container
@@ -560,16 +562,15 @@ function findContainerElement(el: HTMLElement): HTMLElement | null {
 }
 
 function waitForCanvasReady(renderer: THREE.WebGLRenderer): Promise<void> {
-            return new Promise((resolve) => {
-                const check = () => {
-                    const rect = renderer.domElement.getBoundingClientRect();
-                    if (rect.width > 0 && rect.height > 0) {
-                        console.log("[Init] Canvas ready:", rect.width, rect.height);
-                        resolve();
-                    } else {
-                        requestAnimationFrame(check);
-                    }
-                };
-                check();
-            });
-        }
+    return new Promise((resolve) => {
+        const check = () => {
+            const rect = renderer.domElement.getBoundingClientRect();
+            if (rect.width > 0 && rect.height > 0) {
+                resolve();
+            } else {
+                requestAnimationFrame(check);
+            }
+        };
+        check();
+    });
+}

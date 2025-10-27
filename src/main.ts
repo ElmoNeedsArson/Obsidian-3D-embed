@@ -31,6 +31,11 @@ export default class ThreeJSPlugin extends Plugin {
         if (data) {
             if (data.version) {
                 console.log("3D Embed: Loading Plugin version: " + this.manifest.version);
+                if (data.version != this.manifest.version) {
+                    const newVersion = this.manifest.version.toString()
+                    const updatedData = { ...data, version: newVersion }
+                    await this.saveData(updatedData)
+                }
                 //Potential future option for showing an installation modal
             } else {
                 console.log("No version found showing modal")
@@ -40,7 +45,8 @@ export default class ThreeJSPlugin extends Plugin {
                 }).open();
 
                 const existingData = await this.loadData() || {};
-                const updatedData = { ...existingData, version: "1.0.9" };
+                const newVersion = this.manifest.version.toString()
+                const updatedData = { ...existingData, version: newVersion };
                 await this.saveData(updatedData);
             }
         }
@@ -368,7 +374,7 @@ class UpdateModal extends Modal {
 
         // Introductory text with GitHub link.
         const messagepart2 = contentEl.createEl("p");
-        messagepart2.appendText("You just updated the 3D embed plugin. If you'd like to learn how to control your scenes with more details or suggest new features check out my ");
+        messagepart2.appendText("You just updated/Installed the 3D embed plugin. If you'd like to learn how to control your scenes with more details or suggest new features check out my ");
         const GitHub = messagepart2.createEl("a", { text: "GitHub!", href: "https://github.com/ElmoNeedsArson/Obsidian-3D-embed#readme" });
         GitHub.setAttribute("target", "_blank"); // Opens in a new tab
 
@@ -381,7 +387,7 @@ class UpdateModal extends Modal {
         const calloutEl = warning.createEl("div", { cls: "callout callout-warning" });
         calloutEl.createEl("strong", { text: "Update Notice:" });
         const calloutText = calloutEl.createEl("p");
-        calloutText.appendText("In this update the syntax of the codeblock has significantly changed. This causes the old embeds to stop working. ");
+        calloutText.appendText("If you updated from a version older than 1.0.8: this update the syntax of the codeblock has significantly changed. This causes the old embeds to stop working. ");
         calloutText.appendText("To fix this, remove your old codeblock and execute the 3D embed command again.")
 
         const calloutText2 = calloutEl.createEl("p");

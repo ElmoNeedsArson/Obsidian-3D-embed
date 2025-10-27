@@ -26,7 +26,7 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
             camera: THREE.PerspectiveCamera | THREE.OrthographicCamera;
             controls: OrbitControls;
             group: THREE.Group;
-            viewport?: { left: number; bottom: number; width: number; height: number };
+            viewport?: { left: number; bottom: number; cellWidth: number; cellHeight: number };
         }
 
         let height_gl: number;
@@ -137,58 +137,66 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
 
             // Orbit controls
             const orbit = new OrbitControls(camera, renderer.domElement);
-            orbit.enableDamping = true;
+            orbit.enableDamping = cellData.scene?.orbitControlDamping ?? plugin.settings.dampedOrbit ?? true
             orbit.enabled = false;
             applyCameraSettings(camera, cellData, orbit);
 
             views.push({ name: cellName, scene, camera, controls: orbit, group: parentGroup });
         }
 
-        // --- Interaction routing (mouse events to active controls) ---
-        let activeControls: OrbitControls | null = null;
+        function setupInteractionHandlers() {
+            let activeControls: OrbitControls | null = null;
 
-        renderer.domElement.addEventListener("pointermove", (event: PointerEvent) => {
-            const rect = renderer.domElement.getBoundingClientRect();
-            const x = event.clientX - rect.left;
-            const y = event.clientY - rect.top;                // <- use top, not bottom
+            renderer.domElement.addEventListener("pointermove", (event: PointerEvent) => {
+                const rect = renderer.domElement.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const yTop = event.clientY - rect.top;
+                const yBottom = rect.height - yTop;
 
-            const cellW = rect.width / columns;
-            const cellH = rect.height / rows;
-            const col = Math.floor(x / cellW);
-            const row = Math.floor(y / cellH);
-            const index = row * columns + col;
-
-            // disable previous if pointer is outside valid cell
-            if (index < 0 || index >= views.length || col < 0 || col >= columns || row < 0 || row >= rows) {
-                if (activeControls) {
-                    activeControls.enabled = false;
-                    activeControls = null;
+                let foundControls: OrbitControls | null = null;
+                for (const v of views) {
+                    const vp = v.viewport;
+                    if (!vp) continue;
+                    const { left, bottom, cellWidth, cellHeight } = vp;
+                    if (
+                        x >= left &&
+                        x <= left + cellWidth &&
+                        yBottom >= bottom &&
+                        yBottom <= bottom + cellHeight
+                    ) {
+                        foundControls = v.controls;
+                        break;
+                    }
                 }
-                return;
-            }
 
-            // if the active control is unchanged, nothing to do
-            if (activeControls === views[index].controls) return;
+                if (foundControls === activeControls) return;
 
-            // switch enabled control
-            if (activeControls) activeControls.enabled = false;
-            activeControls = views[index].controls;
-            activeControls.enabled = true;
+                if (activeControls) activeControls.enabled = false;
+                activeControls = foundControls;
+                if (activeControls) activeControls.enabled = true;
+            });
+
+            (["pointerdown", "pointerup", "pointermove", "wheel"] as const).forEach((evName) => {
+                renderer.domElement.addEventListener(
+                    evName,
+                    (e: PointerEvent | WheelEvent) => {
+                        if (!activeControls) return;
+                        activeControls.update();
+                        activeControls.dispatchEvent({ type: "change" });
+                    },
+                    { passive: false }
+                );
+            });
+        }
+
+        waitForCanvasReady(renderer).then(() => {
+            console.log("[Init] Running first layout + listeners");
+            updateViewLayout();
+            setupInteractionHandlers();
         });
 
-        (["pointerdown", "pointerup", "pointermove", "wheel"] as const).forEach((evName) => {
-            renderer.domElement.addEventListener(evName, (e: PointerEvent | WheelEvent) => {
-                if (!activeControls) {
-                    // If no active control, prevent the default handling by the disabled controls
-                    // (OrbitControls check .enabled before acting, so this is just a guard)
-                    return;
-                }
-                // Let the active controls update themselves
-                // (they already listen to DOM events, but we keep explicit update/dispatch to ensure smoothness)
-                activeControls.update();
-                activeControls.dispatchEvent({ type: "change" });
-            }, { passive: false });
-        });
+        let gapX = config.gridSettings?.gapX || plugin.settings.gapX || 10
+        let gapY = config.gridSettings?.gapY || plugin.settings.gapY || 10
 
         function updateViewLayout() {
             const container = findContainerElement(el);
@@ -197,15 +205,18 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
             const containerWidth = container.clientWidth
             const rect = renderer.domElement.getBoundingClientRect();
             if (containerWidth <= 0 || height_gl <= 0) {
-                console.warn("⚠️ RendererOpt2 not ready yet, skipping layout", rect);
+                console.warn("Renderer not ready yet, skipping layout", rect);
                 return;
             }
-            const cellW = containerWidth / columns
-            const cellH = height_gl;
 
-            //const gapPx = 10; // 2 pixels gap between cells
-            const gapX = config.gridSettings?.gapX || plugin.settings.gapX || 10
-            const gapY = config.gridSettings?.gapY || plugin.settings.gapY || 10
+            // Update if needed, probably never triggers
+            gapX = config.gridSettings?.gapX || plugin.settings.gapX || 10
+            gapY = config.gridSettings?.gapY || plugin.settings.gapY || 10
+
+            //cell widths resize based on total width, for height they remain static
+            let newTotalWidth = containerWidth - (gapX * (columns - 1))
+            let cellWidth = newTotalWidth / columns
+            let cellHeight = height_gl
 
             for (let i = 0; i < views.length; i++) {
                 const v = views[i];
@@ -214,56 +225,23 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
 
                 v.controls.update();
 
-                let left = col * cellW;
-                let bottom = (cellH * rows - (row + 1) * cellH);
-                let width = cellW - gapX / 2;
-                let height = cellH - gapY;
+                let bottom = ((rows - 1) - row) * (cellHeight + gapY)
+                let left = col * (cellWidth + gapX)
 
-                // Apply horizontal gap only between cells (not on edges)
-                if (col > 0) {
-                    left += gapX / 2;
-                    //width -= gapX / 2;
-                }
-                if (col < columns - 1) {
-                    //width -= gapX / 2;
-                }
-
-                if (row < rows - 1) {
-                    bottom += (rows-row)* (gapY / rows)
-                }
-
-                // Apply vertical gap only between cells (not on edges)
-                // if (row == 0) {
-
-                //     //bottom += gapY / 2
-                //     //height -= gapY / 2;
-                // }
-                // if (row >= 0) {
-                //     bottom += gapY / 2
-                //     //height -= gapY/2
-                // }
-
-                // if (row > -1) {
-                //     bottom -= gapY / 2
-                // }
-
-                v.viewport = { left, bottom, width, height };
+                v.viewport = { left, bottom, cellWidth, cellHeight };
 
                 if (v.camera instanceof THREE.PerspectiveCamera) {
-                    v.camera.aspect = width / height;
-                    //v.camera.updateProjectionMatrix();
+                    v.camera.aspect = cellWidth / cellHeight;
                 } else if (v.camera instanceof THREE.OrthographicCamera) {
-                    const aspect = width / height;
+                    const aspect = cellWidth / cellHeight;
                     const frustumHeight = v.camera.top - v.camera.bottom;
                     const frustumWidth = frustumHeight * aspect;
                     v.camera.left = -frustumWidth / 2;
                     v.camera.right = frustumWidth / 2;
-                    //v.camera.updateProjectionMatrix();
                 }
 
                 v.camera.updateProjectionMatrix();
                 adjustControlSpeed(v)
-                //renderer.render(v.scene, v.camera);
             }
         }
 
@@ -271,7 +249,7 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
             if (!v.viewport) return;
             const fullW = renderer.domElement.clientWidth;
             const fullH = renderer.domElement.clientHeight;
-            const scale = Math.max(fullW / v.viewport.width, fullH / v.viewport.height);
+            const scale = Math.max(fullW / v.viewport.cellWidth, fullH / v.viewport.cellHeight);
 
             v.controls.rotateSpeed = 1.0 * scale;
             v.controls.panSpeed = 1.0 * scale;
@@ -298,10 +276,10 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
                 v.controls.update();
 
                 if (!v.viewport) continue; // skip views not yet sized
-                const { left, bottom, width, height } = v.viewport;
+                const { left, bottom, cellWidth, cellHeight } = v.viewport;
 
-                renderer.setViewport(left, bottom, width, height);
-                renderer.setScissor(left, bottom, width, height);
+                renderer.setViewport(left, bottom, cellWidth, cellHeight);
+                renderer.setScissor(left, bottom, cellWidth, cellHeight);
 
                 renderer.render(v.scene, v.camera);
             }
@@ -312,14 +290,15 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
         const onResize = (): void => {
             // renderer.setSize(el.clientWidth, el.clientHeight);
             updateViewLayout();
+            setupInteractionHandlers();
             for (const v of views) {
                 if (!v.viewport) continue;
                 if (v.camera instanceof THREE.PerspectiveCamera) {
-                    v.camera.aspect = v.viewport.width / v.viewport.height;
+                    v.camera.aspect = v.viewport.cellWidth / v.viewport.cellHeight;
                     v.camera.updateProjectionMatrix();
                 } else if (v.camera instanceof THREE.OrthographicCamera) {
                     // Adjust orthographic camera frustum to match aspect ratio
-                    const aspect = v.viewport.width / v.viewport.height;
+                    const aspect = v.viewport.cellWidth / v.viewport.cellHeight;
                     const frustumHeight = v.camera.top - v.camera.bottom;
                     const frustumWidth = frustumHeight * aspect;
                     v.camera.left = -frustumWidth / 2;
@@ -334,9 +313,9 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
 
             const containerWidth = container.clientWidth;
             const newWidth = containerWidth;
-            renderer.setSize(newWidth, height_gl * rows);
+            renderer.setSize(newWidth, (height_gl * rows) + (gapY * (rows - 1)));
             el.style.width = `${newWidth}px`;
-            el.style.height = `${height_gl * rows}px`;
+            el.style.height = `${(height_gl * rows) + (gapY * (rows - 1))}px`;
         };
 
         const resizeObserver = new ResizeObserver(onResize);
@@ -399,12 +378,6 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
                 widthPercentage = setting_width_percentage;
             };
 
-            // if (config.renderBlock.width) {
-            //     width = config.renderBlock.width;
-            // } else {
-            //     width = setting_width;
-            // }
-
             if (config.renderBlock.height) {
                 height = config.renderBlock.height;
             } else {
@@ -433,6 +406,9 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
         scene.add(camera)
 
         const orbit = new OrbitControls(camera, renderer.domElement);
+        console.log("config: " + config.scene?.orbitControlDamping + "\nsettings: " + plugin.settings.dampedOrbit)
+        orbit.enableDamping = config.scene?.orbitControlDamping ?? plugin.settings.dampedOrbit ?? true
+        console.log("Orbit: " + orbit.enableDamping)
 
         applyCameraSettings(camera, config, orbit);
 
@@ -582,3 +558,18 @@ function findContainerElement(el: HTMLElement): HTMLElement | null {
     // For embedded or preview notes, look for these parent classes:
     return el.closest('.cm-content, markdown-preview-section, .markdown-preview-section');
 }
+
+function waitForCanvasReady(renderer: THREE.WebGLRenderer): Promise<void> {
+            return new Promise((resolve) => {
+                const check = () => {
+                    const rect = renderer.domElement.getBoundingClientRect();
+                    if (rect.width > 0 && rect.height > 0) {
+                        console.log("[Init] Canvas ready:", rect.width, rect.height);
+                        resolve();
+                    } else {
+                        requestAnimationFrame(check);
+                    }
+                };
+                check();
+            });
+        }

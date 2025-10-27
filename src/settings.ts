@@ -30,6 +30,7 @@ export interface ThreeDEmbedSettings {
     standardEmbedWidthPercentage: number;
     alignment: string;
     autoRotate: boolean;
+    dampedOrbit: boolean;
     camPosX: number;
     camPosY: number;
     camPosZ: number;
@@ -55,6 +56,7 @@ export const DEFAULT_SETTINGS: ThreeDEmbedSettings = {
     standardEmbedWidthPercentage: 100,
     alignment: "center",
     autoRotate: false,
+    dampedOrbit: true,
     camPosX: 0,
     camPosY: 5,
     camPosZ: 10,
@@ -188,6 +190,20 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         .setValue(this.plugin.settings.autoRotate) // Set the initial value based on settings
                         .onChange(async (value) => {
                             this.plugin.settings.autoRotate = value; // Update setting when toggled
+                            //await this.plugin.saveData(this.plugin.settings); // Save the new setting value
+                            await this.plugin.saveSettings();
+                        })
+            )
+
+        new Setting(containerEl)
+            .setName('Damped Orbit Controls')
+            .setDesc('If true, will toggle smooth and damped orbit controls (e.g.) the model will rotate a bit more after you let go')
+            .addToggle(
+                (toggle) =>
+                    toggle
+                        .setValue(this.plugin.settings.dampedOrbit) // Set the initial value based on settings
+                        .onChange(async (value) => {
+                            this.plugin.settings.dampedOrbit = value; // Update setting when toggled
                             //await this.plugin.saveData(this.plugin.settings); // Save the new setting value
                             await this.plugin.saveSettings();
                         })

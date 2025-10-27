@@ -67,6 +67,7 @@ ${plugin.settings.lightSettings.map((light: LightSetting) => {
       "showGuiOverlay": false,
       "autoRotation": [0, ${autorotateY}, 0],
       "backgroundColor": "${plugin.settings.standardColor.replace(/#/g, "")}",
+      "orbitControlDamping": ${plugin.settings.dampedOrbit},
       "showAxisHelper": false,
       "length": 5,
       "showGridHelper": false,
@@ -83,7 +84,7 @@ ${plugin.settings.lightSettings.map((light: LightSetting) => {
 
       // Build final block manually to avoid extra braces
       const codeBlock = "```3D-grid\n" +
-        `"gridSettings": {\n   "columns": ${plugin.settings.columnsAmount},\n   "rowHeight": ${plugin.settings.rowHeight}\n},\n` +
+        `"gridSettings": {\n   "columns": ${plugin.settings.columnsAmount},\n   "rowHeight": ${plugin.settings.rowHeight},\n   "gapX": ${plugin.settings.gapX},\n   "gapY": ${plugin.settings.gapY}\n},\n` +
         cells.join(",\n") +
         "\n```\n";
 

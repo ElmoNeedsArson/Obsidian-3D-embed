@@ -217,9 +217,10 @@ Use the settings tab, to alter standard settings for how all the models are init
 ![image](https://github.com/user-attachments/assets/b7df88bf-75e2-4066-a685-8dfa11478816)
 
 ## Precautions:
-1) The plugin uses three.js, thereby the amount of active renderers (webGL contexts) is limited to 16. This means that you can either have 16 single scenes shown at once, or 16 grids at the same time (grids only use one renderer if the advanced scissor option is togled on).  
-2) Big models will be laggy (defined by vertex count), since obsidian has a limited amount of RAM that cannot be altered. If you have a big model in a note, and that note is open, your whole vault may lag. Be aware of this. Most light models cause no issue. 
-3) If your model is not showing up in the scene, half of the time the scale of the model is the cause, so try playing around with sizes both large and small. 
+1) The plugin uses three.js, thereby the amount of active renderers (webGL contexts) is limited to 16. This means that you can either have 16 single scenes shown at once, or 16 grids at the same time (grids only use one renderer if the advanced scissor option is togled on).
+		a. It seems that on mobile scissoring is not possible, and the amount of active renderers is limited to 8 at once.  
+3) Big models will be laggy (defined by vertex count), since obsidian has a limited amount of RAM that cannot be altered. If you have a big model in a note, and that note is open, your whole vault may lag. Be aware of this. Most light models cause no issue. 
+4) If your model is not showing up in the scene, half of the time the scale of the model is the cause, so try playing around with sizes both large and small. 
 
 ## Future plans:
 1) Be able to run custom three.js script for a scene. 

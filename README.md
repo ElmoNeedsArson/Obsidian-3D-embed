@@ -16,7 +16,7 @@ This plugin also allows you to make your scene with the whole model look as nice
 > [!Tip]
 > If you like my plugin feel free to leave a star on my [repository](https://github.com/ElmoNeedsArson/Obsidian-3D-embed) (it's like a reward)
 
-## 1. Showing all filetypes in obsidian:
+## 1. IMPORTANT!: Showing all filetypes in obsidian:
 Go to the settings tab of obsidian -> 'Files and Links' -> toggle the 'Detect all file extensions'
 ![image](https://github.com/user-attachments/assets/d5e27828-1a29-4870-8294-52e9011e2083)
 This allows you to see every type of file in your obsidian vault, including 3D model files such as stl. 
@@ -29,11 +29,10 @@ https://github.com/user-attachments/assets/9b10c36c-36c3-4bc1-a4a7-f5d00f735ec7
 
 
 ## 3. Or read these images and text:
-3.1) Drag Model from file overview/manager into note as an embed
-![Screenshot 2024-11-03 184117](https://github.com/user-attachments/assets/245386b4-5f41-4bf3-8afa-55287cd46207)
 
-3.2) position cursor on line with 3D model embed
-![Screenshot 2024-11-03 184225](https://github.com/user-attachments/assets/cad3f9f5-d1bd-4b61-a816-79ce3fc0a00e)
+|![Screenshot 2024-11-03 184117](https://github.com/user-attachments/assets/245386b4-5f41-4bf3-8afa-55287cd46207)|![Screenshot 2024-11-03 184225](https://github.com/user-attachments/assets/cad3f9f5-d1bd-4b61-a816-79ce3fc0a00e)|
+|:--:|:--:|
+|1. Drag Model from file overview/manager into note as an embed | 2. position cursor on line with 3D model embed|
 
 3.3) On line with embed execute the embed 3D command (ctrl+p) -> Embed 3D: Add a 3D embed at cursor position
 ![image](https://github.com/user-attachments/assets/c75579e8-a051-433c-ab64-486aa30fd9da)

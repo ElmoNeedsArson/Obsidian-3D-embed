@@ -34,8 +34,13 @@ https://github.com/user-attachments/assets/9b10c36c-36c3-4bc1-a4a7-f5d00f735ec7
 |:--:|:--:|
 |3. On line with embed execute the embed 3D command (ctrl+p) -> Embed 3D: Add a 3D embed at cursor position|4. Voila a 3D model|
 
+## 3.1 Alternatively
+Version 1.1.0 also allows you to include grids of 3D models in your vault if you wanna showcase multiple models or perspectives at once
+[img] to be placed
+To get the grid, similarly to the instructions above, drag in all the models you want. Select all the models with your a drag selection, and execute the grid command: (ctrl+p) -> Embed 3D: Add a 3D grid embed from selection. Voila a grid
+
 # Additional Information
-Each embed will contain a codeblock of information. You can access this by clicking in the top right of the scene or my moving your type cursor into the codeblock
+Each embed will contain a codeblock of information. You can access this by clicking in the top right of the scene OR by moving your type cursor into the codeblock
 
 ![image](https://github.com/user-attachments/assets/427a00bc-faa0-4764-8e9b-0302a1712553)
 
@@ -57,17 +62,18 @@ A codeblock should minimally contain these values:
 ]
 ```
 
-> [!Important]
-> The last line of the codeblock should not end on a comma, all other lines should
-
 But this is just the tip of the iceberg! The codeblock can receive a lot more variables to modify the scene and give you more control. 
+
+> [!Important]
+> The last line of the codeblock should not end on a comma, all other lines should (The codeblock uses JSON structure)
 
 ## Additional Configuration
 Look at the codeblock to alter minor things in the scene. It shows all the config options of a 3D scene for now. 
 
 Beside the basic configuration, these are lines you can add for more control:
 
-### Model settings
+<details><summary>
+### Model settings</summary>
 This will come preloaded when entering the command, but this config allows you to change elements about the model(s).
 You can add multiple models in this array to render multiple models in one scene at the same time. 
 ```JSON
@@ -79,6 +85,7 @@ You can add multiple models in this array to render multiple models in one scene
 - `scale` is the scale of the object related to your export size
 - `position` allows you to change the position of the model in the scene
 - `rotation` allows you to change the rotation of the model in the scene 
+</details>
 
 ### Render block settings
 To change the width or height, or the css alignment of a block:

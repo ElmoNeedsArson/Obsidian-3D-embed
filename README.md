@@ -186,7 +186,6 @@ By changing this option in your config of the scene to true
 },
 ```
 You can use transform controls and color pickers to finetune your scene a bit better. See the images below, you have a color picker (becomes unavailable when your background color is set to `transparent`), a rotation tool, a position tool and moving the camera. When clicking the checkmark, the scene will be saved as is in the config. But you can also reset it if you mess up somehow. 
-[OUTDATED IMAGES] 
 ![image](https://github.com/user-attachments/assets/3b594b76-234d-40a0-bac2-356b95150df8)
 
 ## Standard Settings

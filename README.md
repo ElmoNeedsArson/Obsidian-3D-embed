@@ -43,7 +43,7 @@ Version 1.1.0 also allows you to include grids of 3D models in your vault if you
 
 <table>
   <tr>
-    <th><img src="https://github.com/user-attachments/assets/33209e18-9c39-40b3-8d2c-d2164d7edcb5"></th>
+    <th><img src="https://github.com/user-attachments/assets/f0848c35-db9e-44fd-a299-d04a2f0614dd"></th>
     <th><img alt="image of grid of 3D models" src="https://github.com/user-attachments/assets/29a88191-8a65-40a4-ada2-46415fbc76f9" /></th>
   </tr>
   <tr>

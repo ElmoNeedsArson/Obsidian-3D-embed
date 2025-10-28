@@ -54,34 +54,14 @@ Version 1.1.0 also allows you to include grids of 3D models in your vault if you
 
 To get the grid, similarly to the instructions above, drag in all the models you want. Select all the models with a drag selection, and execute the grid command: (`ctrl+p`) -> `Embed 3D: Grid: Add a 3D grid embed from selection.`
 
-The general grid structure is as follows
-````JSON
-```3D-grid
-"gridSettings": {...},
-"cell1": {...standard config | same as #minimal configuration},
-"cell2": {...}
-```
-````
-
-For grids there are some additional codeblock config settings you can manipulate
-```JSON
-"gridSettings": {
-   "columns": 4,
-   "rowHeight": 200,
-   "gapX": 10,
-   "gapY": 10
-},
-```
-- `columns` states how many columns your grid has
-- `rowHeighy` dictates the height of one row in pixels
-- `gapX` and `gapY` dictate the gapsize between scenes in your grid in pixels
-
-# Additional Information
+# CONFIGURATION OPTIONS
 Each embed will contain a codeblock of information. You can access this by clicking in the top right of the scene OR by moving your type cursor into the codeblock
 
-![image](https://github.com/user-attachments/assets/427a00bc-faa0-4764-8e9b-0302a1712553)
+|![image](https://github.com/user-attachments/assets/427a00bc-faa0-4764-8e9b-0302a1712553)|![image](https://github.com/user-attachments/assets/7d6a47ed-1218-43f7-8243-da9372a235e4)|
+|:--:|:--:|
+|where to click to get to the codeblock|view of a codeblock|
 
-This codeblock will allow you to modify settings for this block only. If you want settings to be generally applied to all scenes you embed you should go to the settings tab. 
+This codeblock will allow you to modify A LOT of settings for this block only. If you want settings to be generally applied to all scenes you embed you should go to the settings tab. 
 
 ## Minimal Configuration
 A codeblock should minimally contain these values per scene:
@@ -98,11 +78,18 @@ A codeblock should minimally contain these values per scene:
    {"type": "ambient", "color": "FFFFFF", "pos": [0,0,0], "strength": 0.5, "show": false}
 ]
 ```
-
-But this is just the tip of the iceberg! The codeblock can receive a lot more variables to modify the scene and give you more control. 
-
 > [!Important]
 > The last line of the codeblock should not end on a comma, all other lines should (The codeblock uses JSON structure)
+
+Or in case of a grid:
+````JSON
+```3D-grid
+"gridSettings": {},
+"cell1": {}, //...standard minimum config. See above codeblock
+"cell2": {}
+```
+````
+But this is just the tip of the iceberg! The codeblock can receive a lot more variables to modify the scene and give you more control. 
 
 ## Additional Configuration
 Look at the codeblock to alter minor things in the scene. It shows all the config options of a 3D scene for now. 
@@ -134,6 +121,21 @@ To change the width or height, or the css alignment of a block:
 - `widthPercentage` goes from 1 - 100
 - `height` is in pixels
 - `alignment` has 3 options (begin, center, end)
+
+### Grid Settings
+When using a grid, instead of using [Render Block Settings](#Render-block-settings) you can use the config below:
+
+```JSON
+"gridSettings": {
+   "columns": 4,
+   "rowHeight": 200,
+   "gapX": 10,
+   "gapY": 10
+},
+```
+- `columns` states how many columns your grid has
+- `rowHeighy` dictates the height of one row in pixels
+- `gapX` and `gapY` dictate the gapsize between scenes in your grid in pixels
 
 ### Generic Scene Settings
 To change some other scene settings:

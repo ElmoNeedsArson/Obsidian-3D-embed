@@ -4,7 +4,7 @@
 
 # 3D Embed Plugin - How to use
 
-Currently supported filetypes: `stl, glb, obj, fbx, 3mf`
+Currently supported filetypes: `stl, glb, obj (and mtl), fbx, 3mf`
 
 This plugin allows you to showcase all sorts of 3D models in your vault and notes using the infamous three.js library. As opposed to other plugins this plugin allows you to embed your 3D models locally. This means you **won't** have to upload your models to some other website and embed that in your note, but rather just have the file in your vault and the plugin does all the other work for you.
 
@@ -132,6 +132,9 @@ Specifically for stl model files, I added some additional configuration
 - `stlColorHexString` allows you to set the color of an stl model itself
 - `stlWireframe` allows you to show the stl as a wireframe
 
+### OBJ information
+It's usefull to know that the plugin supports obj models, and thereby the accomponying .mtl files. For them to work, the mtl file has to have the exact same name as the obj file (most 3D programs export them with the same name by default) and they need to be in the same folder. 
+
 ### Lighting Configuration
 Lighting settings such as type, color, position, strength and whether you can see a sphere at the location of the light
 ```JSON
@@ -183,14 +186,16 @@ Use the settings tab, to alter standard settings for how all the models are init
 ![image](https://github.com/user-attachments/assets/b7df88bf-75e2-4066-a685-8dfa11478816)
 
 ## Precautions:
-1) The plugin can currently support 16 models at one time being rendered, but due to refreshing issues, contexts might be lost sometimes needing you to trigger the codeblock again to render the model. I am trying to fix this. 
-2) Big models will be laggy, since obsidian has a limited amount of RAM that cannot be altered.
+1) The plugin uses three.js, thereby the amount of active renderers (webGL contexts) is limited to 16. This means that you can either have 16 single scenes shown at once, or 16 grids at the same time (grids only use one renderer if the advanced scissor option is togled on).  
+2) Big models will be laggy (defined by vertex count), since obsidian has a limited amount of RAM that cannot be altered. If you have a big model in a note, and that note is open, your whole vault may lag. Be aware of this. Most light models cause no issue. 
 3) If your model is not showing up in the scene, half of the time the scale of the model is the cause, so try playing around with sizes both large and small. 
 
 ## Future plans:
-1) Load textures in 3D models
-2) Be able to run custom three.js script for a scene. 
-3) Camera Path Animations
-4) More intuitive GUI for editing scenes
-5) Loading .blend files (Unsure of possibility)
+1) Be able to run custom three.js script for a scene. 
+2) Camera Path Animations
+3) More intuitive GUI for editing scenes
+4) Loading .blend files (Unsure of possibility)
 
+## Support:
+If you are enjoying 3D embed, then feel free to support my work and enthusiasm by buying me a coffee on:
+[Buy me a coffee](https://buymeacoffee.com/elmoneedsarson)

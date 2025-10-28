@@ -7,7 +7,7 @@ import { LightSetting } from '../settings'; // Adjust the path as necessary
 export function ThreeD_Embed_Command(plugin: ThreeJSPlugin) {
     plugin.addCommand({
         id: "Add a 3D embed at the cursorposition",
-        name: "Add a 3D embed at the cursorposition",
+        name: "Single Scene: Add a 3D embed at the cursorposition",
         editorCallback: (editor: Editor) => {
             let selection = editor.getSelection();
 

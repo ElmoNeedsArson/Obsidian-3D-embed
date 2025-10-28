@@ -5,7 +5,7 @@ import { LightSetting } from '../settings';
 export function ThreeD_Embed_Grid_Command(plugin: ThreeJSPlugin) {
   plugin.addCommand({
     id: "Add a 3D grid embed from selection",
-    name: "Add a 3D grid embed from selection",
+    name: "Grid: Add a 3D grid embed from selection",
     editorCallback: (editor: Editor) => {
       const selection = editor.getSelection();
 

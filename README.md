@@ -34,11 +34,9 @@ https://github.com/user-attachments/assets/9b10c36c-36c3-4bc1-a4a7-f5d00f735ec7
 |:--:|:--:|
 |1. Drag Model from file overview/manager into note as an embed | 2. position cursor on line with 3D model embed|
 
-3.3) On line with embed execute the embed 3D command (ctrl+p) -> Embed 3D: Add a 3D embed at cursor position
-![image](https://github.com/user-attachments/assets/c75579e8-a051-433c-ab64-486aa30fd9da)
-
-3.4) Voila a 3D model
-![image](https://github.com/user-attachments/assets/6e142009-9cfb-44e4-b1a9-1457f288f55f)
+|![image](https://github.com/user-attachments/assets/c75579e8-a051-433c-ab64-486aa30fd9da)|![image](https://github.com/user-attachments/assets/6e142009-9cfb-44e4-b1a9-1457f288f55f)|
+|:--:|:--:|
+|3. On line with embed execute the embed 3D command (ctrl+p) -> Embed 3D: Add a 3D embed at cursor position|4. Voila a 3D model|
 
 # Additional Information
 Each embed will contain a codeblock of information. You can access this by clicking in the top right of the scene or my moving your type cursor into the codeblock

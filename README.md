@@ -2,9 +2,6 @@
 |:--:|:--:|
 | <img width="1920" height="1080" alt="4" src="https://github.com/user-attachments/assets/ba47623c-4036-4b26-a134-9442f742940d" /> | <img width="1920" height="1080" alt="3" src="https://github.com/user-attachments/assets/7de120bb-6c2b-4cd7-81fb-861232e05ef9" /> |
 
-
-
-
 # 3D Embed Plugin - How to use
 
 Currently supported filetypes: `stl, glb, obj, fbx, 3mf`
@@ -13,8 +10,8 @@ This plugin allows you to showcase all sorts of 3D models in your vault and note
 
 This plugin also allows you to make your scene with the whole model look as nice as possible. Influencing a lot of variables such as background colors, autorotation, lighting, scales, etc. [Look at the documentation below for all the options]
 
-> [!Developer Note!:] 
-> If the plugin misses anything, feel free to open a github issue or tag me in the obsidian discord `@jesse5`. I am very open to suggestions and bugfixes and love hearing them :) 
+> [!Note]
+> Developer Note!: If the plugin misses anything, feel free to open a github issue or tag me in the obsidian discord `@jesse5`. I am very open to suggestions and bugfixes and love hearing them :) 
 
 ## 1. Showing all filetypes in obsidian:
 Go to the settings tab of obsidian -> 'Files and Links' -> toggle the 'Detect all file extensions'

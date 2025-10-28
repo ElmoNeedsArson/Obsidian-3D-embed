@@ -54,6 +54,27 @@ Version 1.1.0 also allows you to include grids of 3D models in your vault if you
 
 To get the grid, similarly to the instructions above, drag in all the models you want. Select all the models with a drag selection, and execute the grid command: (`ctrl+p`) -> `Embed 3D: Grid: Add a 3D grid embed from selection.`
 
+The general grid structure is as follows
+```3D-grid
+"gridSettings": {...},
+"cell1": {...standard config | same as #minimal configuration},
+"cell2": {...},
+etc...
+```
+
+For grids there are some additional codeblock config settings you can manipulate
+```JSON
+"gridSettings": {
+   "columns": 4,
+   "rowHeight": 200,
+   "gapX": 10,
+   "gapY": 10
+},
+```
+- `columns` states how many columns your grid has
+- `rowHeighy` dictates the height of one row in pixels
+- `gapX` and `gapY` dictate the gapsize between scenes in your grid in pixels
+
 # Additional Information
 Each embed will contain a codeblock of information. You can access this by clicking in the top right of the scene OR by moving your type cursor into the codeblock
 
@@ -62,7 +83,7 @@ Each embed will contain a codeblock of information. You can access this by click
 This codeblock will allow you to modify settings for this block only. If you want settings to be generally applied to all scenes you embed you should go to the settings tab. 
 
 ## Minimal Configuration
-A codeblock should minimally contain these values:
+A codeblock should minimally contain these values per scene:
 ```JSON
 "models": [
    {"name": "Airship.glb", "scale": 0.7, "position": [0, 0, 0], "rotation": [0, 0, 0]}

@@ -11,7 +11,10 @@ This plugin allows you to showcase all sorts of 3D models in your vault and note
 This plugin also allows you to make your scene with the whole model look as nice as possible. Influencing a lot of variables such as background colors, autorotation, lighting, scales, etc. [Look at the documentation below for all the options]
 
 > [!Note]
-> Developer Note!: If the plugin misses anything, feel free to open a github [issue](https://github.com/ElmoNeedsArson/Obsidian-3D-embed/issues) or tag me in the obsidian [discord](https://discord.com/invite/obsidianmd) `@jesse5`. I am very open to suggestions and bugfixes and love hearing them :) 
+> Developer Note!: If the plugin misses anything, feel free to open a github [issue](https://github.com/ElmoNeedsArson/Obsidian-3D-embed/issues) or tag me in the obsidian [discord](https://discord.com/invite/obsidianmd) `@jesse5`. I am very open to suggestions and bugfixes and love hearing them :)
+
+> [!Tip]
+> If you like my plugin feel free to leave a star on my [repository](https://github.com/ElmoNeedsArson/Obsidian-3D-embed) (it's like a reward)
 
 ## 1. Showing all filetypes in obsidian:
 Go to the settings tab of obsidian -> 'Files and Links' -> toggle the 'Detect all file extensions'

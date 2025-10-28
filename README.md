@@ -20,7 +20,7 @@ This allows you to see every type of file in your obsidian vault, including 3D m
 ## 2. Watch this video that showcases how to use the plugin:
 
 
-https://github.com/user-attachments/assets/9b10c36c-36c3-4bc1-a4a7-f5d00f735ec7
+![video](https://github.com/user-attachments/assets/9b10c36c-36c3-4bc1-a4a7-f5d00f735ec7)
 
 
 

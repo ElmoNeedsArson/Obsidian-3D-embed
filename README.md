@@ -42,7 +42,7 @@ https://github.com/user-attachments/assets/9b10c36c-36c3-4bc1-a4a7-f5d00f735ec7
 Version 1.1.0 also allows you to include grids of 3D models in your vault if you wanna showcase multiple models or perspectives at once
 | ![obsidian grid](https://github.com/user-attachments/assets/33209e18-9c39-40b3-8d2c-d2164d7edcb5) | <img alt="image of grid of 3D models" src="https://github.com/user-attachments/assets/29a88191-8a65-40a4-ada2-46415fbc76f9" /> |
 |:--:|:--:|
-|Video of getting a grid|possible view of a grid| Voila a Grid|
+|Video of getting a grid|possible view of a grid|
 
 To get the grid, similarly to the instructions above, drag in all the models you want. Select all the models with a drag selection, and execute the grid command: (`ctrl+p`) -> `Embed 3D: Grid: Add a 3D grid embed from selection.`
 

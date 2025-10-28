@@ -1,3 +1,8 @@
+Add this to readme:
+| <img alt="1" src="https://github.com/user-attachments/assets/f2a2a5c5-8018-4ca7-9254-a29f67864104" /> | <img alt="2" src="https://github.com/user-attachments/assets/cb89e299-11d5-4ea6-a654-3302926c3c51" /> |
+|:--:|:--:|
+| <img alt="4" src="https://github.com/user-attachments/assets/ba47623c-4036-4b26-a134-9442f742940d" /> | <img alt="3" src="https://github.com/user-attachments/assets/7de120bb-6c2b-4cd7-81fb-861232e05ef9" /> |
+
 # 3D Embed Plugin - How to use
 
 Currently supported filetypes: `stl, glb, obj, fbx, 3mf`
@@ -72,8 +77,7 @@ Look at the codeblock to alter minor things in the scene. It shows all the confi
 
 Beside the basic configuration, these are lines you can add for more control:
 
-<details><summary>
-### Model settings</summary>
+### Model settings
 This will come preloaded when entering the command, but this config allows you to change elements about the model(s).
 You can add multiple models in this array to render multiple models in one scene at the same time. 
 ```JSON
@@ -85,7 +89,6 @@ You can add multiple models in this array to render multiple models in one scene
 - `scale` is the scale of the object related to your export size
 - `position` allows you to change the position of the model in the scene
 - `rotation` allows you to change the rotation of the model in the scene 
-</details>
 
 ### Render block settings
 To change the width or height, or the css alignment of a block:

@@ -144,6 +144,7 @@ To change some other scene settings:
    "showGuiOverlay": false,
    "autoRotation": [0, 0, 0],
    "backgroundColor": "4bb8dd",
+   "orbitControlDamping": true,
    "showAxisHelper": false, "length": 5,
    "showGridHelper": false, "gridSize": 10
 },
@@ -151,6 +152,7 @@ To change some other scene settings:
 - `showGuiOverlay` provides you with a gui (see further down)
 - `autoRotation` rotates your model automatically on any axis
 - `backgroundColor` can also be set to `transparent` or any hexvalue for a color. 
+- `orbitControlDamping` can be toggled for smoother orbit controls
 - `showAxisHelper` and `showGridHelper` show scene helpers such as a grid or the main axis
 
 ### STL Configurations

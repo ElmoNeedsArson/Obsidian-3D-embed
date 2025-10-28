@@ -55,11 +55,13 @@ Version 1.1.0 also allows you to include grids of 3D models in your vault if you
 To get the grid, similarly to the instructions above, drag in all the models you want. Select all the models with a drag selection, and execute the grid command: (`ctrl+p`) -> `Embed 3D: Grid: Add a 3D grid embed from selection.`
 
 The general grid structure is as follows
-```3D-grid
+```JSON
+'''3D-grid
 "gridSettings": {...},
 "cell1": {...standard config | same as #minimal configuration},
 "cell2": {...},
 etc...
+'''
 ```
 
 For grids there are some additional codeblock config settings you can manipulate

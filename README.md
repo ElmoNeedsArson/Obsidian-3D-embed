@@ -37,7 +37,7 @@ https://github.com/user-attachments/assets/9b10c36c-36c3-4bc1-a4a7-f5d00f735ec7
 
 |![image](https://github.com/user-attachments/assets/c75579e8-a051-433c-ab64-486aa30fd9da)|![image](https://github.com/user-attachments/assets/6e142009-9cfb-44e4-b1a9-1457f288f55f)|
 |:--:|:--:|
-|3. On line with embed execute the embed 3D command (ctrl+p) -> Embed 3D: Add a 3D embed at cursor position|4. Voila a 3D model|
+|3. On line with embed execute the embed 3D command (`ctrl+p`) -> `Embed 3D: Single Scene: Add a 3D embed at cursor position` |4. Voila a 3D model|
 
 ## 3.1 Alternatively
 Version 1.1.0 also allows you to include grids of 3D models in your vault if you wanna showcase multiple models or perspectives at once
@@ -45,7 +45,7 @@ Version 1.1.0 also allows you to include grids of 3D models in your vault if you
 |:--:|:--:|
 |Video of getting a grid|possible view of a grid| Voila a Grid|
 
-To get the grid, similarly to the instructions above, drag in all the models you want. Select all the models with your a drag selection, and execute the grid command: (ctrl+p) -> Embed 3D: Add a 3D grid embed from selection.
+To get the grid, similarly to the instructions above, drag in all the models you want. Select all the models with a drag selection, and execute the grid command: (`ctrl+p`) -> `Embed 3D: Grid: Add a 3D grid embed from selection.`
 
 # Additional Information
 Each embed will contain a codeblock of information. You can access this by clicking in the top right of the scene OR by moving your type cursor into the codeblock

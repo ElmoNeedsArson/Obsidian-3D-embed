@@ -283,7 +283,6 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
             for (let i = 0; i < views.length; i++) {
                 const v = views[i];
                 const [cellName, cellData] = cells[i];
-                //console.log(cellData.scene.autoRotation)
 
                 // Optional model rotation
                 if (cellData.scene?.autoRotation) {
@@ -451,10 +450,7 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
 
                 let pathToMaterial;
 
-                console.log("Ext type: " + modelExtensionType)
-
                 if (modelExtensionType == "obj") {
-                    console.log("extension type ends with obj")
                     let mtlname = models[i].name.replace(/\.obj$/, ".mtl");
 
                     pathToMaterial = (() => {

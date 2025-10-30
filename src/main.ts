@@ -15,7 +15,10 @@ export default class ThreeJSPlugin extends Plugin {
 
     async saveSettings() {
         const existingData = await this.loadData() || {};
-        const updatedData = { ...existingData, ...this.settings };
+        const updatedData = {
+            ...existingData,             // preserve extra fields
+            ...structuredClone(this.settings), // ensure nested changes get saved
+        };
         await this.saveData(updatedData);
     }
 

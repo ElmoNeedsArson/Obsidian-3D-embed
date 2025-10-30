@@ -20,12 +20,14 @@ export interface LightSetting {
     intensity: number;
     distance?: number;
     angle?: number;
+    castShadows?: boolean;
 }
 
 export interface ThreeDEmbedSettings {
     showConfig: boolean;
     colorChoice: string;
     standardColor: string;
+    showGroundShadows: boolean;
     standardScale: number;
     standardEmbedHeight: number;
     standardEmbedWidthPercentage: number;
@@ -53,6 +55,7 @@ export const DEFAULT_SETTINGS: ThreeDEmbedSettings = {
     showConfig: true,
     colorChoice: "transparent",
     standardColor: "#ADD8E6",
+    showGroundShadows: true,
     standardScale: 0.5,
     standardEmbedHeight: 300,
     standardEmbedWidthPercentage: 100,
@@ -80,6 +83,7 @@ export const DEFAULT_SETTINGS: ThreeDEmbedSettings = {
             targetPosition: [0, 0, 0],
             intensity: 1,
             color: "#FFFFFF",
+            castShadows: true,
         },
         {
             dropdownValue: "ambient",
@@ -231,6 +235,20 @@ export class ThreeDSettingsTab extends PluginSettingTab {
             )
 
         new Setting(containerEl)
+            .setName('Show ground Shadows')
+            .setDesc('If true, will show a ground plane that can receive shadows from models and lights. \nNOTE: may impact performance, and your lightsources also need have "castShadows": true')
+            .addToggle(
+                (toggle) =>
+                    toggle
+                        .setValue(this.plugin.settings.showGroundShadows) // Set the initial value based on settings
+                        .onChange(async (value) => {
+                            this.plugin.settings.showGroundShadows = value; // Update setting when toggled
+                            //await this.plugin.saveData(this.plugin.settings); // Save the new setting value
+                            await this.plugin.saveSettings();
+                        })
+            )
+
+        new Setting(containerEl)
             .setName('Toggle Automatically show GUI')
             .setDesc('If true, will show basic gui options for a scene (color selector, grid checkbox) upon model load. Can also be set in the codeblock config')
             .addToggle(
@@ -366,6 +384,10 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         containerEl.querySelectorAll("details").forEach((detail, idx) => {
                             if (detail.open) openDetails.add(idx);
                         });
+
+                        if (["point", "directional", "spot"].includes(light.dropdownValue)) {
+                            if (light.castShadows === undefined) light.castShadows = true;
+                        }
 
                         // When the type changes, initialize or remove fields as needed.
                         if (value === "hemisphere") {
@@ -522,6 +544,23 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                             await this.plugin.saveSettings();
                         });
                     });
+            }
+
+            if (light.dropdownValue === "directional" || light.dropdownValue === "spot" || light.dropdownValue === "point") {
+                new Setting(details)
+                    //.setClass("ThreeDEmbed_Position_Inputs")
+                    .setName("castShadows")
+                    .setDesc("Able or disable shadow casting for this light")
+                    .addToggle(
+                        (toggle) =>
+                            toggle
+                                .setValue(light.castShadows ?? true) // Set the initial value based on settings
+                                .onChange(async (value) => {
+                                    light.castShadows = value; // Update setting when toggled
+                                    //await this.plugin.saveData(this.plugin.settings); // Save the new setting value
+                                    await this.plugin.saveSettings();
+                                })
+                    )
             }
 
             // For hemisphere lights, do not show a position but show two color pickers.

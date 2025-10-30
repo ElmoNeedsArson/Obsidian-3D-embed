@@ -47,6 +47,13 @@ export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: stri
                 //point.position.set(plugin.settings.lightSettings[0].position[0], plugin.settings.lightSettings[0].position[1], plugin.settings.lightSettings[0].position[2])
             }
 
+            if (lightconfig.castShadows) {
+                point.castShadow = true;
+
+                point.shadow.camera.near = 0.5;
+                point.shadow.camera.far = 100;
+            }
+
             scene.add(point)
             if (show == true) {
                 const sphereSize = 1;
@@ -81,10 +88,26 @@ export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: stri
                 directional.target.position.set(lightconfig.target[0], lightconfig.target[1], lightconfig.target[2])
             }
 
+            if (lightconfig.castShadows) {
+                directional.castShadow = true;
+
+                directional.shadow.camera.left = -15;
+                directional.shadow.camera.right = 15;
+                directional.shadow.camera.top = 15;
+                directional.shadow.camera.bottom = -15;
+                directional.shadow.camera.near = 0.5;
+                directional.shadow.camera.far = 100;
+            }
+
             scene.add(directional)
+
             if (show == true) {
-                const helper = new THREE.DirectionalLightHelper(directional, 5);
-                scene.add(helper);
+                //const helper = new THREE.DirectionalLightHelper(directional, 5);
+                //scene.add(helper);
+
+                // Add shadow camera helper for debugging
+                const shadowHelper = new THREE.CameraHelper(directional.shadow.camera);
+                scene.add(shadowHelper);
             }
             return directional
         case 'spot': //---------------------------------------------------------------------------CHANGE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -98,6 +121,8 @@ export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: stri
             } else {
                 distance = 10;
             }
+
+
 
             if (lightconfig.angle) {
                 let entered_percentage = lightconfig.angle
@@ -122,6 +147,16 @@ export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: stri
                 spot.target.position.set(lightconfig.target[0], lightconfig.target[1], lightconfig.target[2])
             }
 
+            if (lightconfig.castShadows) {
+                spot.castShadow = true;
+
+                //spot.angle = Math.PI / 4; // cone width
+                spot.penumbra = 0.2;      // softness at edge
+                spot.shadow.camera.near = 0.5;
+                spot.shadow.camera.far = 100;
+
+            }
+
             if (position) {
                 spot.position.set(position[0], position[1], position[2])
             } else {
@@ -138,7 +173,7 @@ export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: stri
             return spot
         case 'hemisphere':
             const hemisphere = new THREE.HemisphereLight(lightColor, lightColor2, lightStrength);
-            
+
             if (show == true) {
                 const helper = new THREE.HemisphereLightHelper(hemisphere, 5);
                 scene.add(helper);

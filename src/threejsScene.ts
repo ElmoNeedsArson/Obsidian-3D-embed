@@ -10,6 +10,8 @@ import { loadModels } from './loadModelType'
 import { loadLights } from './loadLightType'
 
 export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, config: any, setting_width: number, setting_width_percentage: number, setting_height: number, setting_alignment: string, ctx: any, renderer: THREE.WebGLRenderer, grid: boolean, scissor: boolean, jic_gridSettings?: any) {
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     if (scissor) {
         renderer.setScissorTest(true);
@@ -471,6 +473,16 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
 
                 try {
                     let model = await loadModels(plugin, scene, pathToModel, modelExtensionType, models[i], config.stl, pathToMaterial);
+                    //model.castShadow = true;
+                    //console.log("Model: " + model)
+                    
+                    model.traverse((child) => {
+                        if ((child as THREE.Mesh).isMesh) {
+                            (child as THREE.Mesh).castShadow = true;
+                            (child as THREE.Mesh).receiveShadow = true;
+                        }
+                    });
+
                     modelArray.push(model);
                 } catch (error) {
                     console.error(error);
@@ -482,6 +494,15 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
             axesHelper ??= new THREE.AxesHelper(10);
             gridHelper ??= new THREE.GridHelper(10, 10);
             gui2(plugin, el, scene, axesHelper, gridHelper, orbit, camera, renderer, ctx, modelArray, config, lightsArray)
+        }
+
+        // Ground plane (very subtle)
+        if (config.scene?.showGroundShadows) {
+            const shadowMat = new THREE.ShadowMaterial({ opacity: 0.5 });
+            const ground = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), shadowMat);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
         }
 
         const onResize = () => {
@@ -512,6 +533,7 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
             el.style.width = `${newWidth}px`;
 
             renderer.setSize(newWidth, height);
+            renderer.shadowMap.enabled = true;
             camera.aspect = newWidth / height;
             camera.updateProjectionMatrix();
         };

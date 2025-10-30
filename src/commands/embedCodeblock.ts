@@ -57,36 +57,71 @@ export function ThreeD_Embed_Command(plugin: ThreeJSPlugin) {
       let codeBlockType = "\n```3D";
       let models = `\n"models": [\n${modelsJSON}\n]`;
       let camera = `,\n"camera": {\n   ${cameraType},\n   "camPosXYZ": [${plugin.settings.camPosX},${plugin.settings.camPosY},${plugin.settings.camPosZ}], "LookatXYZ": [0,0,0]\n}`;
-      let scene = `,\n"scene": {\n   "showGuiOverlay": ${plugin.settings.autoShowGUI},\n   "autoRotation": [0, ${autorotateY}, 0],\n   "backgroundColor": "${plugin.settings.colorChoice === "transparent" ? "transparent" : plugin.settings.standardColor.replace(/#/g, "")}",\n   "orbitControlDamping": ${plugin.settings.dampedOrbit},\n   "showAxisHelper": false, "length": 5,\n   "showGridHelper": false, "gridSize": 10\n}`;
+      let scene = `,\n"scene": {\n   "showGuiOverlay": ${plugin.settings.autoShowGUI},\n   "autoRotation": [0, ${autorotateY}, 0],\n   "backgroundColor": "${plugin.settings.colorChoice === "transparent" ? "transparent" : plugin.settings.standardColor.replace(/#/g, "")}",\n   "showGroundShadows": ${plugin.settings.showGroundShadows},\n   "orbitControlDamping": ${plugin.settings.dampedOrbit},\n   "showAxisHelper": false, "length": 5,\n   "showGridHelper": false, "gridSize": 10\n}`;
       let stl = `,\n"stl": {\n   "stlColorHexString": "${plugin.settings.stlColor.replace(/#/g, "")}",\n   "stlWireframe": ${plugin.settings.stlWireframe}\n}`;
       let ThreeD_block = `,\n"renderBlock": {\n   "widthPercentage": ${plugin.settings.standardEmbedWidthPercentage},\n   "height": ${plugin.settings.standardEmbedHeight},\n   "alignment": "${plugin.settings.alignment}"\n}`;
       let codeBlockClosing = "\n```\n";
+
+      // let lights = `,\n"lights": [\n${plugin.settings.lightSettings
+      //   .map((light: LightSetting) => {
+      //     const defaultColor = "#FFFFFF";
+      //     const colorString = (light.color ?? defaultColor).replace("#", "");
+      //     const posString = light.position ? light.position.join(",") : "0,0,0";
+
+      //     if (light.dropdownValue === "hemisphere") {
+      //       const groundColor = (light.secondaryColor ?? defaultColor).replace("#", "");
+      //       return `   {"type": "hemisphere", "skyColor": "${colorString}", "groundColor": "${groundColor}", "strength": ${light.intensity}, "show": false}`;
+      //     } else if (light.dropdownValue === "directional" || light.dropdownValue === "spot") {
+      //       const targetString = light.targetPosition ? light.targetPosition.join(",") : "0,0,0";
+      //       if (light.dropdownValue === "spot") {
+      //         const distanceValue = light.distance ?? 0;
+      //         const angleValue = light.angle ?? 0;
+      //         return `   {"type": "spot", "color": "${colorString}", "pos": [${posString}], "target": [${targetString}], "distance": ${distanceValue}, "angle": ${angleValue}, "strength": ${light.intensity}, "show": false}`;
+      //       } else {
+      //         return `   {"type": "directional", "color": "${colorString}", "pos": [${posString}], "target": [${targetString}], "strength": ${light.intensity}, "show": false}`;
+      //       }
+      //     } else {
+      //       return `   {"type": "${light.dropdownValue}", "color": "${colorString}", "pos": [${posString}], "strength": ${light.intensity}, "show": false}`;
+      //     }
+      //   })
+      //   .join(",\n")}\n]`;
+
+      // Build final block
 
       let lights = `,\n"lights": [\n${plugin.settings.lightSettings
         .map((light: LightSetting) => {
           const defaultColor = "#FFFFFF";
           const colorString = (light.color ?? defaultColor).replace("#", "");
           const posString = light.position ? light.position.join(",") : "0,0,0";
+          console.log("CastShadows value: " + light.castShadows);
+          if (light.castShadows === undefined) {
+            light.castShadows = true; // default to true if undefined
+          }
+          const castShadows = light.castShadows ? "true" : "false"; // new boolean setting
 
           if (light.dropdownValue === "hemisphere") {
             const groundColor = (light.secondaryColor ?? defaultColor).replace("#", "");
             return `   {"type": "hemisphere", "skyColor": "${colorString}", "groundColor": "${groundColor}", "strength": ${light.intensity}, "show": false}`;
-          } else if (light.dropdownValue === "directional" || light.dropdownValue === "spot") {
+          }
+          else if (light.dropdownValue === "spot") {
             const targetString = light.targetPosition ? light.targetPosition.join(",") : "0,0,0";
-            if (light.dropdownValue === "spot") {
-              const distanceValue = light.distance ?? 0;
-              const angleValue = light.angle ?? 0;
-              return `   {"type": "spot", "color": "${colorString}", "pos": [${posString}], "target": [${targetString}], "distance": ${distanceValue}, "angle": ${angleValue}, "strength": ${light.intensity}, "show": false}`;
-            } else {
-              return `   {"type": "directional", "color": "${colorString}", "pos": [${posString}], "target": [${targetString}], "strength": ${light.intensity}, "show": false}`;
-            }
-          } else {
+            const distanceValue = light.distance ?? 0;
+            const angleValue = light.angle ?? 0;
+            return `   {"type": "spot", "color": "${colorString}", "pos": [${posString}], "target": [${targetString}], "distance": ${distanceValue}, "angle": ${angleValue}, "strength": ${light.intensity}, "castShadows": ${castShadows}, "show": false}`;
+          }
+          else if (light.dropdownValue === "directional") {
+            const targetString = light.targetPosition ? light.targetPosition.join(",") : "0,0,0";
+            return `   {"type": "directional", "color": "${colorString}", "pos": [${posString}], "target": [${targetString}], "strength": ${light.intensity}, "castShadows": ${castShadows}, "show": false}`;
+          }
+          else if (light.dropdownValue === "point") {
+            return `   {"type": "point", "color": "${colorString}", "pos": [${posString}], "strength": ${light.intensity}, "castShadows": ${castShadows}, "show": false}`;
+          }
+          else {
             return `   {"type": "${light.dropdownValue}", "color": "${colorString}", "pos": [${posString}], "strength": ${light.intensity}, "show": false}`;
           }
         })
         .join(",\n")}\n]`;
 
-      // Build final block
       let content = "";
       if (plugin.settings.showConfig) {
         content = codeBlockType + models + lights + camera + scene + stl + ThreeD_block + codeBlockClosing;

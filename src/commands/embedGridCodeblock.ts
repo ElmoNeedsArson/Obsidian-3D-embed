@@ -46,21 +46,30 @@ ${plugin.settings.lightSettings.map((light: LightSetting) => {
           const colorString = (light.color ?? "#FFFFFF").replace("#", "");
           const posString = light.position ?? [0, 0, 0];
           const targetString = light.targetPosition ?? [0, 0, 0];
+          const castShadows = light.castShadows ? "true" : "false"; // new boolean property
+
           switch (light.dropdownValue) {
             case "hemisphere":
               const groundColor = (light.secondaryColor ?? "#FFFFFF").replace("#", "");
               return `      {"type": "hemisphere", "skyColor": "${colorString}", "groundColor": "${groundColor}", "strength": ${light.intensity}, "show": false}`;
+
             case "spot":
-              return `      {"type": "spot", "color": "${colorString}", "pos": [${posString}], "target": [${targetString}], "distance": ${light.distance ?? 0}, "angle": ${light.angle ?? 0}, "strength": ${light.intensity}, "show": false}`;
+              return `      {"type": "spot", "color": "${colorString}", "pos": [${posString}], "target": [${targetString}], "distance": ${light.distance ?? 0}, "angle": ${light.angle ?? 0}, "strength": ${light.intensity}, "castShadows": ${castShadows}, "show": false}`;
+
             case "directional":
-              return `      {"type": "directional", "color": "${colorString}", "pos": [${posString}], "target": [${targetString}], "strength": ${light.intensity}, "show": false}`;
+              return `      {"type": "directional", "color": "${colorString}", "pos": [${posString}], "target": [${targetString}], "strength": ${light.intensity}, "castShadows": ${castShadows}, "show": false}`;
+
+            case "point":
+              return `      {"type": "point", "color": "${colorString}", "pos": [${posString}], "strength": ${light.intensity}, "castShadows": ${castShadows}, "show": false}`;
+
             default:
               return `      {"type": "${light.dropdownValue}", "color": "${colorString}", "pos": [${posString}], "strength": ${light.intensity}, "show": false}`;
           }
         }).join(",\n")}\n   ],
+
   "camera": { "orthographic": ${cameraType}, "camPosXYZ": [${plugin.settings.camPosX}, ${plugin.settings.camPosY}, ${plugin.settings.camPosZ}], "LookatXYZ": [0,0,0]},
   "scene": {
-      "showGuiOverlay": false, "orbitControlDamping": ${plugin.settings.dampedOrbit},
+      "showGuiOverlay": false, "orbitControlDamping": ${plugin.settings.dampedOrbit}, "showGroundShadows": ${plugin.settings.showGroundShadows},
       "autoRotation": [0, ${autorotateY}, 0], "backgroundColor": "${(plugin.settings.colorChoice === "transparent" ? "transparent" : plugin.settings.standardColor.replace(/#/g, ""))}",
       "showAxisHelper": false, "length": 5, "showGridHelper": false, "gridSize": 10
   },

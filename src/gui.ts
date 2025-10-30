@@ -1,4 +1,4 @@
-import { MarkdownView, Notice } from 'obsidian';
+import { MarkdownView } from 'obsidian';
 
 import * as THREE from 'three';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
@@ -228,7 +228,7 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
 
         try {
             // Update global properties
-            if (config.scene.backgroundColor) config.scene.backgroundColor = colorValue;
+            if (config.scene.backgroundColor && config.scene.backgroundColor != "transparent") config.scene.backgroundColor = colorValue;
             if (config.scene.showGuiOverlay) config.scene.showGuiOverlay = false;
             if (config.camera.camPosXYZ) config.camera.camPosXYZ = [camera.position.x, camera.position.y, camera.position.z];
             if (config.camera.LookatXYZ) config.camera.LookatXYZ = [orbit.target.x, orbit.target.y, orbit.target.z];

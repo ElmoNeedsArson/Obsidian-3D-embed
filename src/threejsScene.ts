@@ -69,7 +69,7 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
             }
 
             if (cellData.scene?.showGuiOverlay == true) {
-                new Notice(`GUI cannot be shown for grid cells\nOne of your grid cells has the scene -> showGuiOverlay set to true`, 8000);
+                new Notice(`GUI cannot be shown for 3D grid cells\nOne of your grid cells has the scene -> showGuiOverlay set to true`, 8000);
             }
 
             // Camera setup
@@ -132,7 +132,7 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
 
                         if (!pathToMaterial) {
                             new Notice(`Material path for ${mtlname} not found`, 8000);
-                            continue;
+                            pathToMaterial = "unknown"
                         }
                     } else {
                         pathToMaterial = "unknown"
@@ -463,7 +463,7 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
 
                     if (!pathToMaterial) {
                         new Notice(`Material path for ${mtlname} not found`, 8000);
-                        continue;
+                        pathToMaterial = "unknown"
                     }
                 } else {
                     pathToMaterial = "unknown"

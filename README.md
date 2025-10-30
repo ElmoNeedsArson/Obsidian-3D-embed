@@ -233,3 +233,13 @@ Use the settings tab, to alter standard settings for how all the models are init
 ## Support:
 If you are enjoying 3D embed, then feel free to support my work and enthusiasm by buying me a coffee on:
 [Buy me a coffee](https://buymeacoffee.com/elmoneedsarson)
+
+## FAQ
+ - I have both an .obj file and .mtl file, but my textures dont not show up?
+   - Check if your .obj and .mtl file have the exact same name
+ - I have both an .obj file and .mtl file, but my model doesnt show up
+   - This has to do with the .mtl file, obj's come with different export settings for the mtl file, sometimes the mtl file in itself refers to external files, such as `modelname-Alpha.png` or `modelname-RGBA.png`, if you have these files move them to the same folder as the mtl file. Otherwise, attempt to re export your obj with different mtl settings. And lastly if you dont really care about the textures, remove the mtl file, and your model will load without textures. 
+ - Where can I request new features?
+   - In a GitHub [issue](https://github.com/ElmoNeedsArson/Obsidian-3D-embed/issues) or tag me in the obsidian [discord](https://discord.com/invite/obsidianmd) `@jesse5`
+ - Where can I report bugs?  
+   - In a GitHub [issue](https://github.com/ElmoNeedsArson/Obsidian-3D-embed/issues) or tag me in the obsidian [discord](https://discord.com/invite/obsidianmd) `@jesse5`

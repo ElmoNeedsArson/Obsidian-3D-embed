@@ -1,4 +1,4 @@
-import { MarkdownPostProcessorContext, MarkdownRenderChild, Notice } from 'obsidian';
+import { MarkdownPostProcessorContext, MarkdownRenderChild } from 'obsidian';
 import * as THREE from 'three';
 import ThreeJSPlugin from "./main";
 

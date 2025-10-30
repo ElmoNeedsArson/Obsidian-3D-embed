@@ -50,14 +50,13 @@ export function loadModels(plugin: ThreeJSPlugin, scene: THREE.Scene, modelPath:
                 const objLoader = new OBJLoader();
                 const mtlLoader = new MTLLoader();
 
-                console.log("Materialpath: " + materialPath)
+                //console.log("Materialpath: " + materialPath)
                 //console.log("conf: " + modelconfig)
                 // const MTLpath = modelPath.replace(/\.obj(\?|$)/, ".mtl$1");
                 // const cleanMTLPath = MTLpath.split('?')[0];
 
-                mtlLoader.load(materialPath, (materials) => {
-                    materials.preload();
-                    objLoader.setMaterials(materials);
+                if (materialPath === "unknown") {
+                    console.log("Loading obj without mtl")
                     objLoader.load(modelPath, (obj) => {
                         obj.traverse((child) => {
                             if (child instanceof THREE.Mesh) {
@@ -68,14 +67,34 @@ export function loadModels(plugin: ThreeJSPlugin, scene: THREE.Scene, modelPath:
                         });
                         applyModelConfig(plugin, obj, modelconfig);
                         scene.add(obj);
-                        resolve(obj)
+                        resolve(obj);
                     }, undefined, (error) => {
                         new Notice("Failed to load obj model: " + error);
                     });
-                }, undefined, (error) => {
-                    new Notice("Failed to load MTL file: " + error);
-                    reject(error);
-                });
+                } else {
+                    console.log("Loading obj with mtl")
+                    mtlLoader.load(materialPath, (materials) => {
+                        materials.preload();
+                        objLoader.setMaterials(materials);
+                        objLoader.load(modelPath, (obj) => {
+                            obj.traverse((child) => {
+                                if (child instanceof THREE.Mesh) {
+                                    if (!child.material) {
+                                        child.material = new THREE.MeshStandardMaterial({ color: 0x606060 });
+                                    }
+                                }
+                            });
+                            applyModelConfig(plugin, obj, modelconfig);
+                            scene.add(obj);
+                            resolve(obj)
+                        }, undefined, (error) => {
+                            new Notice("Failed to load obj model: " + error);
+                        });
+                    }, undefined, (error) => {
+                        new Notice("Failed to load MTL file: " + error);
+                        reject(error);
+                    });
+                }
                 break;
             case 'fbx':
                 const fbxLoader = new FBXLoader();

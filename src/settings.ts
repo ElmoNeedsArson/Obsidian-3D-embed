@@ -24,6 +24,7 @@ export interface LightSetting {
 
 export interface ThreeDEmbedSettings {
     showConfig: boolean;
+    colorChoice: string;
     standardColor: string;
     standardScale: number;
     standardEmbedHeight: number;
@@ -50,6 +51,7 @@ export interface ThreeDEmbedSettings {
 // Update your defaults accordingly. (Here I left the default lights as before.)
 export const DEFAULT_SETTINGS: ThreeDEmbedSettings = {
     showConfig: true,
+    colorChoice: "transparent",
     standardColor: "#ADD8E6",
     standardScale: 0.5,
     standardEmbedHeight: 300,
@@ -126,15 +128,34 @@ export class ThreeDSettingsTab extends PluginSettingTab {
         });
 
         new Setting(containerEl)
-            .setName('Standard scene color')
-            .setDesc('Default background color for 3D scenes')
-            .addColorPicker(colorPicker =>
-                colorPicker.setValue(this.plugin.settings.standardColor)
-                    .onChange(async (value) => {
-                        this.plugin.settings.standardColor = value;
-                        await this.plugin.saveSettings();
+            .setName('Scene Background')
+            .setDesc('Default background in your 3D scenes: either a color or transparent')
+            .addDropdown((dropdown) =>
+                dropdown
+                    .addOptions({
+                        color: "color",
+                        transparent: "transparent",
                     })
-            );
+                    .setValue(this.plugin.settings.colorChoice.toString())
+                    .onChange(async (value) => {
+                        this.plugin.settings.colorChoice = value; // Update setting when toggled
+                        //await this.plugin.saveData(this.plugin.settings); // Save the new setting value
+                        await this.plugin.saveSettings();
+                        this.display();
+                    }));
+
+        if (this.plugin.settings.colorChoice === "color") {
+            new Setting(containerEl)
+                .setName('Standard scene color')
+                .setDesc('Default background color for 3D scenes')
+                .addColorPicker(colorPicker =>
+                    colorPicker.setValue(this.plugin.settings.standardColor)
+                        .onChange(async (value) => {
+                            this.plugin.settings.standardColor = value;
+                            await this.plugin.saveSettings();
+                        })
+                );
+        }
 
         new Setting(containerEl)
             .setName('Standard height')

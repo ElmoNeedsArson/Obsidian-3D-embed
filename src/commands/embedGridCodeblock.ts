@@ -98,23 +98,16 @@ ${plugin.settings.lightSettings.map((light: LightSetting) => {
         for (let i = startIndex; i < text.length; i++) {
           if (text[i] === openChar) depth++;
           else if (text[i] === closeChar) depth--;
-
           if (depth === 0) return i;
         }
-
         return -1; // No match found
       }
 
       editor.replaceSelection(codeBlock);
-      //new Notice("3D grid embed created!", 3000);
 
       const cmView = (editor as any).cm || (editor as any).cmEditor || (editor as any).cm?.view;
 
-      // If you don't get an EditorView here, log and bail (you can inspect console)
       if (!cmView) {
-        // best-effort: attempt to use obsidian API to find the MarkdownView editor's cm view
-        // const mdView = (plugin.app.workspace.getActiveViewOfType(MarkdownView) as any);
-        // cmView = mdView?.editor?.cm;
         console.warn("ThreeJS plugin: couldn't get CodeMirror EditorView for folding. cmView:", cmView);
       } else {
         try {

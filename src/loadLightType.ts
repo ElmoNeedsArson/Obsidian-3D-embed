@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 import ThreeJSPlugin from './main';
 
-export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: string, show: boolean, color: string, position: any, strength: number, cam: any, lightconfig: any) {
+export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: string, show: boolean, color: string, position: any, strength: number, cam: THREE.Camera, lightconfig: any) {
     //Take color from config or else standardvalue
     let lightColor
     if (color) {

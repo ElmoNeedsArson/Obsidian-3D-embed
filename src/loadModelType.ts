@@ -7,7 +7,7 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import { ThreeMFLoader } from 'three/examples/jsm/loaders/3MFLoader.js';
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
 
-import { applyCameraSettings, applyModelConfig } from './applyConfig'
+import { applyModelConfig } from './applyConfig'
 import ThreeJSPlugin from './main';
 
 export function loadModels(plugin: ThreeJSPlugin, scene: THREE.Scene, modelPath: string, extension: string, modelconfig: any, stlconfig: any, materialPath: string): Promise<THREE.Object3D> {

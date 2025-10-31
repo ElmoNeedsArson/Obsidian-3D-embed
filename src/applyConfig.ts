@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import ThreeJSPlugin from './main';
 
-export function applyCameraSettings(cam: any, config: any, controls: OrbitControls) {
+export function applyCameraSettings(cam: THREE.Camera, config: any, controls: OrbitControls) {
     if (config.camera.camPosXYZ) {
         cam.position.x = config.camera.camPosXYZ[0];
         cam.position.y = config.camera.camPosXYZ[1];

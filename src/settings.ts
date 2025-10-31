@@ -623,8 +623,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         await this.plugin.saveSettings();
                         this.display(); // Refresh UI
                     });
-                button.buttonEl.style.backgroundColor = "red";
-                button.buttonEl.style.color = "white";
+                button.buttonEl.style.backgroundColor = "red"; //Has to be done through code because css does not apply for some reason
+                button.buttonEl.style.color = "white"; //Has to be done through code because css does not apply for some reason
             });
 
             lightDiv.appendChild(details);

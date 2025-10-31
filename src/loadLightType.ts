@@ -185,7 +185,16 @@ export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: stri
             const AttachToCam = new THREE.DirectionalLight(lightColor, lightStrength);
 
             AttachToCam.position.set(0, 10, 45);
-            AttachToCam.castShadow = true;
+            if (lightconfig.castShadows) {
+                AttachToCam.castShadow = true;
+
+                AttachToCam.shadow.camera.left = -15;
+                AttachToCam.shadow.camera.right = 15;
+                AttachToCam.shadow.camera.top = 15;
+                AttachToCam.shadow.camera.bottom = -15;
+                AttachToCam.shadow.camera.near = 0.5;
+                AttachToCam.shadow.camera.far = 100;
+            }
 
             cam.add(AttachToCam)
             return AttachToCam

@@ -409,6 +409,15 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         } else {
                             delete light.targetPosition;
                         }
+                        
+                        if (value === "spot") {
+                            if (light.distance === undefined) {
+                                light.distance = 0;
+                            }
+                            if (light.angle === undefined) {
+                                light.angle = 0;
+                            }
+                        }
                         summary.innerText = `Lightsource number ${index + 1}: ${value}`;
                         //await this.plugin.saveData(this.plugin.settings);
                         await this.plugin.saveSettings();

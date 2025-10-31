@@ -27,6 +27,11 @@
     padding: 10px;
     border: 1px solid var(--background-modifier-border);
     border-radius: 8px;
+    background-color: var(--background-primary);
+    transition: background-color 500ms ease;
+}
+
+.light-setting:hover {
     background-color: var(--background-secondary);
 }
 

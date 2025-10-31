@@ -56,7 +56,6 @@ export function loadModels(plugin: ThreeJSPlugin, scene: THREE.Scene, modelPath:
                 // const cleanMTLPath = MTLpath.split('?')[0];
 
                 if (materialPath === "unknown") {
-                    console.log("Loading obj without mtl")
                     objLoader.load(modelPath, (obj) => {
                         obj.traverse((child) => {
                             if (child instanceof THREE.Mesh) {
@@ -72,7 +71,6 @@ export function loadModels(plugin: ThreeJSPlugin, scene: THREE.Scene, modelPath:
                         new Notice("Failed to load obj model: " + error);
                     });
                 } else {
-                    console.log("Loading obj with mtl")
                     mtlLoader.load(materialPath, (materials) => {
                         materials.preload();
                         objLoader.setMaterials(materials);

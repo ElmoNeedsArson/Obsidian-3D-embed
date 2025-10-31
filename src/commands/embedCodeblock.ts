@@ -99,7 +99,6 @@ export function ThreeD_Embed_Command(plugin: ThreeJSPlugin) {
           const defaultColor = "#FFFFFF";
           const colorString = (light.color ?? defaultColor).replace("#", "");
           const posString = light.position ? light.position.join(",") : "0,0,0";
-          console.log("CastShadows value: " + light.castShadows);
           if (light.castShadows === undefined) {
             light.castShadows = true; // default to true if undefined
           }

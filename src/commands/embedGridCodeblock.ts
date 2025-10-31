@@ -135,7 +135,7 @@ ${plugin.settings.lightSettings.map((light: LightSetting) => {
             sectionsToFold.push(match[0].replace(/"/g, "")); // strip quotes
           }
 
-          console.log(sectionsToFold)
+          //console.log(sectionsToFold)
 
           for (const key of sectionsToFold) {
             const keyIndex = docText.indexOf(`"${key}"`, insertStart);
@@ -167,7 +167,7 @@ ${plugin.settings.lightSettings.map((light: LightSetting) => {
               effects: (foldEffect as any).of({ from: openingPos, to: closingPos + 1 })
             });
 
-            console.log(`Folded section: ${key}`);
+            //console.log(`Folded section: ${key}`);
           }
 
         } catch (e) {

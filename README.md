@@ -32,7 +32,7 @@ https://github.com/user-attachments/assets/9b10c36c-36c3-4bc1-a4a7-f5d00f735ec7
 
 |![Screenshot 2024-11-03 184117](https://github.com/user-attachments/assets/245386b4-5f41-4bf3-8afa-55287cd46207)|![Screenshot 2024-11-03 184225](https://github.com/user-attachments/assets/cad3f9f5-d1bd-4b61-a816-79ce3fc0a00e)|
 |:--:|:--:|
-|1. Drag Model from file overview/manager into note as an embed | 2. position cursor on line with 3D model embed|
+|1. Drag Model from file overview/manager into note as an embed | 2. position cursor on line with 3D model embed OR select the line with the embed (You can select multiple models to include multiple in one scene)|
 
 |![image](https://github.com/user-attachments/assets/c75579e8-a051-433c-ab64-486aa30fd9da)|![image](https://github.com/user-attachments/assets/6e142009-9cfb-44e4-b1a9-1457f288f55f)|
 |:--:|:--:|
@@ -144,6 +144,7 @@ To change some other scene settings:
    "showGuiOverlay": false,
    "autoRotation": [0, 0, 0],
    "backgroundColor": "4bb8dd",
+   "showGroundShadows": true,
    "orbitControlDamping": true,
    "showAxisHelper": false, "length": 5,
    "showGridHelper": false, "gridSize": 10
@@ -152,6 +153,7 @@ To change some other scene settings:
 - `showGuiOverlay` provides you with a gui (see further down)
 - `autoRotation` rotates your model automatically on any axis
 - `backgroundColor` can also be set to `transparent` or any hexvalue for a color. 
+- `showGroundShadows` places a plane in the scene with a shadow material (Transparent but shows shadows)
 - `orbitControlDamping` can be toggled for smoother orbit controls
 - `showAxisHelper` and `showGridHelper` show scene helpers such as a grid or the main axis
 
@@ -173,11 +175,11 @@ It's usefull to know that the plugin supports obj models, and thereby the accomp
 Lighting settings such as type, color, position, strength and whether you can see a sphere at the location of the light
 ```JSON
 "lights": [
-   {"type": "directional", "color": "FFFFFF", "pos": [5,10,5], "target": [0,0,0], "strength": 1, "show": false},
+   {"type": "directional", "color": "FFFFFF", "pos": [5,10,5], "target": [0,0,0], "strength": 1, "castShadows": true, "show": false},
    {"type": "ambient", "color": "FFFFFF", "pos": [0,0,0], "strength": 0.5, "show": false},
    {"type": "attachToCam", "color": "ffffff", "pos": [5,10,5], "strength": 1, "show": false},
-   {"type": "point", "color": "ffffff", "pos": [5,10,5], "strength": 1, "show": false},
-   {"type": "spot", "color": "ffffff", "pos": [5,10,5], "target": [0,0,0], "distance": 0, "angle": 0, "strength": 1, "show": false},
+   {"type": "point", "color": "ffffff", "pos": [5,10,5], "strength": 1, "castShadows": true, "show": false},
+   {"type": "spot", "color": "ffffff", "pos": [5,10,5], "target": [0,0,0], "distance": 0, "angle": 0, "strength": 1, "castShadows": true, "show": false},
    {"type": "hemisphere", "skyColor": "ffffff", "groundColor": "FFFFFF", "strength": 1, "show": false}
 ],
 ```
@@ -186,6 +188,7 @@ Lighting settings such as type, color, position, strength and whether you can se
 - `position` allows you to set the position of the lightsource
 - `strength` allows you to set the strength of the lightsource
 - `show` allows you to physically see the lightsource position by placing a sphere at the position coordinates you provide (can be usefull for setting up your scene)
+- `castShadows` only available in the `directional, point` and `spot` lightsource, which enables the lightsource to cast shadows
 - `target` only available in the `directional` and `spot` lightsource, to aim it at a point
 - `distance` only available in the `spot` lightsource, allows you to say how far the light projects
 - `angle` only available in the `spot` lightsource, allows you to adjust the angle of the spotlight

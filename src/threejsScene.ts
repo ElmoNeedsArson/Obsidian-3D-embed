@@ -143,6 +143,12 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
                     try {
                         const ext = model.name.slice(-3).toLowerCase();
                         const loaded = await loadModels(plugin, scene, pathToModel, ext, model, cellData.stl, pathToMaterial);
+                        loaded.traverse((child) => {
+                            if ((child as THREE.Mesh).isMesh) {
+                                (child as THREE.Mesh).castShadow = true;
+                                (child as THREE.Mesh).receiveShadow = true;
+                            }
+                        });
                         modelArray.push(loaded);
                     } catch (err) {
                         console.error(err);
@@ -157,6 +163,15 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
                 if (l && l.name !== "attachToCam") scene.add(l.obj);
             });
             scene.add(parentGroup);
+
+            if (cellData.scene?.showGroundShadows) {
+                const shadowMat = new THREE.ShadowMaterial({ opacity: 0.5 });
+                const ground = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), shadowMat);
+                ground.rotation.x = -Math.PI / 2;
+                ground.position.y = -5;
+                ground.receiveShadow = true;
+                scene.add(ground);
+            }
 
             // Orbit controls
             const orbit = new OrbitControls(camera, renderer.domElement);
@@ -475,7 +490,7 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
                     let model = await loadModels(plugin, scene, pathToModel, modelExtensionType, models[i], config.stl, pathToMaterial);
                     //model.castShadow = true;
                     //console.log("Model: " + model)
-                    
+
                     model.traverse((child) => {
                         if ((child as THREE.Mesh).isMesh) {
                             (child as THREE.Mesh).castShadow = true;
@@ -501,6 +516,7 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
             const shadowMat = new THREE.ShadowMaterial({ opacity: 0.5 });
             const ground = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), shadowMat);
             ground.rotation.x = -Math.PI / 2;
+            ground.position.y = -5;
             ground.receiveShadow = true;
             scene.add(ground);
         }
@@ -533,7 +549,7 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
             el.style.width = `${newWidth}px`;
 
             renderer.setSize(newWidth, height);
-            renderer.shadowMap.enabled = true;
+            //renderer.shadowMap.enabled = true;
             camera.aspect = newWidth / height;
             camera.updateProjectionMatrix();
         };

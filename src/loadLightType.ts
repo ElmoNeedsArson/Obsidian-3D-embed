@@ -110,7 +110,7 @@ export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: stri
                 scene.add(shadowHelper);
             }
             return directional
-        case 'spot': //---------------------------------------------------------------------------CHANGE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        case 'spot':
             let distance;
             let angle;
             let decay;

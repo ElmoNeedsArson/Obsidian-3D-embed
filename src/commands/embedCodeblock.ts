@@ -1,6 +1,12 @@
 import { Editor, Notice } from 'obsidian';
 import ThreeJSPlugin from '../main';
 import { LightSetting } from '../settings'; // adjust as needed
+// try this first (modern): 
+import { foldEffect } from '@codemirror/language';
+
+// fallback if your environment exposes fold in a different package, you can try:
+// import { foldEffect } from '@codemirror/fold';
+
 
 export function ThreeD_Embed_Command(plugin: ThreeJSPlugin) {
   plugin.addCommand({
@@ -130,7 +136,111 @@ export function ThreeD_Embed_Command(plugin: ThreeJSPlugin) {
       }
 
       // Replace selection or insert at cursor
+      //console.log("Inserting 3D embed code block at:\n" + editor.getCursor().line);
+      //editor.replaceSelection(content);
+
+      // --- after editor.replaceSelection(content); ---
+
+      //const sectionsToFold = ["scene", "camera", "lights"];
+
+      // Helper: find matching closing brace for a JSON object starting at bracePos (offsets)
+      function findMatchingBrace(text: string, startIndex: number): number {
+        const openChar = text[startIndex];
+        const closeChar = openChar === '{' ? '}' : ']';
+        let depth = 0;
+
+        for (let i = startIndex; i < text.length; i++) {
+          if (text[i] === openChar) depth++;
+          else if (text[i] === closeChar) depth--;
+
+          if (depth === 0) return i;
+        }
+
+        return -1; // No match found
+      }
+
+
+      // Inserted content already put into the editor
+      console.log("Inserting 3D embed code block at:\n" + editor.getCursor().line);
       editor.replaceSelection(content);
+
+      // Try to get the CodeMirror 6 EditorView from Obsidian's editor object.
+      // Different Obsidian/CM versions expose it as `editor.cm` or `editor.cm?.editor` etc.
+      // We'll try common patterns:
+      // const cmView = (editor as any).cm || (editor as any).cmEditor || (editor as any).cm?.view;
+
+      // // If you don't get an EditorView here, log and bail (you can inspect console)
+      // if (!cmView) {
+      //   // best-effort: attempt to use obsidian API to find the MarkdownView editor's cm view
+      //   // const mdView = (plugin.app.workspace.getActiveViewOfType(MarkdownView) as any);
+      //   // cmView = mdView?.editor?.cm;
+      //   console.warn("ThreeJS plugin: couldn't get CodeMirror EditorView for folding. cmView:", cmView);
+      // } else {
+      //   try {
+      //     const docText = cmView.state.doc.toString();
+
+      //     // compute the insertion start offset — the selection start before we inserted.
+      //     // If you stored the cursor position before replacing, prefer that.
+      //     // Here we derive it from the selection (the selection has moved to end of inserted text after replace).
+      //     // So we compute the likely insertion range as: end - content.length ... end
+      //     const selectionAfter = cmView.state.selection.main;
+      //     const insertEnd = selectionAfter.to;
+      //     const insertStart = Math.max(0, insertEnd - content.length);
+
+      //     // search for the '"scene"' key inside the newly inserted text
+      //     // --- after insertion, automatically fold configured sections ---
+
+      //     // Which sections to auto-collapse
+      //     const sectionsToFold = ["scene", "camera", "lights"]; // add/remove freely
+
+      //     const cellMatches = docText
+      //       .slice(insertStart, insertEnd)
+      //       .matchAll(/"cell\d+"/g);
+
+      //     for (const match of cellMatches) {
+      //       sectionsToFold.push(match[0].replace(/"/g, "")); // strip quotes
+      //     }
+
+      //     console.log(sectionsToFold)
+
+      //     for (const key of sectionsToFold) {
+      //       const keyIndex = docText.indexOf(`"${key}"`, insertStart);
+      //       if (keyIndex === -1 || keyIndex > insertEnd) continue;
+
+      //       // Find the first opening symbol ({ or [) after the key
+      //       const nextBrace = docText.indexOf("{", keyIndex);
+      //       const nextBracket = docText.indexOf("[", keyIndex);
+
+      //       // Pick whichever appears first (and is valid)
+      //       const openingPos = [nextBrace, nextBracket]
+      //         .filter(i => i !== -1)
+      //         .sort((a, b) => a - b)[0];
+
+      //       if (openingPos === undefined || openingPos > insertEnd) {
+      //         console.warn(`ThreeJS plugin: couldn't find opening brace/bracket for '${key}'`);
+      //         continue;
+      //       }
+
+      //       // Determine the matching closer
+      //       const closingPos = findMatchingBrace(docText, openingPos);
+      //       if (closingPos === -1) {
+      //         console.warn(`ThreeJS plugin: couldn't find closing for '${key}'`);
+      //         continue;
+      //       }
+
+      //       // Dispatch fold for this section
+      //       cmView.dispatch({
+      //         effects: (foldEffect as any).of({ from: openingPos, to: closingPos + 1 })
+      //       });
+
+      //       console.log(`Folded section: ${key}`);
+      //     }
+
+      //   } catch (e) {
+      //     console.error("ThreeJS plugin: error while attempting to fold 'scene' section:", e);
+      //   }
+      // }
+
     },
   });
 }

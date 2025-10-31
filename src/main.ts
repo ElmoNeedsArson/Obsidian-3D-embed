@@ -131,6 +131,42 @@ export default class ThreeJSPlugin extends Plugin {
                         ? "The last line should not end with a comma"
                         : error.message;
 
+                function parseJsonError(errorMessage: string) {
+                    const regex = /at position (\d+) \(line (\d+) column (\d+)\)/;
+                    const match = errorMessage.match(regex);
+                    if (!match) return null;
+
+                    const [, position, line, column] = match.map(Number);
+                    return { position, line, column };
+                }
+
+                //console.log(error)
+                const errInfo = parseJsonError(error.message);
+                // if (errInfo) {
+                //     el.classList.add("json-error-container");
+                //     el.dataset.errorLine = errInfo.line.toString();
+                // }
+
+                if (errInfo) {
+                    const lines = source.split("\n");
+                    const errorLine = lines[errInfo.line - 2]?.trim() || "(unknown)";
+                    message = `There is an error on line ${errInfo.line}: \n${errorLine}`;
+                    let codeBlockMessage = `3D Embed\nThere is an error on line ${errInfo.line}: \n${errorLine}`;
+                    let reasons = `\n
+Possible reasons:
+- A missing comma at the end of the line
+- A comma too much at the end of the line
+- A missing or extra quotation mark (" or ')
+- An opening or closing brace ({ } [ ]) is missing or too many
+- A typo in variable names (Look at the plugin description or README for variable names)
+- If none of this works, just redo the command`
+
+                    // el.dataset.errorLine = errInfo.line.toString();
+                    // el.dataset.errorMessage = message;
+                    el.classList.add("json-error-container");
+                    el.dataset.errorLine = codeBlockMessage + reasons;
+                }
+
                 new Notice("Failed to render 3D model: " + message, 10000);
             }
         });

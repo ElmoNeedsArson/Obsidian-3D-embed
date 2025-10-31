@@ -60,7 +60,7 @@ export const DEFAULT_SETTINGS: ThreeDEmbedSettings = {
     standardEmbedHeight: 300,
     standardEmbedWidthPercentage: 100,
     alignment: "center",
-    autoRotate: false,
+    autoRotate: true,
     dampedOrbit: true,
     camPosX: 0,
     camPosY: 5,
@@ -409,7 +409,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         } else {
                             delete light.targetPosition;
                         }
-                        
+
                         if (value === "spot") {
                             if (light.distance === undefined) {
                                 light.distance = 0;

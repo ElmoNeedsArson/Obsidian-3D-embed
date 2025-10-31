@@ -227,8 +227,8 @@ Use the settings tab, to alter standard settings for how all the models are init
 ## Future plans:
 1) Be able to run custom three.js script for a scene. 
 2) Camera Path Animations
-3) More intuitive GUI for editing scenes
-4) Loading .blend files (Unsure of possibility)
+3) More intuitive GUI for editing scenes (Modal)
+4) Loading .blend files (Unsure of achievability)
 
 ## Support:
 If you are enjoying 3D embed, then feel free to support my work and enthusiasm by buying me a coffee on:

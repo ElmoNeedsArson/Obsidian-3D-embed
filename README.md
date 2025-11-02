@@ -134,7 +134,7 @@ When using a grid, instead of using [Render Block Settings](#Render-block-settin
 },
 ```
 - `columns` states how many columns your grid has
-- `rowHeighy` dictates the height of one row in pixels
+- `rowHeight` can either be a number, or a string `"auto"`. Auto makes an automatic square, while a number dictates the height of one row in pixels
 - `gapX` and `gapY` dictate the gapsize between scenes in your grid in pixels
 
 ### Generic Scene Settings
@@ -155,7 +155,22 @@ To change some other scene settings:
 - `backgroundColor` can also be set to `transparent` or any hexvalue for a color. 
 - `showGroundShadows` places a plane in the scene with a shadow material (Transparent but shows shadows)
 - `orbitControlDamping` can be toggled for smoother orbit controls
-- `showAxisHelper` and `showGridHelper` show scene helpers such as a grid or the main axis
+- `showAxisHelper` and `showGridHelper` show scene helpers such as a grid or the main axis.
+
+#### Advanced Scene setting - HDR/HDRI loading:
+If you want to utilize HDR loading in your scenes, for very realistic lighting and reflections you can do so. It is important to mention that this will cause your vault, or specifically note, to load more slowly since it has to load the HDR image, which can be quite big in size. 
+
+You can add this inside the scene tag as seen above:
+```JSON
+"hdriBackground": {
+   "texturePath": "filename.hdr",
+   "sceneBackground": true,
+   "baseGeometry": true
+}
+```
+- `texturePath` is the filename of the HDRI. (You dont have to include the vault path, filename suffices)
+- `sceneBackground` puts the HDR texture you provide as the scene background
+- `baseGeometry` loads a torus with very metallic material so you can see how well your HDRI works
 
 ### STL Configurations
 Specifically for stl model files, I added some additional configuration
@@ -231,7 +246,6 @@ Use the settings tab, to alter standard settings for how all the models are init
 1) Be able to run custom three.js script for a scene. 
 2) Camera Path Animations
 3) More intuitive GUI for editing scenes (Modal)
-4) Loading .blend files (Unsure of achievability)
 
 ## Support:
 If you are enjoying 3D embed, then feel free to support my work and enthusiasm by buying me a coffee on:

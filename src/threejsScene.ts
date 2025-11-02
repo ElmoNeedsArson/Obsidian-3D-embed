@@ -1,6 +1,7 @@
 import { Notice, getLinkpath } from 'obsidian';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 
 import ThreeJSPlugin from './main';
 
@@ -45,140 +46,28 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
 
         const views: SceneView[] = [];
 
-        let axesHelper: THREE.AxesHelper | null = null;
-        let gridHelper: THREE.GridHelper | null = null;
-
         // --- Create each scene ---
         for (let i = 0; i < numScenes; i++) {
             const [cellName, cellData] = cells[i];
-            const scene = new THREE.Scene();
 
-            // Scene background
-            if (cellData.scene?.backgroundColor === "transparent") {
-                scene.background = null;
-            } else {
-                const bg = cellData.scene?.backgroundColor || plugin.settings.standardColor;
-                scene.background = new THREE.Color(`#${bg.replace(/#/g, "")}`);
-            }
-
-            axesHelper = new THREE.AxesHelper(cellData.scene.length);
-            gridHelper = new THREE.GridHelper(cellData.scene.gridSize, cellData.scene.gridSize);
-
-            if (cellData.scene.showAxisHelper && axesHelper) {
-                scene.add(axesHelper);
-            }
-            if (cellData.scene.showGridHelper && gridHelper) {
-                scene.add(gridHelper);
-            }
-
-            if (cellData.scene?.showGuiOverlay == true) {
-                new Notice(`GUI cannot be shown for 3D grid cells\nOne of your grid cells has the scene -> showGuiOverlay set to true`, 8000);
-            }
+            let { scene, axesHelper, gridHelper } = setupBaseScene(cellData, plugin)
 
             // Camera setup
             const cellWidth = setting_width;
             const cellHeight = setting_height;
-            const camera = setCameraMode(!!cellData.camera?.orthographic, cellWidth, cellHeight);
 
-            scene.add(camera);
-
-            // Lighting setup
-            const lightsArray: { name: string; obj: THREE.Light }[] = [];
-            if (Array.isArray(cellData.lights)) {
-                for (const l of cellData.lights) {
-                    const light = loadLights(
-                        plugin,
-                        scene,
-                        l.type,
-                        l.show,
-                        l.color,
-                        l.pos,
-                        l.strength,
-                        camera,
-                        l
-                    );
-                    if (light) {
-                        lightsArray.push({ name: l.type, obj: light });
-                    }
-                }
-            }
-
-            // Model loading
-            const modelArray: THREE.Object3D[] = [];
-            if (Array.isArray(cellData.models)) {
-                for (const model of cellData.models) {
-                    const pathToModel = (() => {
-                        const path = plugin.app.metadataCache.getFirstLinkpathDest(
-                            getLinkpath(model.name),
-                            model.name
-                        );
-                        return path ? plugin.app.vault.getResourcePath(path) : null;
-                    })();
-
-                    if (!pathToModel) {
-                        new Notice(`Model path for ${model.name} not found`, 8000);
-                        continue;
-                    }
-
-                    let pathToMaterial;
-
-                    if (model.name.endsWith(".obj")) {
-                        let mtlname = model.name.replace(/\.obj$/, ".mtl");
-
-                        pathToMaterial = (() => {
-                            const path = plugin.app.metadataCache.getFirstLinkpathDest(
-                                getLinkpath(mtlname),
-                                mtlname
-                            );
-                            return path ? plugin.app.vault.getResourcePath(path) : null;
-                        })();
-
-                        if (!pathToMaterial) {
-                            new Notice(`Material path for ${mtlname} not found`, 8000);
-                            pathToMaterial = "unknown"
-                        }
-                    } else {
-                        pathToMaterial = "unknown"
-                    }
-
-                    try {
-                        const ext = model.name.slice(-3).toLowerCase();
-                        const loaded = await loadModels(plugin, scene, pathToModel, ext, model, cellData.stl, pathToMaterial);
-                        loaded.traverse((child) => {
-                            if ((child as THREE.Mesh).isMesh) {
-                                (child as THREE.Mesh).castShadow = true;
-                                (child as THREE.Mesh).receiveShadow = true;
-                            }
-                        });
-                        modelArray.push(loaded);
-                    } catch (err) {
-                        console.error(err);
-                    }
-                }
-            }
-
-            // Group models & lights
-            const parentGroup = new THREE.Group();
-            modelArray.forEach((m) => parentGroup.add(m));
-            lightsArray.forEach((l) => {
-                if (l && l.name !== "attachToCam") scene.add(l.obj);
-            });
-            scene.add(parentGroup);
-
-            if (cellData.scene?.showGroundShadows) {
-                const shadowMat = new THREE.ShadowMaterial({ opacity: 0.5 });
-                const ground = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), shadowMat);
-                ground.rotation.x = -Math.PI / 2;
-                ground.position.y = -5;
-                ground.receiveShadow = true;
-                scene.add(ground);
-            }
-
-            // Orbit controls
-            const orbit = new OrbitControls(camera, renderer.domElement);
-            orbit.enableDamping = cellData.scene?.orbitControlDamping ?? plugin.settings.dampedOrbit ?? true
-            orbit.enabled = false;
+            const camera = setCameraMode(!!cellData.camera?.orthographic, cellWidth, cellHeight, scene);
+            setupHDRIBackground(cellData, plugin, scene, renderer)
+            const lightsArray = setupLightsArray(cellData, plugin, scene, camera);
+            const modelArray = await setupModelsArray(cellData, plugin, scene);
+            setupGroundShadows(cellData, scene)
+            const orbit = setupOrbitControls(cellData, camera, renderer, plugin, scissor);
             applyCameraSettings(camera, cellData, orbit);
+            const parentGroup = setupParentGroup(scene, modelArray, lightsArray);
+
+            if (cellData.scene?.showGuiOverlay == true) {
+                new Notice(`GUI cannot be shown for 3D grid cells\nOne of your grid cells has the scene -> showGuiOverlay set to true`, 8000);
+            }
 
             views.push({ name: cellName, scene, camera, controls: orbit, group: parentGroup });
         }
@@ -332,7 +221,6 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
 
         // --- Resize handling ---
         const onResize = (): void => {
-            // renderer.setSize(el.clientWidth, el.clientHeight);
             updateViewLayout();
             setupInteractionHandlers();
             for (const v of views) {
@@ -363,45 +251,12 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
         };
 
         const resizeObserver = new ResizeObserver(onResize);
-        //cases: triggers upon note resize, pane resize, but not in reading mode 
         const container = findContainerElement(el);
         if (container) resizeObserver.observe(container);
 
-        // Clean up on plugin unload
-        plugin.register(() => {
-            resizeObserver.disconnect(); // Stop observing
-            renderer.dispose();
-            for (const v of views) {
-                try { v.controls.dispose(); } catch (e) { /* ignore */ }
-            }
-        });
+        setupPluginUnload(plugin, resizeObserver, renderer, views);
     } else {
-
-        const scene = new THREE.Scene();
-
-        let axesHelper: THREE.AxesHelper | null = null;
-        let gridHelper: THREE.GridHelper | null = null;
-
-        //If the config specifies scene settings, adress them here
-        if (config.scene) {
-            if (config.scene.backgroundColor == "transparent") {
-                scene.background = null;
-            } else {
-                scene.background = new THREE.Color(`#${config.scene.backgroundColor || plugin.settings.standardColor.replace(/#/g, "")}`);
-            }
-            //scene.background = null;
-            axesHelper = new THREE.AxesHelper(config.scene.length);
-            gridHelper = new THREE.GridHelper(config.scene.gridSize, config.scene.gridSize);
-
-            if (config.scene.showAxisHelper && axesHelper) {
-                scene.add(axesHelper);
-            }
-            if (config.scene.showGridHelper && gridHelper) {
-                scene.add(gridHelper);
-            }
-        } else {
-            scene.background = new THREE.Color(`#${plugin.settings.standardColor.replace(/#/g, "")}`);
-        }
+        let { scene, axesHelper, gridHelper } = setupBaseScene(config, plugin)
 
         let width = setting_width;
         let height: number;
@@ -409,7 +264,6 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
         let alignment;
 
         if (config.renderBlock) {
-
             if (config.renderBlock.alignment) {
                 alignment = config.renderBlock.alignment;
             } else {
@@ -437,100 +291,22 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
             }
         }
 
-        let camera = setCameraMode(config.camera.orthographic, width, height);
-
+        let camera = setCameraMode(config.camera.orthographic, width, height, scene);
         renderer.setSize(width, height);
-
-        //If the config contains lighting settings, adress them here
-        let lightsArray = []
-        if (config.lights) {
-            let lights = config.lights
-            for (let i = 0; i < lights.length; i++) {
-                let light = loadLights(plugin, scene, lights[i].type, lights[i].show, lights[i].color, lights[i].pos, lights[i].strength, camera, lights[i])
-                lightsArray.push({ name: lights[i].type, obj: light })
-            }
-        }
-
-        scene.add(camera)
-
-        const orbit = new OrbitControls(camera, renderer.domElement);
-        orbit.enableDamping = config.scene?.orbitControlDamping ?? plugin.settings.dampedOrbit ?? true
-
+        const lightsArray = setupLightsArray(config, plugin, scene, camera);
+        setupHDRIBackground(config, plugin, scene, renderer)
+        const orbit = setupOrbitControls(config, camera, renderer, plugin, scissor);
         applyCameraSettings(camera, config, orbit);
+        const modelArray = await setupModelsArray(config, plugin, scene);
+        setupGroundShadows(config, scene)
+        const parentGroup = setupParentGroup(scene, modelArray, lightsArray);
 
-        let modelArray = []
-        // For each model, add it to the scene with the neccesary information
-        if (config.models) {
-            let models = config.models
-            for (let i = 0; i < models.length; i++) {
-                const pathToModel = getModelPath(models[i].name);
-
-                if (!pathToModel) {
-                    new Notice("Model path for " + models[i].name + " not found", 10000);
-                    return;
-                }
-
-                function getModelPath(name: string): string | null {
-                    const path = this.app.metadataCache.getFirstLinkpathDest(getLinkpath(name), name);
-                    return path ? this.app.vault.getResourcePath(path) : null;
-                }
-
-                const modelExtensionType = models[i].name.slice(-3).toLowerCase();
-
-                let pathToMaterial;
-
-                if (modelExtensionType == "obj") {
-                    let mtlname = models[i].name.replace(/\.obj$/, ".mtl");
-
-                    pathToMaterial = (() => {
-                        const path = plugin.app.metadataCache.getFirstLinkpathDest(
-                            getLinkpath(mtlname),
-                            mtlname
-                        );
-                        return path ? plugin.app.vault.getResourcePath(path) : null;
-                    })();
-
-                    if (!pathToMaterial) {
-                        new Notice(`Material path for ${mtlname} not found`, 8000);
-                        pathToMaterial = "unknown"
-                    }
-                } else {
-                    pathToMaterial = "unknown"
-                }
-
-                try {
-                    let model = await loadModels(plugin, scene, pathToModel, modelExtensionType, models[i], config.stl, pathToMaterial);
-                    //model.castShadow = true;
-                    //console.log("Model: " + model)
-
-                    model.traverse((child) => {
-                        if ((child as THREE.Mesh).isMesh) {
-                            (child as THREE.Mesh).castShadow = true;
-                            (child as THREE.Mesh).receiveShadow = true;
-                        }
-                    });
-
-                    modelArray.push(model);
-                } catch (error) {
-                    console.error(error);
-                }
-            }
-        }
-
-        if (config.scene && config.scene.showGuiOverlay) {
+        if (config.scene && config.scene.showGuiOverlay && !grid) {
             axesHelper ??= new THREE.AxesHelper(10);
             gridHelper ??= new THREE.GridHelper(10, 10);
-            gui2(plugin, el, scene, axesHelper, gridHelper, orbit, camera, renderer, ctx, modelArray, config, lightsArray)
-        }
-
-        // Ground plane (very subtle)
-        if (config.scene?.showGroundShadows) {
-            const shadowMat = new THREE.ShadowMaterial({ opacity: 0.5 });
-            const ground = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), shadowMat);
-            ground.rotation.x = -Math.PI / 2;
-            ground.position.y = -5;
-            ground.receiveShadow = true;
-            scene.add(ground);
+            gui2(plugin, el, scene, axesHelper, gridHelper, orbit, camera, renderer, ctx, modelArray, config)
+        } else if (grid && config.scene.showGuiOverlay) {
+            new Notice(`GUI cannot be shown for 3D grid cells\nOne of your grid cells has the scene -> showGuiOverlay set to true`, 8000);
         }
 
         const onResize = () => {
@@ -570,33 +346,12 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
         };
 
         const resizeObserver = new ResizeObserver(onResize);
-        //cases: triggers upon note resize, pane resize, but not in reading mode 
         const container = findContainerElement(el);
         if (container) resizeObserver.observe(container);
 
-        // Clean up on plugin unload
-        plugin.register(() => {
-            resizeObserver.disconnect(); // Stop observing
-            renderer.dispose();
-        });
-
-        //Create a parent group with all models and add it to the scene
-        const parentGroup = new THREE.Group();
-        modelArray.forEach((child) => {
-            parentGroup.add(child);
-        });
-        lightsArray.forEach((child) => {
-            if (child.obj && child.name != "attachToCam") {
-                parentGroup.add(child.obj);
-            }
-        });
-        scene.add(parentGroup);
-
         // Animation loop
         const animate = () => {
-            if (renderer.getContext().isContextLost()) {
-                return
-            }
+            if (renderer.getContext().isContextLost()) { return }
             requestAnimationFrame(animate);
 
             if (scene && config.scene && config.scene.autoRotation != undefined) {
@@ -612,24 +367,214 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
                 renderer.render(scene, camera);
             }
 
-            //Makes sure the attachToCam light rotates properly
+            //Makes sure the attachToCam light updates properly --- is this done for grid view?
             for (let i = 0; i < lightsArray.length; i++) {
                 if (lightsArray[i].name === 'attachToCam') {
                     const light = lightsArray[i].obj;
 
                     if (light instanceof THREE.DirectionalLight) {
                         light.target.position.copy(camera.position);
-                        light.target.position.y = 0;
                         light.target.updateMatrixWorld();
                     }
                 }
             }
         };
         animate();
+
+        setupPluginUnload(plugin, resizeObserver, renderer);
     }
 }
 
-function setCameraMode(orthographic: boolean, width: number, height: number) {
+function setupPluginUnload(plugin: ThreeJSPlugin, resizeObserver: ResizeObserver, renderer: THREE.WebGLRenderer, views?: any[]) {
+    plugin.register(() => {
+        resizeObserver.disconnect();
+        renderer.dispose();
+        if (views) { //if in scissor mode
+            for (const v of views) {
+                try { v.controls.dispose(); } catch (e) { /* ignore */ }
+            }
+        }
+    });
+}
+
+function setupParentGroup(scene: THREE.Scene, modelArray: THREE.Object3D[], lightsArray: { name: string; obj: THREE.Light }[]) {
+    const parentGroup = new THREE.Group();
+    modelArray.forEach((child) => {
+        parentGroup.add(child);
+    });
+    lightsArray.forEach((child) => {
+        if (child.obj && child.name != "attachToCam") {
+            parentGroup.add(child.obj);
+        }
+    });
+    scene.add(parentGroup);
+    return parentGroup;
+}
+
+function setupBaseScene(data: any, plugin: ThreeJSPlugin) {
+    const scene = new THREE.Scene();
+    let axesHelper: THREE.AxesHelper | null = null;
+    let gridHelper: THREE.GridHelper | null = null;
+
+    if (data.scene?.backgroundColor === "transparent") {
+        scene.background = null;
+    } else {
+        const bg = data.scene?.backgroundColor || plugin.settings.standardColor;
+        scene.background = new THREE.Color(`#${bg.replace(/#/g, "")}`);
+    }
+
+    axesHelper = new THREE.AxesHelper(data.scene.length);
+    gridHelper = new THREE.GridHelper(data.scene.gridSize, data.scene.gridSize);
+
+    if (data.scene.showAxisHelper && axesHelper) {
+        scene.add(axesHelper);
+    }
+    if (data.scene.showGridHelper && gridHelper) {
+        scene.add(gridHelper);
+    }
+
+    return { scene, axesHelper, gridHelper };
+}
+
+async function setupModelsArray(data: any, plugin: ThreeJSPlugin, scene: THREE.Scene) {
+    const modelArray: THREE.Object3D[] = [];
+    if (Array.isArray(data.models)) {
+        for (const model of data.models) {
+            const pathToModel = (() => {
+                const path = plugin.app.metadataCache.getFirstLinkpathDest(
+                    getLinkpath(model.name),
+                    model.name
+                );
+                return path ? plugin.app.vault.getResourcePath(path) : null;
+            })();
+
+            if (!pathToModel) {
+                new Notice(`Model path for ${model.name} not found`, 8000);
+                continue;
+            }
+
+            let pathToMaterial;
+
+            if (model.name.endsWith(".obj")) {
+                let mtlname = model.name.replace(/\.obj$/, ".mtl");
+
+                pathToMaterial = (() => {
+                    const path = plugin.app.metadataCache.getFirstLinkpathDest(
+                        getLinkpath(mtlname),
+                        mtlname
+                    );
+                    return path ? plugin.app.vault.getResourcePath(path) : null;
+                })();
+
+                if (!pathToMaterial) {
+                    new Notice(`Material path for ${mtlname} not found`, 8000);
+                    pathToMaterial = "unknown"
+                }
+            } else {
+                pathToMaterial = "unknown"
+            }
+
+            try {
+                const ext = model.name.slice(-3).toLowerCase();
+                const loaded = await loadModels(plugin, scene, pathToModel, ext, model, data.stl, pathToMaterial);
+                loaded.traverse((child) => {
+                    if ((child as THREE.Mesh).isMesh) {
+                        (child as THREE.Mesh).castShadow = true;
+                        (child as THREE.Mesh).receiveShadow = true;
+                    }
+                });
+                modelArray.push(loaded);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    }
+    return modelArray;
+}
+
+function setupLightsArray(data: any, plugin: ThreeJSPlugin, scene: THREE.Scene, camera: THREE.Camera) {
+    const lightsArray: { name: string; obj: THREE.Light }[] = [];
+    if (Array.isArray(data.lights)) {
+        for (const l of data.lights) {
+            const light = loadLights(
+                plugin,
+                scene,
+                l.type,
+                l.show,
+                l.color,
+                l.pos,
+                l.strength,
+                camera,
+                l
+            );
+            if (light) {
+                lightsArray.push({ name: l.type, obj: light });
+            }
+        }
+    }
+    return lightsArray;
+}
+
+function setupGroundShadows(data: any, scene: THREE.Scene) {
+    if (data.scene?.showGroundShadows) {
+        const shadowMat = new THREE.ShadowMaterial({ opacity: 0.5 });
+        const ground = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), shadowMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = -5;
+        ground.receiveShadow = true;
+        scene.add(ground);
+    }
+}
+
+function setupHDRIBackground(data: any, plugin: ThreeJSPlugin, scene: THREE.Scene, renderer: THREE.WebGLRenderer) {
+    if (data.scene?.hdriBackground?.texturePath) {
+        const pmremGenerator = new THREE.PMREMGenerator(renderer);
+        const hdriLoader = new RGBELoader()
+        console.log(data.scene.hdriBackground.texturePath)
+        const pth = plugin.getModelPath(data.scene.hdriBackground.texturePath)
+        let envMap;
+        if (pth) {
+            console.log("Loading HDRI from: " + pth)
+            hdriLoader.load(pth, function (texture) {
+                envMap = pmremGenerator.fromEquirectangular(texture).texture;
+                texture.dispose();
+                scene.environment = envMap
+
+                if (data.scene.hdriBackground.sceneBackground) {
+                    scene.background = envMap;
+                }
+
+                if (data.scene.hdriBackground.baseGeometry) {
+                    const geometry2 = new THREE.TorusKnotGeometry(1.5, 0.50, 220, 20);
+
+                    const material2 = new THREE.MeshStandardMaterial({
+                        color: 0xaaaaaa,
+                        metalness: 1.0,
+                        roughness: 0.02,
+                        envMapIntensity: 1.0
+                    });
+
+                    const torus = new THREE.Mesh(geometry2, material2);
+                    scene.add(torus);
+                }
+            });
+        }
+
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 0.8;
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+    }
+}
+
+function setupOrbitControls(data: any, camera: THREE.Camera, renderer: THREE.WebGLRenderer, plugin: ThreeJSPlugin, scissor: boolean) {
+    const orbit = new OrbitControls(camera, renderer.domElement);
+    orbit.enableDamping = data.scene?.orbitControlDamping ?? plugin.settings.dampedOrbit ?? true
+    if (scissor) orbit.enabled = false;
+
+    return orbit
+}
+
+function setCameraMode(orthographic: boolean, width: number, height: number, scene: THREE.Scene) {
     let camera: any;
     if (!orthographic) {
         camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
@@ -647,6 +592,7 @@ function setCameraMode(orthographic: boolean, width: number, height: number) {
     } else {
         camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
     }
+    scene.add(camera);
     return camera;
 }
 

@@ -6,7 +6,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 import ThreeJSPlugin from './main';
 
-export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene, axesHelper: THREE.AxesHelper, gridHelper: THREE.GridHelper, orbit: OrbitControls, camera: THREE.Camera, renderer: THREE.Renderer, ctx: any, modelArr: any, config: any, lightsArr: any) {
+export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene, axesHelper: THREE.AxesHelper, gridHelper: THREE.GridHelper, orbit: OrbitControls, camera: THREE.Camera, renderer: THREE.Renderer, ctx: any, modelArr: any, config: any) {
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
     let selectedGroup: THREE.Group | null = null;

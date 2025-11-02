@@ -363,6 +363,16 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                 text: `Lightsource number ${index + 1}: ${light.dropdownValue}`,
             });
 
+            const removeButton = summary.createEl("button", { text: "Remove" });
+            removeButton.addClass("ThreeDEmbed_Remove_Button");
+
+            removeButton.addEventListener("click", async (evt) => {
+                evt.stopPropagation(); // prevent summary toggle when clicking remove
+                this.plugin.settings.lightSettings.splice(index, 1);
+                await this.plugin.saveSettings();
+                this.display();
+            });
+
             // Light Type Dropdown (include our two new types)
             new Setting(details)
                 .setName("Light Type")
@@ -620,21 +630,6 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         await this.plugin.saveSettings();
                     });
                 });
-
-            // Remove Light Button
-            new Setting(details).addButton((button) => {
-                button
-                    .setButtonText("Remove")
-                    .setClass("ThreeDEmbed_Remove_Button")
-                    .onClick(async () => {
-                        this.plugin.settings.lightSettings.splice(index, 1);
-                        //await this.plugin.saveData(this.plugin.settings);
-                        await this.plugin.saveSettings();
-                        this.display(); // Refresh UI
-                    });
-                button.buttonEl.style.backgroundColor = "red"; //Has to be done through code because css does not apply for some reason
-                button.buttonEl.style.color = "white"; //Has to be done through code because css does not apply for some reason
-            });
 
             lightDiv.appendChild(details);
         });

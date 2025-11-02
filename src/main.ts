@@ -1,4 +1,4 @@
-import { Editor, Notice, Plugin, getLinkpath, Modal, App } from 'obsidian';
+import { Editor, Notice, Plugin, getLinkpath, Modal, App, MarkdownView, setIcon } from 'obsidian';
 
 import { DEFAULT_SETTINGS, ThreeDEmbedSettings, ThreeDSettingsTab } from './settings';
 import { ThreeJSRendererChild, getUniqueId, getRenderer } from './rendermanager'
@@ -122,6 +122,49 @@ export default class ThreeJSPlugin extends Plugin {
 
                 const grid = false;
                 const scissor = false;
+
+                const removeButton = el.createEl("button", { text: "" });
+                removeButton.addClass("ThreeDEmbed_Codeblock_Remove");
+                removeButton.style.background = "none";
+                removeButton.style.boxShadow = "none";
+
+                setIcon(removeButton, "lucide-trash");
+
+                removeButton.addEventListener("click", () => {
+                    const section = ctx.getSectionInfo(el);
+                    if (!section) return;
+
+                    const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+                    if (!view) return;
+                    const editor = view.editor;
+
+                    const from = { line: section.lineStart, ch: 0 };
+                    const to = { line: section.lineEnd + 1, ch: 0 }; // +1 to include the closing ```
+                    editor.replaceRange("", from, to);
+                });
+
+                const copyButton = el.createEl("button", { text: "" });
+                copyButton.addClass("ThreeDEmbed_Codeblock_Copy");
+                copyButton.style.background = "none";
+                copyButton.style.boxShadow = "none";
+
+                setIcon(copyButton, "lucide-copy");
+
+                copyButton.addEventListener("click", async () => {
+                    const section = ctx.getSectionInfo(el);
+                    if (!section) return;
+
+                    const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+                    if (!view) return;
+                    const editor = view.editor;
+
+                    const from = { line: section.lineStart, ch: 0 };
+                    const to = { line: section.lineEnd + 1, ch: 0 }; // +1 includes closing fence
+                    const blockText = editor.getRange(from, to);
+
+                    await navigator.clipboard.writeText(blockText);
+                    new Notice("Copied to clipboard!");
+                })
 
                 initializeThreeJsScene(this, el, parsedData, width, widthPercentage, height, alignment, ctx, renderer, grid, scissor);
             } catch (error) {

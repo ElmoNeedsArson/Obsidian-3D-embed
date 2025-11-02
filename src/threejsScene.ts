@@ -31,7 +31,7 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
             viewport?: { left: number; bottom: number; cellWidth: number; cellHeight: number };
         }
 
-        let height_gl: number;
+        let height_gl: number | string;
         if (config.gridSettings) {
             if (config.gridSettings.rowHeight) {
                 height_gl = config.gridSettings.rowHeight;
@@ -41,6 +41,7 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
         } else {
             height_gl = this.settings.rowHeight;
         }
+        let cellHeight: number;
 
         const views: SceneView[] = [];
 
@@ -241,7 +242,7 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
 
             const containerWidth = container.clientWidth
             const rect = renderer.domElement.getBoundingClientRect();
-            if (containerWidth <= 0 || height_gl <= 0) {
+            if (containerWidth <= 0 || Number(height_gl) <= 0) {
                 console.warn("Renderer not ready yet, skipping layout", rect);
                 return;
             }
@@ -253,7 +254,14 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
             //cell widths resize based on total width, for height they remain static
             let newTotalWidth = containerWidth - (gapX * (columns - 1))
             let cellWidth = newTotalWidth / columns
-            let cellHeight = height_gl
+
+            if (typeof height_gl === "string") {
+                cellHeight = cellWidth
+                height_gl = cellHeight
+            } else {
+                cellHeight = height_gl
+            }
+
 
             for (let i = 0; i < views.length; i++) {
                 const v = views[i];
@@ -349,9 +357,9 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
 
             const containerWidth = container.clientWidth;
             const newWidth = containerWidth;
-            renderer.setSize(newWidth, (height_gl * rows) + (gapY * (rows - 1)));
+            renderer.setSize(newWidth, (Number(height_gl) * rows) + (gapY * (rows - 1)));
             el.style.width = `${newWidth}px`;
-            el.style.height = `${(height_gl * rows) + (gapY * (rows - 1))}px`;
+            el.style.height = `${(Number(height_gl) * rows) + (gapY * (rows - 1))}px`;
         };
 
         const resizeObserver = new ResizeObserver(onResize);
@@ -396,7 +404,7 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
         }
 
         let width = setting_width;
-        let height;
+        let height: number;
         let widthPercentage;
         let alignment;
 
@@ -422,7 +430,11 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
         } else {
             alignment = setting_alignment;
             widthPercentage = setting_width_percentage;
-            height = setting_height;
+            if (typeof setting_height === "string" && setting_height === "auto") {
+                height = width
+            } else {
+                height = setting_height;
+            }
         }
 
         let camera = setCameraMode(config.camera.orthographic, width, height);
@@ -531,6 +543,9 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
                 newWidth = (containerWidth - ((jic_gridSettings.columns - 1) * jic_gridSettings.gapX)) * widthPercentage
             } else {
                 newWidth = containerWidth * widthPercentage;
+            }
+            if (typeof setting_height === "string" && setting_height === "auto") {
+                height = newWidth;
             }
             const align = alignment || "center";
 

@@ -10,8 +10,8 @@
     content: attr(data-error-line);
     display: block;
     padding: 7px;
-    background-color: #fff0f0;
-    border: 1px solid #ff4d4d;
+    background-color: var(--background-secondary);
+    border: 1px solid var(--background-modifier-border);
     color: #b71c1c;
     font-family: var(--font-monospace);
     font-size: 0.95em;
@@ -35,12 +35,42 @@
     background-color: var(--background-secondary);
 }
 
-.light-setting summary,
-.position-group {
-    margin-bottom: 5px;
+.light-setting summary {
+    /* padding-bottom: 0.75em; */
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    list-style: none;
+}
+
+.light-setting details[open] summary {
+    padding-bottom: 0.73em;
+}
+
+.light-setting summary::-webkit-details-marker {
+    display: none;
+}
+
+.light-setting summary::before {
+    content: "▶";
+    font-size: 0.7em;
+    transition: transform 0.3s ease;
+    margin-left: 0.25em;
+    color: var(--text-muted);
+}
+
+.light-setting details[open] summary::before {
+    transform: rotate(90deg);
+}
+
+.light-setting .ThreeDEmbed_Remove_Button {
+    color: var(--font-text-theme);
+    background-color: rgba(255, 0, 0, 0.5);
+    margin-left: auto;
 }
 
 .position-group {
+    margin-bottom: 5px;
     display: flex;
     gap: 5px;
 }
@@ -121,4 +151,37 @@
     z-index: 100;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
+}
+
+.ThreeDEmbed_Codeblock_Remove {
+    padding: var(--size-2-2) var(--size-2-3);
+    position: absolute;
+    bottom: var(--size-2-2);
+    inset-inline-end: var(--size-2-2);
+    display: flex;
+    opacity: 0;
+    color: var(--text-muted) !important;
+    border-radius: var(--radius-s);
+    cursor: var(--cursor);
+}
+
+button.ThreeDEmbed_Codeblock_Remove:hover {
+    background-color: rgba(129, 129, 129, 0.2) !important;
+}
+
+.ThreeDEmbed_Codeblock_Copy {
+    padding: var(--size-2-2) var(--size-2-3);
+    position: absolute;
+    top: calc(var(--size-2-2) + 30px);
+    inset-inline-end: var(--size-2-2);
+    display: flex;
+    opacity: 0;
+    color: var(--text-muted) !important;
+    border-radius: var(--radius-s);
+    cursor: var(--cursor);
+    content: var(--clipboard-list);
+}
+
+button.ThreeDEmbed_Codeblock_Copy:hover {
+    background-color: rgba(129, 129, 129, 0.2) !important;
 }

@@ -246,3 +246,5 @@ If you are enjoying 3D embed, then feel free to support my work and enthusiasm b
    - In a GitHub [issue](https://github.com/ElmoNeedsArson/Obsidian-3D-embed/issues) or tag me in the obsidian [discord](https://discord.com/invite/obsidianmd) `@jesse5`
  - Where can I report bugs?  
    - In a GitHub [issue](https://github.com/ElmoNeedsArson/Obsidian-3D-embed/issues) or tag me in the obsidian [discord](https://discord.com/invite/obsidianmd) `@jesse5`
+ - I want to export my note as a pdf, but the 3D scenes arent there.
+   - If you use the `better Export pdf` community plugin you can export your markdown notes with a nice snapshot of your 3D scenes! 

@@ -28,15 +28,6 @@ export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: stri
         lightStrength = plugin.settings.lightSettings[0].intensity ?? 1
     }
 
-    //Show indicator for light if true
-    // if (show == true) {
-    //     const lightIndicator_Geometry = new THREE.SphereGeometry(1)
-    //     const lightIndicator_material = new THREE.MeshBasicMaterial({ color: lightColor });
-    //     const lightIndicator = new THREE.Mesh(lightIndicator_Geometry, lightIndicator_material);
-    //     lightIndicator.position.set(position[0] ?? plugin.settings.lightSettings[0].position[0], position[1] ?? plugin.settings.lightSettings[0].position[1], position[2] ?? plugin.settings.lightSettings[0].position[2]);
-    //     scene.add(lightIndicator);
-    // }
-
     switch (type) {
         case 'point':
             const point = new THREE.PointLight(lightColor, lightStrength);

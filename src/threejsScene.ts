@@ -52,11 +52,7 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
 
             let { scene, axesHelper, gridHelper } = setupBaseScene(cellData, plugin)
 
-            // Camera setup
-            const cellWidth = setting_width;
-            const cellHeight = setting_height;
-
-            const camera = setCameraMode(!!cellData.camera?.orthographic, cellWidth, cellHeight, scene);
+            const camera = setCameraMode(!!cellData.camera?.orthographic, setting_width, setting_height, scene);
             setupHDRIBackground(cellData, plugin, scene, renderer)
             const lightsArray = setupLightsArray(cellData, plugin, scene, camera);
             const modelArray = await setupModelsArray(cellData, plugin, scene);
@@ -135,10 +131,6 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
                 console.warn("Renderer not ready yet, skipping layout", rect);
                 return;
             }
-
-            // Update if needed, probably never triggers
-            gapX = config.gridSettings?.gapX || plugin.settings.gapX || 10
-            gapY = config.gridSettings?.gapY || plugin.settings.gapY || 10
 
             //cell widths resize based on total width, for height they remain static
             let newTotalWidth = containerWidth - (gapX * (columns - 1))
@@ -219,7 +211,6 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
         };
         animate();
 
-        // --- Resize handling ---
         const onResize = (): void => {
             updateViewLayout();
             setupInteractionHandlers();
@@ -229,7 +220,6 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
                     v.camera.aspect = v.viewport.cellWidth / v.viewport.cellHeight;
                     v.camera.updateProjectionMatrix();
                 } else if (v.camera instanceof THREE.OrthographicCamera) {
-                    // Adjust orthographic camera frustum to match aspect ratio
                     const aspect = v.viewport.cellWidth / v.viewport.cellHeight;
                     const frustumHeight = v.camera.top - v.camera.bottom;
                     const frustumWidth = frustumHeight * aspect;
@@ -340,7 +330,6 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
             el.style.width = `${newWidth}px`;
 
             renderer.setSize(newWidth, height);
-            //renderer.shadowMap.enabled = true;
             camera.aspect = newWidth / height;
             camera.updateProjectionMatrix();
         };
@@ -349,7 +338,6 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
         const container = findContainerElement(el);
         if (container) resizeObserver.observe(container);
 
-        // Animation loop
         const animate = () => {
             if (renderer.getContext().isContextLost()) { return }
             requestAnimationFrame(animate);

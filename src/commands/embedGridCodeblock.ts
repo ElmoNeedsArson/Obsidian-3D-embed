@@ -117,7 +117,7 @@ ${plugin.settings.lightSettings.map((light: LightSetting) => {
           const insertStart = Math.max(0, insertEnd - codeBlock.length);
 
           // Which sections to auto-collapse
-          const sectionsToFold = []; // add/remove freely
+          const sectionsToFold = []; 
 
           const cellMatches = docText
             .slice(insertStart, insertEnd)

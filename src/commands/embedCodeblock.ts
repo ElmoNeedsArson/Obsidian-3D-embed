@@ -68,32 +68,6 @@ export function ThreeD_Embed_Command(plugin: ThreeJSPlugin) {
       let ThreeD_block = `,\n"renderBlock": {\n   "widthPercentage": ${plugin.settings.standardEmbedWidthPercentage},\n   "height": ${plugin.settings.standardEmbedHeight},\n   "alignment": "${plugin.settings.alignment}"\n}`;
       let codeBlockClosing = "\n```\n";
 
-      // let lights = `,\n"lights": [\n${plugin.settings.lightSettings
-      //   .map((light: LightSetting) => {
-      //     const defaultColor = "#FFFFFF";
-      //     const colorString = (light.color ?? defaultColor).replace("#", "");
-      //     const posString = light.position ? light.position.join(",") : "0,0,0";
-
-      //     if (light.dropdownValue === "hemisphere") {
-      //       const groundColor = (light.secondaryColor ?? defaultColor).replace("#", "");
-      //       return `   {"type": "hemisphere", "skyColor": "${colorString}", "groundColor": "${groundColor}", "strength": ${light.intensity}, "show": false}`;
-      //     } else if (light.dropdownValue === "directional" || light.dropdownValue === "spot") {
-      //       const targetString = light.targetPosition ? light.targetPosition.join(",") : "0,0,0";
-      //       if (light.dropdownValue === "spot") {
-      //         const distanceValue = light.distance ?? 0;
-      //         const angleValue = light.angle ?? 0;
-      //         return `   {"type": "spot", "color": "${colorString}", "pos": [${posString}], "target": [${targetString}], "distance": ${distanceValue}, "angle": ${angleValue}, "strength": ${light.intensity}, "show": false}`;
-      //       } else {
-      //         return `   {"type": "directional", "color": "${colorString}", "pos": [${posString}], "target": [${targetString}], "strength": ${light.intensity}, "show": false}`;
-      //       }
-      //     } else {
-      //       return `   {"type": "${light.dropdownValue}", "color": "${colorString}", "pos": [${posString}], "strength": ${light.intensity}, "show": false}`;
-      //     }
-      //   })
-      //   .join(",\n")}\n]`;
-
-      // Build final block
-
       let lights = `,\n"lights": [\n${plugin.settings.lightSettings
         .map((light: LightSetting) => {
           const defaultColor = "#FFFFFF";

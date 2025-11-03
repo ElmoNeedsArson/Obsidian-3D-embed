@@ -61,7 +61,6 @@ export default class ThreeJSPlugin extends Plugin {
             const instanceId = `${blockId}:${Date.now()}:${Math.random()}`; // Instance-level unique ID
 
             const renderer = getRenderer(blockId, instanceId, el);
-            // const renderer = new THREE.WebGLRenderer
 
             const child = new ThreeJSRendererChild(el, blockId, instanceId, this);
             ctx.addChild(child);
@@ -424,7 +423,7 @@ function createHelperButtons(el: HTMLElement, ctx: any) {
     removeButton.style.background = "none";
     removeButton.style.boxShadow = "none";
     setIcon(removeButton, "lucide-trash");
-    setTooltip(removeButton, "Remove 3D embed"); // Doesnt work sadly
+    setTooltip(removeButton, "Remove 3D embed"); 
 
     removeButton.addEventListener("click", () => {
         const section = ctx.getSectionInfo(el);
@@ -444,7 +443,7 @@ function createHelperButtons(el: HTMLElement, ctx: any) {
     copyButton.style.background = "none";
     copyButton.style.boxShadow = "none";
     setIcon(copyButton, "lucide-copy");
-    setTooltip(copyButton, "Copy 3D embed to clipboard"); // Doesnt work sadly
+    setTooltip(copyButton, "Copy 3D embed to clipboard");
 
     copyButton.addEventListener("click", async () => {
         const section = ctx.getSectionInfo(el);
@@ -482,12 +481,7 @@ class UpdateModal extends Modal {
         const GitHub = messagepart2.createEl("a", { text: "GitHub!", href: "https://github.com/ElmoNeedsArson/Obsidian-3D-embed#readme" });
         GitHub.setAttribute("target", "_blank"); // Opens in a new tab
 
-        // Dropdown callout using a details element.
-        //const detailsEl = contentEl.createEl("details");
-        //const summaryEl = detailsEl.createEl("summary", { text: "If you just updated from 1.0.7 or older to a newer version, click here!" });
-
         const warning = contentEl.createEl("p")
-        // The callout content – you can apply custom CSS to the classes below.
         const calloutEl = warning.createEl("div", { cls: "callout callout-warning" });
         calloutEl.createEl("strong", { text: "Update Notice:" });
         const calloutText = calloutEl.createEl("p");
@@ -503,7 +497,6 @@ class UpdateModal extends Modal {
         const calloutText3 = calloutEl.createEl("p");
         calloutText3.appendText("Apologies for the inconvenience. But I hope you can keep enjoying the plugin with all its new functions.")
 
-        // Additional apology message.
         const messagepart4 = contentEl.createEl("p");
         messagepart4.appendText("Thank you and Enjoy!");
 

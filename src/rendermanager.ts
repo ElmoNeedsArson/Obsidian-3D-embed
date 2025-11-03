@@ -20,7 +20,6 @@ export function getRenderer(blockId: string, instanceId: string, el: HTMLElement
 
     // If a renderer is currently being disposed, wait before creating a new one
     if (disposingRenderers.has(`${blockId}:${instanceId}`)) {
-        // console.warn(`Waiting for disposal to complete before creating a new renderer for ${blockId}`);
         return blockRenderers.get(Array.from(blockRenderers.keys())[0])!; // Reuse an existing one if available
     }
 

@@ -165,6 +165,10 @@
     cursor: var(--cursor);
 }
 
+.cm-lang-3D:hover .ThreeDEmbed_Codeblock_Remove, .cm-lang-3D-grid:hover .ThreeDEmbed_Codeblock_Remove {
+    opacity: 1;
+}
+
 button.ThreeDEmbed_Codeblock_Remove:hover {
     background-color: rgba(129, 129, 129, 0.2) !important;
 }
@@ -180,6 +184,10 @@ button.ThreeDEmbed_Codeblock_Remove:hover {
     border-radius: var(--radius-s);
     cursor: var(--cursor);
     content: var(--clipboard-list);
+}
+
+.cm-lang-3D:hover .ThreeDEmbed_Codeblock_Copy, .cm-lang-3D-grid:hover .ThreeDEmbed_Codeblock_Copy {
+    opacity: 1;
 }
 
 button.ThreeDEmbed_Codeblock_Copy:hover {

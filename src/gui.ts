@@ -92,16 +92,6 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
         mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     }
 
-    // Helper: Find the top-level group of a selected mesh
-    // function findParentGroup(mesh: THREE.Object3D): THREE.Group | null {
-    //     let obj = mesh;
-    //     while (obj.parent) {
-    //         if (obj.parent instanceof THREE.Group) return obj.parent;
-    //         obj = obj.parent;
-    //     }
-    //     return null;
-    // }
-
     function findParentGroup(mesh: THREE.Object3D): THREE.Group | null {
         let obj = mesh;
         while (obj.parent) {

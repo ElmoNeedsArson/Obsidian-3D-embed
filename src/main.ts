@@ -26,31 +26,32 @@ export default class ThreeJSPlugin extends Plugin {
         await this.loadSettings();
         this.addSettingTab(new ThreeDSettingsTab(this.app, this));
 
-        //adds a code block that instantly adds the 3D scene to your note
+        // register commands
         ThreeD_Embed_Command(this)
         ThreeD_Embed_Grid_Command(this)
 
         const data = await this.loadData(); //delete version from data.json to trigger modal again
-        if (data) {
-            if (data.version) {
-                console.log("3D Embed: Loading Plugin version: " + this.manifest.version);
-                if (data.version != this.manifest.version) {
-                    const newVersion = this.manifest.version.toString()
-                    const updatedData = { ...data, version: newVersion }
-                    await this.saveData(updatedData)
-                }
-                //Potential future option for showing an installation modal
-            } else {
-                console.log("No version found showing modal")
+        if (!data) {
+            // Fresh install — no data.json existed before
+            console.log("3D Embed: Fresh install, creating default data.json");
+            const newData = { version: this.manifest.version.toString(), ...DEFAULT_SETTINGS };
+            await this.saveData(newData);
+        } else {
+            if (!data.version) {
+                // Old user upgrading from <1.0.9
+                console.log("3D Embed: No version found, showing update modal");
+                new UpdateModal(this.app, async () => { }).open();
 
-                new UpdateModal(this.app, async () => {
-                    //await this.saveData({ hasSeenUpdateModal: true });
-                }).open();
-
-                const existingData = await this.loadData() || {};
-                const newVersion = this.manifest.version.toString()
-                const updatedData = { ...existingData, version: newVersion };
+                const updatedData = { ...data, version: this.manifest.version.toString() };
                 await this.saveData(updatedData);
+            } else if (data.version !== this.manifest.version) {
+                // Normal version update, already has version field
+                console.log(`3D Embed: Updating plugin data version from ${data.version} to ${this.manifest.version}`);
+                const updatedData = { ...data, version: this.manifest.version.toString() };
+                await this.saveData(updatedData);
+            } else {
+                // Everything up to date
+                console.log(`3D Embed: Plugin version ${this.manifest.version} loaded`);
             }
         }
 
@@ -123,78 +124,11 @@ export default class ThreeJSPlugin extends Plugin {
                 const grid = false;
                 const scissor = false;
 
-                const removeButton = el.createEl("button", { text: "" });
-                removeButton.addClass("ThreeDEmbed_Codeblock_Remove");
-                removeButton.style.background = "none";
-                removeButton.style.boxShadow = "none";
-
-                setIcon(removeButton, "lucide-trash");
-
-                removeButton.addEventListener("click", () => {
-                    const section = ctx.getSectionInfo(el);
-                    if (!section) return;
-
-                    const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-                    if (!view) return;
-                    const editor = view.editor;
-
-                    const from = { line: section.lineStart, ch: 0 };
-                    const to = { line: section.lineEnd + 1, ch: 0 }; // +1 to include the closing ```
-                    editor.replaceRange("", from, to);
-                });
-
-                const copyButton = el.createEl("button", { text: "" });
-                copyButton.addClass("ThreeDEmbed_Codeblock_Copy");
-                copyButton.style.background = "none";
-                copyButton.style.boxShadow = "none";
-
-                setIcon(copyButton, "lucide-copy");
-
-                copyButton.addEventListener("click", async () => {
-                    const section = ctx.getSectionInfo(el);
-                    if (!section) return;
-
-                    const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-                    if (!view) return;
-                    const editor = view.editor;
-
-                    const from = { line: section.lineStart, ch: 0 };
-                    const to = { line: section.lineEnd + 1, ch: 0 }; // +1 includes closing fence
-                    const blockText = editor.getRange(from, to);
-
-                    await navigator.clipboard.writeText(blockText);
-                    new Notice("Copied to clipboard!");
-                })
+                createHelperButtons(el, ctx)
 
                 initializeThreeJsScene(this, el, parsedData, width, widthPercentage, height, alignment, ctx, renderer, grid, scissor);
             } catch (error) {
-                let message = error.toString().includes("Expected ',' or '}'")
-                    ? "Please make sure that every line BUT the last one ends with a comma ','"
-                    : error.toString().includes("Expected double")
-                        ? "The last line should not end with a comma"
-                        : error.message;
-
-                const errInfo = parseJsonError(error.message);
-
-                if (errInfo) {
-                    const lines = source.split("\n");
-                    const errorLine = lines[errInfo.line - 2]?.trim() || "(unknown)";
-                    message = `There is an error on line ${errInfo.line}: \n${errorLine}`;
-                    let codeBlockMessage = `3D Embed\nThere is an error on line ${errInfo.line}: \n${errorLine}`;
-                    let reasons = `\n
-Possible reasons:
-- A missing comma at the end of the line
-- A comma too much at the end of the line
-- A missing or extra quotation mark (" or ')
-- An opening or closing brace ({ } [ ]) is missing or too many
-- A typo in variable names (Look at the plugin description or README for variable names)
-- If none of this works, just redo the command`
-
-                    el.classList.add("json-error-container");
-                    el.dataset.errorLine = codeBlockMessage + reasons;
-                }
-
-                new Notice("Failed to render 3D model: " + message, 10000);
+                handleCodeblockError(error, source, el)
             }
         });
 
@@ -267,7 +201,6 @@ Possible reasons:
                         if (cellIsValid) validCells[cellName] = sceneData;
                     };
 
-                    // 🩻 Step 1 — Validation loop
                     for (const [cellName, cellData] of Object.entries(parsedData)) {
                         if (!cellName.startsWith("cell")) continue;
                         validateScene(cellData, cellName);
@@ -286,79 +219,11 @@ Possible reasons:
                     const grid = true;
                     const scissor = true;
 
-                    //renderer.setScissorTest(true);
-                    const removeButton = el.createEl("button", { text: "" })
-                    removeButton.addClass("ThreeDEmbed_Codeblock_Remove");
-                    removeButton.style.background = "none";
-                    removeButton.style.boxShadow = "none";
-                    setTooltip(removeButton, "Remove this 3D scene"); // Not working sadly
-                    setIcon(removeButton, "lucide-trash");
-
-                    removeButton.addEventListener("click", () => {
-                        const section = ctx.getSectionInfo(el);
-                        if (!section) return;
-
-                        const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-                        if (!view) return;
-                        const editor = view.editor;
-
-                        const from = { line: section.lineStart, ch: 0 };
-                        const to = { line: section.lineEnd + 1, ch: 0 }; // +1 to include the closing ```
-                        editor.replaceRange("", from, to);
-                    });
-
-                    const copyButton = el.createEl("button", { text: "" });
-                    copyButton.addClass("ThreeDEmbed_Codeblock_Copy");
-                    copyButton.style.background = "none";
-                    copyButton.style.boxShadow = "none";
-                    setTooltip(copyButton, "Remove this 3D scene"); // Not working sadly
-                    setIcon(copyButton, "lucide-copy");
-
-                    copyButton.addEventListener("click", async () => {
-                        const section = ctx.getSectionInfo(el);
-                        if (!section) return;
-
-                        const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-                        if (!view) return;
-                        const editor = view.editor;
-
-                        const from = { line: section.lineStart, ch: 0 };
-                        const to = { line: section.lineEnd + 1, ch: 0 }; // +1 includes closing fence
-                        const blockText = editor.getRange(from, to);
-
-                        await navigator.clipboard.writeText(blockText);
-                        new Notice("Copied to clipboard!");
-                    })
+                    createHelperButtons(el, ctx)
 
                     initializeThreeJsScene(this, el, parsedData, width, widthPercentage, height, alignment, ctx, renderer, grid, scissor);
                 } catch (error) {
-                    let message = error.toString().includes("Expected ',' or '}'")
-                        ? "Please make sure that every line BUT the last one ends with a comma ','"
-                        : error.toString().includes("Expected double")
-                            ? "The last line should not end with a comma"
-                            : error.message;
-
-                    const errInfo = parseJsonError(error.message);
-
-                    if (errInfo) {
-                        const lines = source.split("\n");
-                        const errorLine = lines[errInfo.line - 2]?.trim() || "(unknown)";
-                        message = `There is an error on line ${errInfo.line}: \n${errorLine}`;
-                        let codeBlockMessage = `3D Embed\nThere is an error on line ${errInfo.line}: \n${errorLine}`;
-                        let reasons = `\n
-Possible reasons:
-- A missing comma at the end of the line
-- A comma too much at the end of the line
-- A missing or extra quotation mark (" or ')
-- An opening or closing brace ({ } [ ]) is missing or too many
-- A typo in variable names (Look at the plugin description or README for variable names)
-- If none of this works, just redo the command`
-
-                        el.classList.add("json-error-container");
-                        el.dataset.errorLine = codeBlockMessage + reasons;
-                    }
-
-                    new Notice("Failed to render 3D model: " + message, 10000);
+                    handleCodeblockError(error, source, el)
                 }
             } else {
                 try {
@@ -417,7 +282,6 @@ Possible reasons:
                         if (cellIsValid) validCells[cellName] = sceneData;
                     };
 
-                    // 🩻 Step 1 — Validation loop
                     for (const [cellName, cellData] of Object.entries(parsedData)) {
                         if (!cellName.startsWith("cell")) continue;
                         validateScene(cellData, cellName);
@@ -450,7 +314,6 @@ Possible reasons:
                         const columns = parsedData.gridSettings?.columns || this.settings.columnsAmount || 4;
                         el.style.display = 'grid';
                         el.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
-                        //el.style.gap = '1rem';
                         el.style.gap = `${parsedData.gridSettings?.gapY || this.settings.gapY || 10}px ${parsedData.gridSettings?.gapX || this.settings.gapX || 10}px`
 
                         const modelPath = this.getModelPath(cellData.models[0].name);
@@ -507,33 +370,7 @@ Possible reasons:
                         initializeThreeJsScene(this, el, cellData, width, widthPercentage, height, alignment, ctx, renderer, grid, scissor, parsedData.gridSettings);
                     }
                 } catch (error) {
-                    let message = error.toString().includes("Expected ',' or '}'")
-                        ? "Please make sure that every line BUT the last one ends with a comma ','"
-                        : error.toString().includes("Expected double")
-                            ? "The last line should not end with a comma"
-                            : error.message;
-
-                    const errInfo = parseJsonError(error.message);
-
-                    if (errInfo) {
-                        const lines = source.split("\n");
-                        const errorLine = lines[errInfo.line - 2]?.trim() || "(unknown)";
-                        message = `There is an error on line ${errInfo.line}: \n${errorLine}`;
-                        let codeBlockMessage = `3D Embed\nThere is an error on line ${errInfo.line}: \n${errorLine}`;
-                        let reasons = `\n
-Possible reasons:
-- A missing comma at the end of the line
-- A comma too much at the end of the line
-- A missing or extra quotation mark (" or ')
-- An opening or closing brace ({ } [ ]) is missing or too many
-- A typo in variable names (Look at the plugin description or README for variable names)
-- If none of this works, just redo the command`
-
-                        el.classList.add("json-error-container");
-                        el.dataset.errorLine = codeBlockMessage + reasons;
-                    }
-
-                    new Notice("Failed to render 3D model: " + message, 10000);
+                    handleCodeblockError(error, source, el)
                 }
             }
 
@@ -549,6 +386,81 @@ Possible reasons:
     onunload() {
         console.log("3D Embed Plugin Unloaded")
     }
+}
+
+function handleCodeblockError(error: any, source: string, el: HTMLElement) {
+    let message = error.toString().includes("Expected ',' or '}'")
+        ? "Please make sure that every line BUT the last one ends with a comma ','"
+        : error.toString().includes("Expected double")
+            ? "The last line should not end with a comma"
+            : error.message;
+
+    const errInfo = parseJsonError(error.message);
+
+    if (errInfo) {
+        const lines = source.split("\n");
+        const errorLine = lines[errInfo.line - 2]?.trim() || "(unknown)";
+        message = `There is an error on line ${errInfo.line}: \n${errorLine}`;
+        let codeBlockMessage = `3D Embed\nThere is an error on line ${errInfo.line}: \n${errorLine}`;
+        let reasons = `\n
+Possible reasons:
+- A missing comma at the end of the line
+- A comma too much at the end of the line
+- A missing or extra quotation mark (" or ')
+- An opening or closing brace ({ } [ ]) is missing or too many
+- A typo in variable names (Look at the plugin description or README for variable names)
+- If none of this works, just redo the command`
+
+        el.classList.add("json-error-container");
+        el.dataset.errorLine = codeBlockMessage + reasons;
+    }
+
+    new Notice("Failed to render 3D model: " + message, 10000);
+}
+
+function createHelperButtons(el: HTMLElement, ctx: any) {
+    const removeButton = el.createEl("button", { text: "" });
+    removeButton.addClass("ThreeDEmbed_Codeblock_Remove");
+    removeButton.style.background = "none";
+    removeButton.style.boxShadow = "none";
+    setIcon(removeButton, "lucide-trash");
+    setTooltip(removeButton, "Remove 3D embed"); // Doesnt work sadly
+
+    removeButton.addEventListener("click", () => {
+        const section = ctx.getSectionInfo(el);
+        if (!section) return;
+
+        const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+        if (!view) return;
+        const editor = view.editor;
+
+        const from = { line: section.lineStart, ch: 0 };
+        const to = { line: section.lineEnd + 1, ch: 0 }; // +1 to include the closing ```
+        editor.replaceRange("", from, to);
+    });
+
+    const copyButton = el.createEl("button", { text: "" });
+    copyButton.addClass("ThreeDEmbed_Codeblock_Copy");
+    copyButton.style.background = "none";
+    copyButton.style.boxShadow = "none";
+    setIcon(copyButton, "lucide-copy");
+    setTooltip(copyButton, "Copy 3D embed to clipboard"); // Doesnt work sadly
+
+    copyButton.addEventListener("click", async () => {
+        const section = ctx.getSectionInfo(el);
+        if (!section) return;
+
+        const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+        if (!view) return;
+        const editor = view.editor;
+
+        const from = { line: section.lineStart, ch: 0 };
+        const to = { line: section.lineEnd + 1, ch: 0 }; // +1 includes closing fence
+        const blockText = editor.getRange(from, to);
+
+        await navigator.clipboard.writeText(blockText);
+        new Notice("Copied to clipboard!");
+    })
 }
 
 class UpdateModal extends Modal {

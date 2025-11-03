@@ -112,17 +112,9 @@ ${plugin.settings.lightSettings.map((light: LightSetting) => {
       } else {
         try {
           const docText = cmView.state.doc.toString();
-
-          // compute the insertion start offset — the selection start before we inserted.
-          // If you stored the cursor position before replacing, prefer that.
-          // Here we derive it from the selection (the selection has moved to end of inserted text after replace).
-          // So we compute the likely insertion range as: end - content.length ... end
           const selectionAfter = cmView.state.selection.main;
           const insertEnd = selectionAfter.to;
           const insertStart = Math.max(0, insertEnd - codeBlock.length);
-
-          // search for the '"scene"' key inside the newly inserted text
-          // --- after insertion, automatically fold configured sections ---
 
           // Which sections to auto-collapse
           const sectionsToFold = []; // add/remove freely

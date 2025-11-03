@@ -467,7 +467,7 @@ async function setupModelsArray(data: any, plugin: ThreeJSPlugin, scene: THREE.S
                 })();
 
                 if (!pathToMaterial) {
-                    new Notice(`Material path for ${mtlname} not found`, 8000);
+                    console.warn(`Material path for ${mtlname} not found`, 8000);
                     pathToMaterial = "unknown"
                 }
             } else {

@@ -171,7 +171,9 @@ export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: stri
             }
             return spot
         case 'hemisphere':
-            const hemisphere = new THREE.HemisphereLight(lightColor, lightColor2, lightStrength);
+            let skyColor = "#" + lightconfig.skyColor || "#FFFFFF";
+            let groundColor = "#" + lightconfig.groundColor || "#FFFFFF";
+            const hemisphere = new THREE.HemisphereLight(skyColor, groundColor, lightStrength);
 
             if (show == true) {
                 const helper = new THREE.HemisphereLightHelper(hemisphere, 5);

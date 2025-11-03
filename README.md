@@ -172,6 +172,9 @@ You can add this inside the scene tag as seen above:
 - `sceneBackground` puts the HDR texture you provide as the scene background
 - `baseGeometry` loads a torus with very metallic material so you can see how well your HDRI works
 
+Example of HDRI with a base Geometry:
+<img width="1044" height="452" alt="Screenshot 2025-11-02 190740" src="https://github.com/user-attachments/assets/3f4536b0-34ad-41b1-83d3-e1586af6247f" />
+
 ### STL Configurations
 Specifically for stl model files, I added some additional configuration
 ```JSON

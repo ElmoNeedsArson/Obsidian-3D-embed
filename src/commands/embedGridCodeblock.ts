@@ -135,8 +135,6 @@ ${plugin.settings.lightSettings.map((light: LightSetting) => {
             sectionsToFold.push(match[0].replace(/"/g, "")); // strip quotes
           }
 
-          //console.log(sectionsToFold)
-
           for (const key of sectionsToFold) {
             const keyIndex = docText.indexOf(`"${key}"`, insertStart);
             if (keyIndex === -1 || keyIndex > insertEnd) continue;
@@ -166,8 +164,6 @@ ${plugin.settings.lightSettings.map((light: LightSetting) => {
             cmView.dispatch({
               effects: (foldEffect as any).of({ from: openingPos, to: closingPos + 1 })
             });
-
-            //console.log(`Folded section: ${key}`);
           }
 
         } catch (e) {

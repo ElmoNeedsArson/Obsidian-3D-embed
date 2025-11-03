@@ -134,30 +134,6 @@ export function ThreeD_Embed_Command(plugin: ThreeJSPlugin) {
         content = codeBlockType + models + camera + lights + codeBlockClosing;
       }
 
-      // Replace selection or insert at cursor
-      //console.log("Inserting 3D embed code block at:\n" + editor.getCursor().line);
-      //editor.replaceSelection(content);
-
-      // --- after editor.replaceSelection(content); ---
-
-      //const sectionsToFold = ["scene", "camera", "lights"];
-
-      // Helper: find matching closing brace for a JSON object starting at bracePos (offsets)
-      function findMatchingBrace(text: string, startIndex: number): number {
-        const openChar = text[startIndex];
-        const closeChar = openChar === '{' ? '}' : ']';
-        let depth = 0;
-
-        for (let i = startIndex; i < text.length; i++) {
-          if (text[i] === openChar) depth++;
-          else if (text[i] === closeChar) depth--;
-
-          if (depth === 0) return i;
-        }
-
-        return -1; // No match found
-      }
-
       editor.replaceSelection(content);
     },
   });

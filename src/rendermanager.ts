@@ -50,8 +50,6 @@ function disposeRenderer(blockId: string, instanceId: string) {
             renderer.dispose();
             renderer.domElement?.parentNode?.removeChild(renderer.domElement);
             blockRenderers.delete(instanceId);
-
-            // console.log(Renderer for blockId ${blockId} instanceId ${instanceId} disposed.);
         } catch (error) {
             console.error("Error disposing renderer:", error);
         }
@@ -61,32 +59,6 @@ function disposeRenderer(blockId: string, instanceId: string) {
         rendererPool.delete(blockId);
     }
 }
-
-// function disposeAllRenderers() {
-//     // Iterate over all blockIds in the rendererPool
-//     for (const [blockId, blockRenderers] of rendererPool.entries()) {
-//         // Iterate over all instanceIds in the blockRenderers map
-//         for (const [instanceId, renderer] of blockRenderers.entries()) {
-//             try {
-//                 const gl = renderer.getContext();
-//                 if (gl) {
-//                     const loseContextExtension = gl.getExtension("WEBGL_lose_context");
-//                     if (loseContextExtension) loseContextExtension.loseContext();
-//                 }
-
-//                 renderer.dispose();
-//                 renderer.domElement?.parentNode?.removeChild(renderer.domElement);
-//                 // console.log(`Renderer for blockId ${blockId} instanceId ${instanceId} disposed.`);
-//             } catch (error) {
-//                 // console.error(`Error disposing renderer for blockId ${blockId} instanceId ${instanceId}:`, error);
-//             }
-//         }
-
-//         // After disposing all renderers in the block, delete the block from the pool
-//         rendererPool.delete(blockId);
-//     }
-//     // console.log("All renderers have been disposed.");
-// }
 
 export class ThreeJSRendererChild extends MarkdownRenderChild {
     blockId: string;

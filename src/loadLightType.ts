@@ -116,7 +116,6 @@ export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: stri
             let decay;
 
             if (lightconfig.distance) {
-                //console.log("distance")
                 distance = lightconfig.distance
             } else {
                 distance = 10;

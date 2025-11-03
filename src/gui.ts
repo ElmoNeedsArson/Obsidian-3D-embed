@@ -68,7 +68,7 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
     function onMouseMove(event: MouseEvent) {
         updateMousePosition(event);
         raycaster.setFromCamera(mouse, camera);  // Recalculate raycaster position
-        const intersects = raycaster.intersectObjects(scene.children, true);
+        const intersects = raycaster.intersectObjects(modelArr, true);
 
         if (intersects.length > 0) {
             const hoveredMesh = intersects[0].object;
@@ -93,10 +93,19 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
     }
 
     // Helper: Find the top-level group of a selected mesh
+    // function findParentGroup(mesh: THREE.Object3D): THREE.Group | null {
+    //     let obj = mesh;
+    //     while (obj.parent) {
+    //         if (obj.parent instanceof THREE.Group) return obj.parent;
+    //         obj = obj.parent;
+    //     }
+    //     return null;
+    // }
+
     function findParentGroup(mesh: THREE.Object3D): THREE.Group | null {
         let obj = mesh;
         while (obj.parent) {
-            if (obj.parent instanceof THREE.Group) return obj.parent;
+            if (modelArr.includes(obj.parent)) return obj.parent as THREE.Group;
             obj = obj.parent;
         }
         return null;
@@ -214,7 +223,6 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
 
     //Saves settings to codeblock
     applyReload.addEventListener("click", () => {
-        //console.log("Pressed Save")
         const view = plugin.app.workspace.getActiveViewOfType(MarkdownView);
         const sec = ctx.getSectionInfo(ctx.el);
         const lineno = sec?.lineStart;
@@ -235,21 +243,16 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
 
             // Update models
             config.models.forEach((model: any, index: number) => {
-                //const matchingModel = modelArr.find((mdl: THREE.Group) => mdl.name === model.name);
-                //if (matchingModel) {
                 model.position = [modelArr[index].position.x.toFixed(3), modelArr[index].position.y.toFixed(3), modelArr[index].position.z.toFixed(3)];
                 model.rotation = [
                     (modelArr[index].rotation.x * (180 / Math.PI)).toFixed(3),
                     (modelArr[index].rotation.y * (180 / Math.PI)).toFixed(3),
                     (modelArr[index].rotation.z * (180 / Math.PI)).toFixed(3)
                 ];
-                //}
             });
 
-            /**
-    * Custom formatter that outputs JSON in a specific style.
-    * Top-level keys (first iteration) are not indented.
-    */
+            // Custom formatter that outputs JSON in a specific style.
+            // Top-level keys (first iteration) are not indented.
             function customFormat(value: any, indent = ""): string {
                 const indentStep = "   "; // 3 spaces for each nested level
 
@@ -287,17 +290,13 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
                 return JSON.stringify(value);
             }
 
-            /**
-             * Determines if a value is a primitive.
-             */
+            // Determines if a value is a primitive.
             function isPrimitive(val: any): boolean {
                 return val === null || (typeof val !== "object" && typeof val !== "function");
             }
 
-            /**
-             * Checks if an object is "simple": all of its properties are primitives
-             * or flat arrays (arrays of primitives).
-             */
+            // Checks if an object is "simple": all of its properties are primitives
+            // or flat arrays (arrays of primitives).
             function isSimpleObject(obj: any): boolean {
                 if (obj === null || typeof obj !== "object") return false;
                 return Object.values(obj).every(val => {
@@ -308,9 +307,7 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
                 });
             }
 
-            /**
-             * Formats a simple object on one line.
-             */
+            // Formats a simple object on one line.
             function formatObjectInline(obj: any): string {
                 const entries = Object.entries(obj).map(([key, val]) => {
                     let formatted: string;
@@ -328,12 +325,9 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
                 });
                 return `{${entries.join(", ")}}`;
             }
-            // Convert back to JSON string without outer brackets
-            //let updatedJsonText = JSON.stringify(config, null, 3).slice(1, -1).trim();
-            //let updatedJsonText = JSON.stringify(config, null, 0).slice(1, -1).trim();
 
             let formattedJson = customFormat(config);
-            // If you want to remove the outer braces (like if you're inserting it inside a code block without them)
+            // Remove the outer braces (like if you're inserting it inside a code block without them)
             formattedJson = formattedJson.slice(1, -1).trim();
 
             // Now insert formattedJson into your editor:
@@ -342,10 +336,6 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
                 { line: lineno, ch: 0 },
                 { line: lineEnd + 1, ch: 0 }
             );
-
-            // Replace the old JSON in the editor with proper codeblock formatting
-            //view.editor.replaceRange(`\`\`\`3D\n${updatedJsonText}\n\`\`\``, { line: lineno, ch: 0 }, { line: lineEnd, ch: 0 });
-
         } catch (error) {
             console.error("Error updating JSON: " + error);
         }
@@ -370,7 +360,6 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
 
             const btnElement = button as HTMLButtonElement;
             let classes = button.classList
-            //console.log(classes)
 
             if (classes.contains("rotationBtn")) {
                 controls.setMode('rotate');

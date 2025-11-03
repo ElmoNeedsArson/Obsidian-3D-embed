@@ -530,11 +530,9 @@ function setupHDRIBackground(data: any, plugin: ThreeJSPlugin, scene: THREE.Scen
     if (data.scene?.hdriBackground?.texturePath) {
         const pmremGenerator = new THREE.PMREMGenerator(renderer);
         const hdriLoader = new RGBELoader()
-        console.log(data.scene.hdriBackground.texturePath)
         const pth = plugin.getModelPath(data.scene.hdriBackground.texturePath)
         let envMap;
         if (pth) {
-            console.log("Loading HDRI from: " + pth)
             hdriLoader.load(pth, function (texture) {
                 envMap = pmremGenerator.fromEquirectangular(texture).texture;
                 texture.dispose();

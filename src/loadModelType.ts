@@ -12,6 +12,18 @@ import ThreeJSPlugin from './main';
 
 export function loadModels(plugin: ThreeJSPlugin, scene: THREE.Scene, modelPath: string, extension: string, modelconfig: any, stlconfig: any, materialPath: string): Promise<THREE.Object3D> {
     return new Promise((resolve, reject) => {
+        const finalize = (loaded: THREE.Object3D) => {
+            // Normalize: wrap everything in a Group
+            const wrapper = new THREE.Group();
+            wrapper.name = modelconfig.name || "UnnamedModel";
+            wrapper.add(loaded);
+
+            applyModelConfig(plugin, wrapper, modelconfig);
+            scene.add(wrapper);
+
+            resolve(wrapper);
+        };
+
         switch (extension) {
             case 'stl':
                 const stlLoader = new STLLoader();
@@ -28,9 +40,10 @@ export function loadModels(plugin: ThreeJSPlugin, scene: THREE.Scene, modelPath:
                         material = new THREE.MeshPhongMaterial({ color: 0x606060, shininess: 100 });
                     }
                     const model = new THREE.Mesh(geometry, material);
-                    applyModelConfig(plugin, model, modelconfig);
-                    scene.add(model);
-                    resolve(model)
+                    // applyModelConfig(plugin, model, modelconfig);
+                    // scene.add(model);
+                    // resolve(model)
+                    finalize(model);
                 }, undefined, (error) => {
                     new Notice("Failed to load stl model: " + error);
                 });
@@ -39,9 +52,10 @@ export function loadModels(plugin: ThreeJSPlugin, scene: THREE.Scene, modelPath:
                 const gltfLoader = new GLTFLoader();
                 gltfLoader.load(modelPath, (gltf) => {
                     const model = gltf.scene;
-                    applyModelConfig(plugin, model, modelconfig);
-                    scene.add(model);
-                    resolve(model)
+                    finalize(model);
+                    // applyModelConfig(plugin, model, modelconfig);
+                    // scene.add(model);
+                    // resolve(model)
                 }, undefined, (error) => {
                     new Notice("Failed to load glb (GLTF) model: " + error);
                 });
@@ -49,11 +63,6 @@ export function loadModels(plugin: ThreeJSPlugin, scene: THREE.Scene, modelPath:
             case 'obj':
                 const objLoader = new OBJLoader();
                 const mtlLoader = new MTLLoader();
-
-                //console.log("Materialpath: " + materialPath)
-                //console.log("conf: " + modelconfig)
-                // const MTLpath = modelPath.replace(/\.obj(\?|$)/, ".mtl$1");
-                // const cleanMTLPath = MTLpath.split('?')[0];
 
                 if (materialPath === "unknown") {
                     objLoader.load(modelPath, (obj) => {
@@ -64,9 +73,10 @@ export function loadModels(plugin: ThreeJSPlugin, scene: THREE.Scene, modelPath:
                                 }
                             }
                         });
-                        applyModelConfig(plugin, obj, modelconfig);
-                        scene.add(obj);
-                        resolve(obj);
+                        // applyModelConfig(plugin, obj, modelconfig);
+                        // scene.add(obj);
+                        // resolve(obj);
+                        finalize(obj);
                     }, undefined, (error) => {
                         new Notice("Failed to load obj model: " + error);
                     });
@@ -82,9 +92,10 @@ export function loadModels(plugin: ThreeJSPlugin, scene: THREE.Scene, modelPath:
                                     }
                                 }
                             });
-                            applyModelConfig(plugin, obj, modelconfig);
-                            scene.add(obj);
-                            resolve(obj)
+                            // applyModelConfig(plugin, obj, modelconfig);
+                            // scene.add(obj);
+                            // resolve(obj)
+                            finalize(obj);
                         }, undefined, (error) => {
                             new Notice("Failed to load obj model: " + error);
                         });
@@ -105,9 +116,10 @@ export function loadModels(plugin: ThreeJSPlugin, scene: THREE.Scene, modelPath:
                         }
                     });
 
-                    applyModelConfig(plugin, fbx, modelconfig);
-                    scene.add(fbx)
-                    resolve(fbx)
+                    // applyModelConfig(plugin, fbx, modelconfig);
+                    // scene.add(fbx)
+                    // resolve(fbx)
+                    finalize(fbx);
                 }, undefined, (error) => {
                     new Notice("Failed to load fbx model: " + error);
                 });
@@ -116,9 +128,10 @@ export function loadModels(plugin: ThreeJSPlugin, scene: THREE.Scene, modelPath:
                 const ThreeMFloader = new ThreeMFLoader();
 
                 ThreeMFloader.load(modelPath, (ThreeMF) => {
-                    applyModelConfig(plugin, ThreeMF, modelconfig);
-                    scene.add(ThreeMF);
-                    resolve(ThreeMF)
+                    // applyModelConfig(plugin, ThreeMF, modelconfig);
+                    // scene.add(ThreeMF);
+                    // resolve(ThreeMF)
+                    finalize(ThreeMF);
                 }, undefined, (error) => {
                     new Notice("Failed to load 3mf model: " + error);
                 });

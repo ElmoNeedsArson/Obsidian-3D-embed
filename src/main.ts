@@ -1,4 +1,4 @@
-import { Editor, Notice, Plugin, getLinkpath, Modal, App, MarkdownView, setIcon } from 'obsidian';
+import { Editor, Notice, Plugin, getLinkpath, Modal, App, MarkdownView, setIcon, setTooltip } from 'obsidian';
 
 import { DEFAULT_SETTINGS, ThreeDEmbedSettings, ThreeDSettingsTab } from './settings';
 import { ThreeJSRendererChild, getUniqueId, getRenderer } from './rendermanager'
@@ -287,11 +287,11 @@ Possible reasons:
                     const scissor = true;
 
                     //renderer.setScissorTest(true);
-                    const removeButton = el.createEl("button", { text: "" });
+                    const removeButton = el.createEl("button", { text: "" })
                     removeButton.addClass("ThreeDEmbed_Codeblock_Remove");
                     removeButton.style.background = "none";
                     removeButton.style.boxShadow = "none";
-
+                    setTooltip(removeButton, "Remove this 3D scene"); // Not working sadly
                     setIcon(removeButton, "lucide-trash");
 
                     removeButton.addEventListener("click", () => {
@@ -311,7 +311,7 @@ Possible reasons:
                     copyButton.addClass("ThreeDEmbed_Codeblock_Copy");
                     copyButton.style.background = "none";
                     copyButton.style.boxShadow = "none";
-
+                    setTooltip(copyButton, "Remove this 3D scene"); // Not working sadly
                     setIcon(copyButton, "lucide-copy");
 
                     copyButton.addEventListener("click", async () => {
@@ -503,7 +503,7 @@ Possible reasons:
                             await navigator.clipboard.writeText(blockText);
                             new Notice("Copied to clipboard!");
                         })
-                        
+
                         initializeThreeJsScene(this, el, cellData, width, widthPercentage, height, alignment, ctx, renderer, grid, scissor, parsedData.gridSettings);
                     }
                 } catch (error) {

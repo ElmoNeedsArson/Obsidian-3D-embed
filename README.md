@@ -18,7 +18,7 @@ This plugin also allows you to make your scene with the whole model look as nice
 
 ## 1. IMPORTANT!: Showing all filetypes in obsidian:
 Go to the settings tab of obsidian -> 'Files and Links' -> toggle the 'Show all file types'
-<img width="1380" height="880" alt="file_types_obsidian" src="https://github.com/user-attachments/assets/63cc91e1-3a3f-4352-9e75-0deb866780e4" />
+<img alt="file_types_obsidian" src="https://github.com/user-attachments/assets/63cc91e1-3a3f-4352-9e75-0deb866780e4" />
 This allows you to see every type of file in your obsidian vault, including 3D model files such as stl. 
 
 ## 2. Watch this video that showcases how to use the plugin:

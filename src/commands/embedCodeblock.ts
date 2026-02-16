@@ -49,9 +49,14 @@ export function ThreeD_Embed_Command(plugin: ThreeJSPlugin) {
       }
 
       // Build models array JSON string
+      // const modelsJSON = validModels
+      //   .map((name, idx) => {
+      //     return `   {"name": "${name}", "scale": ${plugin.settings.standardScale}, "position": [0, 0, ${idx * 5}], "rotation": [0, 0, 0]}`;
+      //   })
+      //   .join(",\n");
       const modelsJSON = validModels
         .map((name, idx) => {
-          return `   {"name": "${name}", "scale": ${plugin.settings.standardScale}, "position": [0, 0, ${idx * 5}], "rotation": [0, 0, 0]}`;
+          return `   {"name": "${name}", "scale": ${plugin.settings.standardScale}, "position": [${plugin.settings.modelPosX}, ${plugin.settings.modelPosY}, ${plugin.settings.modelPosZ}], "rotation": [${plugin.settings.modelRotX}, ${plugin.settings.modelRotY}, ${plugin.settings.modelRotZ}]}`;
         })
         .join(",\n");
 

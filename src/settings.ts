@@ -29,6 +29,12 @@ export interface ThreeDEmbedSettings {
     standardColor: string;
     showGroundShadows: boolean;
     standardScale: number;
+    modelPosX: number,
+    modelPosY: number,
+    modelPosZ: number,
+    modelRotX: number,
+    modelRotY: number,
+    modelRotZ: number,
     standardEmbedHeight: number;
     standardEmbedWidthPercentage: number;
     alignment: string;
@@ -57,6 +63,12 @@ export const DEFAULT_SETTINGS: ThreeDEmbedSettings = {
     standardColor: "#ADD8E6",
     showGroundShadows: true,
     standardScale: 0.5,
+    modelPosX: 0,
+    modelPosY: 0,
+    modelPosZ: 0,
+    modelRotX: 0,
+    modelRotY: 0,
+    modelRotZ: 0,
     standardEmbedHeight: 300,
     standardEmbedWidthPercentage: 100,
     alignment: "center",
@@ -118,9 +130,9 @@ export class ThreeDSettingsTab extends PluginSettingTab {
             .addToggle(
                 (toggle) =>
                     toggle
-                        .setValue(this.plugin.settings.showConfig) 
+                        .setValue(this.plugin.settings.showConfig)
                         .onChange(async (value) => {
-                            this.plugin.settings.showConfig = value; 
+                            this.plugin.settings.showConfig = value;
                             await this.plugin.saveSettings();
                         })
             )
@@ -140,7 +152,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                     })
                     .setValue(this.plugin.settings.colorChoice.toString())
                     .onChange(async (value) => {
-                        this.plugin.settings.colorChoice = value; 
+                        this.plugin.settings.colorChoice = value;
                         await this.plugin.saveSettings();
                         this.display();
                     }));
@@ -196,7 +208,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                     })
                     .setValue(this.plugin.settings.alignment.toString())
                     .onChange(async (value) => {
-                        this.plugin.settings.alignment = value; 
+                        this.plugin.settings.alignment = value;
                         await this.plugin.saveSettings();
                     }));
 
@@ -207,9 +219,9 @@ export class ThreeDSettingsTab extends PluginSettingTab {
             .addToggle(
                 (toggle) =>
                     toggle
-                        .setValue(this.plugin.settings.autoRotate) 
+                        .setValue(this.plugin.settings.autoRotate)
                         .onChange(async (value) => {
-                            this.plugin.settings.autoRotate = value; 
+                            this.plugin.settings.autoRotate = value;
                             await this.plugin.saveSettings();
                         })
             )
@@ -220,9 +232,9 @@ export class ThreeDSettingsTab extends PluginSettingTab {
             .addToggle(
                 (toggle) =>
                     toggle
-                        .setValue(this.plugin.settings.dampedOrbit) 
+                        .setValue(this.plugin.settings.dampedOrbit)
                         .onChange(async (value) => {
-                            this.plugin.settings.dampedOrbit = value; 
+                            this.plugin.settings.dampedOrbit = value;
                             await this.plugin.saveSettings();
                         })
             )
@@ -233,9 +245,9 @@ export class ThreeDSettingsTab extends PluginSettingTab {
             .addToggle(
                 (toggle) =>
                     toggle
-                        .setValue(this.plugin.settings.showGroundShadows) 
+                        .setValue(this.plugin.settings.showGroundShadows)
                         .onChange(async (value) => {
-                            this.plugin.settings.showGroundShadows = value; 
+                            this.plugin.settings.showGroundShadows = value;
                             await this.plugin.saveSettings();
                         })
             )
@@ -246,7 +258,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
             .addToggle(
                 (toggle) =>
                     toggle
-                        .setValue(this.plugin.settings.autoShowGUI) 
+                        .setValue(this.plugin.settings.autoShowGUI)
                         .onChange(async (value) => {
                             this.plugin.settings.autoShowGUI = value;
                             await this.plugin.saveSettings();
@@ -266,6 +278,76 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                     .onChange(async (value) => {
                         const numValue = parseFloat(value)
                         this.plugin.settings.standardScale = numValue;
+                        await this.plugin.saveSettings();
+                    })
+
+            )
+
+        new Setting(containerEl)
+            .setClass("ThreeDEmbed_Position_Inputs")
+            .setName('Standard Position Model')
+            .setDesc('The default position of the Model in your scene (X,Y,Z)')
+            .addText(text =>
+                text
+                    .setValue(this.plugin.settings.modelPosX.toString())
+                    .onChange(async (value) => {
+                        const numValue = parseFloat(value)
+                        this.plugin.settings.modelPosX = numValue;
+                        await this.plugin.saveSettings();
+                    })
+
+            )
+            .addText(text =>
+                text
+                    .setValue(this.plugin.settings.modelPosY.toString())
+                    .onChange(async (value) => {
+                        const numValue = parseFloat(value)
+                        this.plugin.settings.modelPosY = numValue;
+                        await this.plugin.saveSettings();
+                    })
+
+            )
+            .addText(text =>
+                text
+                    .setValue(this.plugin.settings.modelPosZ.toString())
+                    .onChange(async (value) => {
+                        const numValue = parseFloat(value)
+                        this.plugin.settings.modelPosZ = numValue;
+                        await this.plugin.saveSettings();
+                    })
+
+            )
+
+        new Setting(containerEl)
+            .setClass("ThreeDEmbed_Position_Inputs")
+            .setName('Standard Rotation Model')
+            .setDesc('The default rotation of the model in your scene (X,Y,Z)')
+            .addText(text =>
+                text
+                    .setValue(this.plugin.settings.modelRotX.toString())
+                    .onChange(async (value) => {
+                        const numValue = parseFloat(value)
+                        this.plugin.settings.modelRotX = numValue;
+                        await this.plugin.saveSettings();
+                    })
+
+            )
+            .addText(text =>
+                text
+                    .setValue(this.plugin.settings.modelRotY.toString())
+                    .onChange(async (value) => {
+                        const numValue = parseFloat(value)
+                        this.plugin.settings.modelRotY = numValue;
+                        await this.plugin.saveSettings();
+                    })
+
+            )
+            .addText(text =>
+                text
+                    .setValue(this.plugin.settings.modelRotZ.toString())
+                    .onChange(async (value) => {
+                        const numValue = parseFloat(value)
+                        this.plugin.settings.modelRotZ = numValue;
                         await this.plugin.saveSettings();
                     })
 
@@ -322,7 +404,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         })
                         .setValue(this.plugin.settings.cameraType.toString())
                         .onChange(async (value) => {
-                            this.plugin.settings.cameraType = value; 
+                            this.plugin.settings.cameraType = value;
                             await this.plugin.saveSettings();
                         }));
 
@@ -552,9 +634,9 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                     .addToggle(
                         (toggle) =>
                             toggle
-                                .setValue(light.castShadows ?? true) 
+                                .setValue(light.castShadows ?? true)
                                 .onChange(async (value) => {
-                                    light.castShadows = value; 
+                                    light.castShadows = value;
                                     await this.plugin.saveSettings();
                                 })
                     )
@@ -676,7 +758,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                     toggle
                         .setValue(this.plugin.settings.scissor)
                         .onChange(async (value) => {
-                            this.plugin.settings.scissor = value; 
+                            this.plugin.settings.scissor = value;
                             await this.plugin.saveSettings();
                         })
             )
@@ -703,9 +785,9 @@ export class ThreeDSettingsTab extends PluginSettingTab {
             .addToggle(
                 (toggle) =>
                     toggle
-                        .setValue(this.plugin.settings.stlWireframe) 
+                        .setValue(this.plugin.settings.stlWireframe)
                         .onChange(async (value) => {
-                            this.plugin.settings.stlWireframe = value; 
+                            this.plugin.settings.stlWireframe = value;
                             await this.plugin.saveSettings();
                         })
             )

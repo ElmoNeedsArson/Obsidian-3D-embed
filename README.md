@@ -99,7 +99,7 @@ Version 1.1.4 adds a dedicated viewer tab. Simply **left-click any supported 3D 
 > [!Note]
 > Make sure **"Show all file types"** is enabled in Settings → Files and Links (see step 1 above), otherwise 3D files won't be visible in the file tree.
 
-![image](https://github.com/user-attachments/assets/b40bc215-b9ab-405a-a479-54e08b0b589e)
+![image](https://github.com/user-attachments/assets/94a542ca-8a4e-4890-b62b-ce91e522acad)
 
 The viewer uses all your global plugin settings (background color, lighting, camera position, scale, etc.) 
 

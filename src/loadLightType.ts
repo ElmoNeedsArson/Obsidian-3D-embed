@@ -6,6 +6,9 @@ export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: stri
     //Take color from config or else standardvalue
     let lightColor
     if (color) {
+        if(color.startsWith("#")) {
+            color = color.slice(1);
+        }
         lightColor = "#" + color
     } else {
         lightColor = plugin.settings.lightSettings[0].color ?? 0xFFFFFF
@@ -13,6 +16,9 @@ export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: stri
 
     let lightColor2
     if (lightconfig.color2) {
+        if(lightconfig.color2.startsWith("#")) {
+            lightconfig.color2 = lightconfig.color2.slice(1);
+        }
         lightColor2 = "#" + lightconfig.color2
     } else {
         lightColor2 = plugin.settings.lightSettings[0].color ?? 0xFFFFFF

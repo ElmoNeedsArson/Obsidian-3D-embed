@@ -10,6 +10,8 @@ import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
 import { applyModelConfig } from './applyConfig'
 import ThreeJSPlugin from './main';
 
+export const SUPPORTED_3D_EXTENSIONS = ['stl', 'glb', 'obj', 'fbx', '3mf'] as const;
+
 export function loadModels(plugin: ThreeJSPlugin, scene: THREE.Scene, modelPath: string, extension: string, modelconfig: any, stlconfig: any, materialPath: string): Promise<THREE.Object3D> {
     return new Promise((resolve, reject) => {
         const finalize = (loaded: THREE.Object3D) => {
@@ -29,19 +31,24 @@ export function loadModels(plugin: ThreeJSPlugin, scene: THREE.Scene, modelPath:
                 const stlLoader = new STLLoader();
                 stlLoader.load(modelPath, (geometry) => {
                     let material: any;
-                    if (stlconfig.stlColorHexString) {
+                    if (stlconfig?.stlColorHexString) {
                         let col2: string;
                         col2 = "#" + stlconfig.stlColorHexString
                         material = new THREE.MeshStandardMaterial({ color: col2 });
                         if (stlconfig.stlWireframe) {
                             material.wireframe = true;
+                        } else {
+                            material.wireframe = plugin.settings.stlWireframe;
                         }
                     } else {
-                        material = new THREE.MeshPhongMaterial({ color: 0x606060, shininess: 100 });
+                        //material = new THREE.MeshPhongMaterial({ color: 0x606060, shininess: 100 });
+                        material = new THREE.MeshPhongMaterial({ color: plugin.settings.stlColor })
+                        material.wireframe = plugin.settings.stlWireframe;
                     }
                     const model = new THREE.Mesh(geometry, material);
                     finalize(model);
                 }, undefined, (error) => {
+                    console.error("Error loading STL model: ", error);
                     new Notice("Failed to load stl model: " + error);
                 });
                 break;

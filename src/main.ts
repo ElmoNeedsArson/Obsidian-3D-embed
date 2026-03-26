@@ -1,4 +1,6 @@
 import { Editor, Notice, Plugin, getLinkpath, Modal, App, MarkdownView, setIcon, setTooltip } from 'obsidian';
+import { Direct3DView, DIRECT3D_VIEW_TYPE } from './direct3DView';
+import { SUPPORTED_3D_EXTENSIONS } from './loadModelType';
 
 import { DEFAULT_SETTINGS, ThreeDEmbedSettings, ThreeDSettingsTab } from './settings';
 import { ThreeJSRendererChild, getUniqueId, getRenderer } from './rendermanager'
@@ -29,6 +31,9 @@ export default class ThreeJSPlugin extends Plugin {
         // register commands
         ThreeD_Embed_Command(this)
         ThreeD_Embed_Grid_Command(this)
+
+        this.registerView(DIRECT3D_VIEW_TYPE, (leaf) => new Direct3DView(leaf, this));
+        this.registerExtensions([...SUPPORTED_3D_EXTENSIONS], DIRECT3D_VIEW_TYPE);
 
         const data = await this.loadData(); //delete version from data.json to trigger modal again
         if (!data) {

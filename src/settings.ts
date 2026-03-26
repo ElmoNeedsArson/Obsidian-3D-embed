@@ -15,7 +15,7 @@ export interface LightSetting {
     dropdownValue: LightType;
     position?: [number, number, number];
     targetPosition?: [number, number, number];
-    color?: string;
+    color: string;
     secondaryColor?: string;
     intensity: number;
     distance?: number;

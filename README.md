@@ -16,6 +16,32 @@ This plugin also allows you to make your scene with the whole model look as nice
 > [!Tip]
 > If you like my plugin feel free to leave a star on my [repository](https://github.com/ElmoNeedsArson/Obsidian-3D-embed) (it's like a reward)
 
+## Table of Contents
+- [1. IMPORTANT!: Showing all filetypes in obsidian](#1-important-showing-all-filetypes-in-obsidian)
+- [2. Watch this video that showcases how to use the plugin](#2-watch-this-video-that-showcases-how-to-use-the-plugin)
+- [3. Two ways to view a 3D model](#3-two-ways-to-view-a-3d-model)
+  - [3A. Embed a 3D model in a note](#3a-embed-a-3d-model-in-a-note)
+      - [3A.1 Alternatively — embed a grid of models](#3a1-alternatively--embed-a-grid-of-models)
+  - [3B. Open a 3D file directly from the file tree](#3b-open-a-3d-file-directly-from-the-file-tree)
+- [Opening 3D models in notes (codeblock)](#3a-opening-3d-models-in-notes)
+- [Minimal Configuration](#minimal-configuration)
+- [Additional Configuration](#additional-configuration)
+  - [Model settings](#model-settings)
+  - [Render block settings](#render-block-settings)
+  - [Grid Settings](#grid-settings)
+  - [Generic Scene Settings](#generic-scene-settings)
+    - [Advanced Scene setting - HDR/HDRI loading](#advanced-scene-setting---hdrhdi-loading)
+  - [STL Configurations](#stl-configurations)
+  - [OBJ information](#obj-information)
+  - [Lighting Configuration](#lighting-configuration)
+  - [Camera configuration](#camera-configuration)
+  - [GUI (BETA)](#gui-beta)
+- [Standard Settings](#standard-settings)
+- [Precautions](#precautions)
+- [Future plans](#future-plans)
+- [Support](#support)
+- [FAQ](#faq)
+
 ## 1. IMPORTANT!: Showing all filetypes in obsidian:
 Go to the settings tab of obsidian -> 'Files and Links' -> toggle the 'Show all file types'
 ![image](https://github.com/user-attachments/assets/63cc91e1-3a3f-4352-9e75-0deb866780e4)
@@ -28,7 +54,18 @@ https://github.com/user-attachments/assets/9b10c36c-36c3-4bc1-a4a7-f5d00f735ec7
 
 
 
-## 3. Or read these images and text:
+## 3. Two ways to view a 3D model
+
+There are two distinct ways to view a 3D model with this plugin:
+
+| | Method | Best for |
+|---|---|---|
+| **A** | **Embed in a note** — insert an interactive 3D scene directly inside a markdown note, alongside your text, images, and other content | Documenting, annotating, or presenting models in context |
+| **B** | **Open directly** — left-click a 3D file in the file explorer and it opens in its own dedicated tab, just like an image or PDF | Quickly inspecting a model without opening or editing any note |
+
+---
+
+### 3A. Embed a 3D model in a note
 
 |![Screenshot 2024-11-03 184117](https://github.com/user-attachments/assets/245386b4-5f41-4bf3-8afa-55287cd46207)|![Screenshot 2024-11-03 184225](https://github.com/user-attachments/assets/cad3f9f5-d1bd-4b61-a816-79ce3fc0a00e)|
 |:--:|:--:|
@@ -38,7 +75,7 @@ https://github.com/user-attachments/assets/9b10c36c-36c3-4bc1-a4a7-f5d00f735ec7
 |:--:|:--:|
 |3. On line with embed execute the embed 3D command (`ctrl+p`) -> `Embed 3D: Single Scene: Add a 3D embed at cursor position` |4. Voila a 3D model|
 
-## 3.1 Alternatively
+### 3A.1 Alternatively — embed a grid of models
 Version 1.1.0 also allows you to include grids of 3D models in your vault if you wanna showcase multiple models or perspectives at once
 
 <table>
@@ -54,8 +91,21 @@ Version 1.1.0 also allows you to include grids of 3D models in your vault if you
 
 To get the grid, similarly to the instructions above, drag in all the models you want. Select all the models with a drag selection, and execute the grid command: (`ctrl+p`) -> `Embed 3D: Grid: Add a 3D grid embed from selection.`
 
-# CONFIGURATION OPTIONS
-Each embed will contain a codeblock of information. You can access this by clicking in the top right of the scene OR by moving your type cursor into the codeblock
+---
+
+### 3B. Open a 3D file directly from the file tree
+Version 1.1.4 adds a dedicated viewer tab. Simply **left-click any supported 3D file** in the file explorer and it opens in its own tab — no note required.
+
+> [!Note]
+> Make sure **"Show all file types"** is enabled in Settings → Files and Links (see step 1 above), otherwise 3D files won't be visible in the file tree.
+
+The viewer uses all your global plugin settings (background color, lighting, camera position, scale, etc.) 
+
+
+---
+
+### Opening 3D models in notes
+If you embed in a note; Each embed will contain a codeblock of information. You can access this by clicking in the top right of the scene OR by moving your type cursor into the codeblock
 
 |![image](https://github.com/user-attachments/assets/427a00bc-faa0-4764-8e9b-0302a1712553)|![image](https://github.com/user-attachments/assets/7d6a47ed-1218-43f7-8243-da9372a235e4)|
 |:--:|:--:|

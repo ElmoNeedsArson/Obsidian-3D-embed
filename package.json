@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-3d-embed",
-	"version": "1.1.4",
+	"version": "1.1.5",
 	"description": "Embed and view 3D models in Markdown notes. Supports .stl, .obj, .3mf, .fbx and .gltf/.glb files.",
 	"main": "main.js",
 	"scripts": {

@@ -296,41 +296,36 @@ Use the settings tab, to alter standard settings for how all the models are init
 ![image](https://github.com/user-attachments/assets/b7df88bf-75e2-4066-a685-8dfa11478816)
 
 ## Bases — Snapshot & Card View
-
-Obsidian's **Bases** feature lets you build database-like views of your notes. In card view, each note can display a cover image sourced from a frontmatter property. The 3D Embed plugin can generate snapshot images of your 3D scenes and automatically write them as a property on your note, so your models show up as preview thumbnails in any Base card view.
+Obsidian's **Bases** feature lets you build database-like views of your notes. 
+![image](https://github.com/user-attachments/assets/ea3f097d-11c4-499d-a797-feb0ba5c07b6)
+In card view, each note can display a cover image sourced from a frontmatter property. The 3D Embed plugin can generate snapshot images of your 3D scenes and automatically write them as a property on your note, so your models show up as preview thumbnails in any Base card view.
 
 ### Taking a snapshot
+Every `3D` embed has a small **camera icon** in its overlay alongside the existing copy and trash buttons. Clicking it captures the current frame of the scene and saves it as a `.png` file in your vault. 
+![image](https://github.com/user-attachments/assets/89bef302-c103-46cb-a268-8047dd08eaa3)
 
-Every `3D` embed has a small **camera icon** (📷) in its overlay alongside the existing copy and trash buttons. Clicking it captures the current frame of the scene and saves it as a `.png` file in your vault. The filename follows the pattern:
-
+The filename follows the pattern:
 ```
 3D-Embed-thumbnail-{modelname}-{timestamp}.png
 ```
-
-The saved file can then be referenced in Bases just like any other image in your vault.
+And will be saved in the folder you specify in the settings or in the root of your vault if nothing is specified
 
 ### Bases settings
-
-These options are found under the **Bases** header in the plugin settings tab.
+These options are found under the **Bases** header in the plugin settings tab (All the way at the bottom).
 
 | Setting | Description |
 |---|---|
 | **Snapshot folder** | Vault folder where snapshot images are saved. Leave empty to save to the vault root. Example: `attachments/3d-snapshots` |
-| **Auto-write snapshot property** | When enabled, saving a snapshot automatically adds a `3D Embed-thumbnail` property to the note containing the embed. The value is a wikilink (`[[filename.png]]`) that Obsidian can resolve regardless of which folder the image was saved to. |
-| **Overwrite existing snapshot** | When enabled, the previous snapshot referenced by the `3D Embed-thumbnail` property is deleted from the vault before the new one is saved. Useful for keeping your vault tidy when you frequently re-export a scene. **Note:** this permanently deletes the old file — only use it if you do not need a history of snapshots. |
-
-> [!Note]
-> **Auto-write snapshot property** must be enabled for **Overwrite existing snapshot** to work, since overwrite looks up the old file via that property.
+| **Auto-write snapshot property** | When enabled, saving a snapshot automatically adds a `3D Embed-thumbnail` property to the note containing the embed. |
+| **Overwrite existing snapshot** | When enabled, the previous snapshot referenced by the `3D Embed-thumbnail` property is deleted from the vault before the new one is saved. Useful for keeping your vault tidy when you frequently re-export a scene. **Note:** this permanently deletes the old file, only use it if you do not need a history of snapshots. |
 
 ### Setting up a Base card view
 
 1. **Generate a snapshot** for each note you want to appear with a preview. Click the camera icon on the 3D embed — if *Auto-write snapshot property* is on, the `3D Embed-thumbnail` property is written to the note's frontmatter automatically. If the toggle is off, add the property manually: open the note's properties panel and create a property named `3D Embed-thumbnail` with a wikilink to your snapshot image.
-
 2. **Create a Base**. Open any folder in Obsidian and switch to the Bases view, or create a new `.base` file. Filter or sort the notes containing 3D embeds as needed.
-
 3. **Switch to card view** using the view selector in the Base toolbar.
-
-4. **Set the image property**. In the Base view settings (the gear or configure icon), find the *Cover image* or *Image property* option and set it to `3D Embed-thumbnail`. Obsidian will now display the snapshot as the card's cover image.
+4. **Set the image property**. In the Base view settings (the gear or configure icon), find the *Image property* option and set it to `3D Embed-thumbnail`. Obsidian will now display the snapshot as the card's cover image.
+5. **Filter the results**. Be sure to add a filter where `file` `has property` `3D Embed-thumbnail` to only show the relevant files.
 
 Each time you adjust a scene and want to refresh the thumbnail, click the camera icon again. With *Overwrite existing snapshot* enabled, the old image is removed and replaced automatically.
 

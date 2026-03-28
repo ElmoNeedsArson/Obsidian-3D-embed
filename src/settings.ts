@@ -54,6 +54,9 @@ export interface ThreeDEmbedSettings {
     scissor: boolean;
     stlColor: string;
     lightSettings: LightSetting[];
+    snapshotFolder: string;
+    snapshotAutoProperty: boolean;
+    snapshotOverwrite: boolean;
 }
 
 // Update your defaults accordingly. (Here I left the default lights as before.)
@@ -87,6 +90,9 @@ export const DEFAULT_SETTINGS: ThreeDEmbedSettings = {
     scissor: true,
     stlWireframe: false,
     stlColor: "#606060",
+    snapshotFolder: "",
+    snapshotAutoProperty: false,
+    snapshotOverwrite: false,
     lightSettings: [
         {
             dropdownValue: "directional",
@@ -790,6 +796,47 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                             this.plugin.settings.stlWireframe = value;
                             await this.plugin.saveSettings();
                         })
+            )
+
+        containerEl.createEl('h2', {
+            text: 'Bases',
+        });
+
+        new Setting(containerEl)
+            .setName('Snapshot folder')
+            .setDesc('Folder inside your vault where snapshots are saved when clicking the camera icon. Leave empty to save to the vault root.')
+            .addText(text =>
+                text
+                    .setPlaceholder('e.g. attachments/3d-snapshots')
+                    .setValue(this.plugin.settings.snapshotFolder)
+                    .onChange(async (value) => {
+                        this.plugin.settings.snapshotFolder = value.trim();
+                        await this.plugin.saveSettings();
+                    })
+            )
+
+        new Setting(containerEl)
+            .setName('Auto-write snapshot property')
+            .setDesc('When a snapshot is exported, automatically add a "3D Embed-thumbnail" property to the note with a link to the saved image. Useful for showing preview images in Bases card view.')
+            .addToggle(toggle =>
+                toggle
+                    .setValue(this.plugin.settings.snapshotAutoProperty)
+                    .onChange(async (value) => {
+                        this.plugin.settings.snapshotAutoProperty = value;
+                        await this.plugin.saveSettings();
+                    })
+            )
+
+        new Setting(containerEl)
+            .setName('Overwrite existing snapshot')
+            .setDesc('When enabled, exporting a snapshot replaces the previous one for that model instead of creating a new timestamped file. NOTE: While this can help keep your vault tidy, it also means you will lose the previous snapshot when exporting a new one. Deleting files is always a cautionary tale, so make sure to use this option only if you are okay with losing previous snapshots.')
+            .addToggle(toggle =>
+                toggle
+                    .setValue(this.plugin.settings.snapshotOverwrite)
+                    .onChange(async (value) => {
+                        this.plugin.settings.snapshotOverwrite = value;
+                        await this.plugin.saveSettings();
+                    })
             )
     }
 }

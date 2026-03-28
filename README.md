@@ -37,6 +37,10 @@ This plugin also allows you to make your scene with the whole model look as nice
   - [Camera configuration](#camera-configuration)
   - [GUI (BETA)](#gui-beta)
 - [Standard Settings](#standard-settings)
+- [Bases — Snapshot & Card View](#bases--snapshot--card-view)
+  - [Taking a snapshot](#taking-a-snapshot)
+  - [Bases settings](#bases-settings)
+  - [Setting up a Base card view](#setting-up-a-base-card-view)
 - [Precautions](#precautions)
 - [Future plans](#future-plans)
 - [Support](#support)
@@ -290,6 +294,47 @@ You can use transform controls and color pickers to finetune your scene a bit be
 ## Standard Settings
 Use the settings tab, to alter standard settings for how all the models are initially loaded. The settings tab has the same options as the codeblock above, but are global settings, the codeblock for each model will override the global setting if they are different. But the codeblocks initial values will be filled according to the global settings. Such as background color, size of 3D embed, or scale of the model. 
 ![image](https://github.com/user-attachments/assets/b7df88bf-75e2-4066-a685-8dfa11478816)
+
+## Bases — Snapshot & Card View
+
+Obsidian's **Bases** feature lets you build database-like views of your notes. In card view, each note can display a cover image sourced from a frontmatter property. The 3D Embed plugin can generate snapshot images of your 3D scenes and automatically write them as a property on your note, so your models show up as preview thumbnails in any Base card view.
+
+### Taking a snapshot
+
+Every `3D` embed has a small **camera icon** (📷) in its overlay alongside the existing copy and trash buttons. Clicking it captures the current frame of the scene and saves it as a `.png` file in your vault. The filename follows the pattern:
+
+```
+3D-Embed-thumbnail-{modelname}-{timestamp}.png
+```
+
+The saved file can then be referenced in Bases just like any other image in your vault.
+
+### Bases settings
+
+These options are found under the **Bases** header in the plugin settings tab.
+
+| Setting | Description |
+|---|---|
+| **Snapshot folder** | Vault folder where snapshot images are saved. Leave empty to save to the vault root. Example: `attachments/3d-snapshots` |
+| **Auto-write snapshot property** | When enabled, saving a snapshot automatically adds a `3D Embed-thumbnail` property to the note containing the embed. The value is a wikilink (`[[filename.png]]`) that Obsidian can resolve regardless of which folder the image was saved to. |
+| **Overwrite existing snapshot** | When enabled, the previous snapshot referenced by the `3D Embed-thumbnail` property is deleted from the vault before the new one is saved. Useful for keeping your vault tidy when you frequently re-export a scene. **Note:** this permanently deletes the old file — only use it if you do not need a history of snapshots. |
+
+> [!Note]
+> **Auto-write snapshot property** must be enabled for **Overwrite existing snapshot** to work, since overwrite looks up the old file via that property.
+
+### Setting up a Base card view
+
+1. **Generate a snapshot** for each note you want to appear with a preview. Click the camera icon on the 3D embed — if *Auto-write snapshot property* is on, the `3D Embed-thumbnail` property is written to the note's frontmatter automatically. If the toggle is off, add the property manually: open the note's properties panel and create a property named `3D Embed-thumbnail` with a wikilink to your snapshot image.
+
+2. **Create a Base**. Open any folder in Obsidian and switch to the Bases view, or create a new `.base` file. Filter or sort the notes containing 3D embeds as needed.
+
+3. **Switch to card view** using the view selector in the Base toolbar.
+
+4. **Set the image property**. In the Base view settings (the gear or configure icon), find the *Cover image* or *Image property* option and set it to `3D Embed-thumbnail`. Obsidian will now display the snapshot as the card's cover image.
+
+Each time you adjust a scene and want to refresh the thumbnail, click the camera icon again. With *Overwrite existing snapshot* enabled, the old image is removed and replaced automatically.
+
+---
 
 ## Precautions:
 1) The plugin uses three.js, thereby the amount of active renderers (webGL contexts) is limited to 16. This means that you can either have 16 single scenes shown at once, or 16 grids at the same time (grids only use one renderer if the advanced scissor option is togled on).

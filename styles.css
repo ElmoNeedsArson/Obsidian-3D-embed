@@ -186,10 +186,24 @@ button.ThreeDEmbed_Codeblock_Remove:hover {
     content: var(--clipboard-list);
 }
 
-.cm-lang-3D:hover .ThreeDEmbed_Codeblock_Copy, .cm-lang-3D-grid:hover .ThreeDEmbed_Codeblock_Copy {
+.ThreeDEmbed_Codeblock_Export {
+    padding: var(--size-2-2) var(--size-2-3);
+    position: absolute;
+    top: calc(var(--size-2-2) + 60px);
+    inset-inline-end: var(--size-2-2);
+    display: flex;
+    opacity: 0;
+    color: var(--text-muted) !important;
+    border-radius: var(--radius-s);
+    cursor: var(--cursor);
+    content: var(--clipboard-list);
+}
+
+.cm-lang-3D:hover .ThreeDEmbed_Codeblock_Copy, .cm-lang-3D-grid:hover .ThreeDEmbed_Codeblock_Copy, 
+.cm-lang-3D:hover .ThreeDEmbed_Codeblock_Export, .cm-lang-3D-grid:hover .ThreeDEmbed_Codeblock_Export {
     opacity: 1;
 }
 
-button.ThreeDEmbed_Codeblock_Copy:hover {
+button.ThreeDEmbed_Codeblock_Copy:hover, button.ThreeDEmbed_Codeblock_Export:hover {
     background-color: rgba(129, 129, 129, 0.2) !important;
 }

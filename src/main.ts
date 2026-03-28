@@ -128,7 +128,7 @@ export default class ThreeJSPlugin extends Plugin {
                 const grid = false;
                 const scissor = false;
 
-                createHelperButtons(el, ctx)
+                createHelperButtons(el, ctx, renderer.domElement, this, parsedData.models[0].name)
 
                 initializeThreeJsScene(this, el, parsedData, width, widthPercentage, height, alignment, ctx, renderer, grid, scissor);
             } catch (error) {
@@ -223,9 +223,10 @@ export default class ThreeJSPlugin extends Plugin {
                     const grid = true;
                     const scissor = true;
 
-                    createHelperButtons(el, ctx)
+                    createHelperButtons(el, ctx, renderer.domElement, this)
 
                     initializeThreeJsScene(this, el, parsedData, width, widthPercentage, height, alignment, ctx, renderer, grid, scissor);
+
                 } catch (error) {
                     handleCodeblockError(error, source, el)
                 }
@@ -422,7 +423,14 @@ Possible reasons:
     new Notice("Failed to render 3D model: " + message, 10000);
 }
 
-function createHelperButtons(el: HTMLElement, ctx: any) {
+function sanitizeModelName(raw: string): string {
+    return raw
+        .replace(/^\[\[/, "").replace(/\]\]$/, "") // strip wikilink brackets
+        .replace(/\.[^.]+$/, "")                   // strip extension
+        .replace(/[\\/:*?"<>|]/g, "_");            // replace invalid filename chars
+}
+
+function createHelperButtons(el: HTMLElement, ctx: any, canvas: HTMLCanvasElement, plugin: ThreeJSPlugin, modelName?: string) {
     const removeButton = el.createEl("button", { text: "" });
     removeButton.addClass("ThreeDEmbed_Codeblock_Remove");
     removeButton.style.background = "none";
@@ -434,7 +442,7 @@ function createHelperButtons(el: HTMLElement, ctx: any) {
         const section = ctx.getSectionInfo(el);
         if (!section) return;
 
-        const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+        const view = plugin.app.workspace.getActiveViewOfType(MarkdownView);
         if (!view) return;
         const editor = view.editor;
 
@@ -454,7 +462,7 @@ function createHelperButtons(el: HTMLElement, ctx: any) {
         const section = ctx.getSectionInfo(el);
         if (!section) return;
 
-        const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+        const view = plugin.app.workspace.getActiveViewOfType(MarkdownView);
         if (!view) return;
         const editor = view.editor;
 
@@ -464,7 +472,72 @@ function createHelperButtons(el: HTMLElement, ctx: any) {
 
         await navigator.clipboard.writeText(blockText);
         new Notice("Copied to clipboard!");
-    })
+    });
+
+    const exportButton = el.createEl("button", { text: "" });
+    exportButton.addClass("ThreeDEmbed_Codeblock_Export");
+    exportButton.style.background = "none";
+    exportButton.style.boxShadow = "none";
+    setIcon(exportButton, "lucide-camera");
+    setTooltip(exportButton, "Export snapshot to vault");
+
+    exportButton.addEventListener("click", async () => {
+        const dataUrl = canvas.toDataURL("image/png");
+        const base64 = dataUrl.split(",")[1];
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+
+        const noteStem = ctx.sourcePath.replace(/.*\//, "").replace(/\.md$/, "");
+        const modelNameBase = modelName ? sanitizeModelName(modelName) : noteStem;
+        const folder = plugin.settings.snapshotFolder.replace(/\/$/, "");
+        const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+        const stem = `3D-Embed-thumbnail-${modelNameBase}-${timestamp}`;
+        const filename = folder ? `${folder}/${stem}.png` : `${stem}.png`;
+
+        try {
+            if (folder && !plugin.app.vault.getFolderByPath(folder)) {
+                new Notice(`Snapshot folder not found: "${folder}"`);
+                return;
+            }
+
+            if (plugin.settings.snapshotOverwrite) {
+                const noteFile = plugin.app.vault.getFileByPath(ctx.sourcePath);
+                if (noteFile) {
+                    const fm = plugin.app.metadataCache.getFileCache(noteFile)?.frontmatter;
+                    const oldLink: string = fm?.["3D Embed-thumbnail"] ?? "";
+                    const oldLinktext = oldLink.replace(/^\[\[/, "").replace(/\]\]$/, "");
+                    const oldFile = oldLinktext
+                        ? plugin.app.metadataCache.getFirstLinkpathDest(oldLinktext, ctx.sourcePath)
+                        : null;
+                    if (oldFile) {
+                        try {
+                            await plugin.app.vault.delete(oldFile);
+                        } catch {
+                            // old snapshot could not be deleted — proceed with saving the new one
+                        }
+                    }
+                }
+            }
+
+            await plugin.app.vault.createBinary(filename, bytes.buffer);
+
+            if (plugin.settings.snapshotAutoProperty) {
+                const noteFile = plugin.app.vault.getFileByPath(ctx.sourcePath);
+                if (noteFile) {
+                    await plugin.app.fileManager.processFrontMatter(noteFile, (fm) => {
+                        fm["3D Embed-thumbnail"] = `[[${stem}.png]]`;
+                    });
+                }
+            }
+
+            new Notice(`Snapshot saved: ${filename}`);
+        } catch (e: any) {
+            new Notice(`Failed to save snapshot: ${e.message}`);
+        }
+    });
 }
 
 class UpdateModal extends Modal {

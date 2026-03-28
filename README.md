@@ -302,6 +302,7 @@ In card view, each note can display a cover image sourced from a frontmatter pro
 
 ### Taking a snapshot
 Every `3D` embed has a small **camera icon** in its overlay alongside the existing copy and trash buttons. Clicking it captures the current frame of the scene and saves it as a `.png` file in your vault. 
+
 ![image](https://github.com/user-attachments/assets/89bef302-c103-46cb-a268-8047dd08eaa3)
 
 The filename follows the pattern:

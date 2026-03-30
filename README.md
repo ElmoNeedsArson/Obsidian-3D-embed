@@ -348,6 +348,8 @@ If you are enjoying 3D embed, then feel free to support my work and enthusiasm b
 [Buy me a coffee](https://buymeacoffee.com/elmoneedsarson)
 
 ## FAQ
+ - My plugin on mobile doesnt want to update in version? Or it updates, but when restarting the app, it reverts to an older version.
+   - Delete and reinstall the plugin, i have no idea what could be the cause of this, but this seems to solve the issue. it will sadly reset your plugin settings but all your note embeds will remain intact :)
  - I have both an .obj file and .mtl file, but my textures dont not show up?
    - Check if your .obj and .mtl file have the exact same name
  - I have both an .obj file and .mtl file, but my model doesnt show up

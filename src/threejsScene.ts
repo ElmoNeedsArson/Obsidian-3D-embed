@@ -37,10 +37,10 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
             if (config.gridSettings.rowHeight) {
                 height_gl = config.gridSettings.rowHeight;
             } else {
-                height_gl = this.settings.rowHeight;
+                height_gl = plugin.settings.rowHeight;
             }
         } else {
-            height_gl = this.settings.rowHeight;
+            height_gl = plugin.settings.rowHeight;
         }
         let cellHeight: number;
 
@@ -635,9 +635,10 @@ function setCameraMode(orthographic: boolean, width: number, height: number, sce
 }
 
 function findContainerElement(el: HTMLElement): HTMLElement | null {
+    // .callout-content is checked first so callout-embedded models use the callout's width
     // For embedded or preview notes, look for these parent classes:
     // Also handles .view-content for FileView-based tabs (e.g. Direct3DView)
-    return el.closest('.cm-content, markdown-preview-section, .markdown-preview-section, .view-content');
+    return el.closest('.callout-content, .cm-content, markdown-preview-section, .markdown-preview-section, .view-content');
 }
 
 function waitForCanvasReady(renderer: THREE.WebGLRenderer): Promise<void> {

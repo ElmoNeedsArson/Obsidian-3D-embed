@@ -463,8 +463,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         hemisphere: "hemisphere",
                     });
                     dropdown.setValue(light.dropdownValue);
-                    dropdown.onChange(async (value: LightType) => {
-                        light.dropdownValue = value;
+                    dropdown.onChange(async (value: string) => {
+                        light.dropdownValue = value as LightType;
 
                         // Store open details sections before refreshing UI
                         const openDetails = new Set();
@@ -799,7 +799,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
             )
 
         containerEl.createEl('h2', {
-            text: 'Bases',
+            text: 'Thumbnail and Snapshot Settings (For bases)',
         });
 
         new Setting(containerEl)

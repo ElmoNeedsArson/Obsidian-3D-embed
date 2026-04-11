@@ -9,7 +9,7 @@ import { ThreeD_Embed_Command } from './commands/embedCodeblock'
 import { ThreeD_Embed_Grid_Command } from './commands/embedGridCodeblock'
 
 export default class ThreeJSPlugin extends Plugin {
-    settings: ThreeDEmbedSettings;
+    settings: ThreeDEmbedSettings = DEFAULT_SETTINGS;
 
     async loadSettings() {
         this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
@@ -494,7 +494,7 @@ function createHelperButtons(el: HTMLElement, ctx: any, canvas: HTMLCanvasElemen
         const modelNameBase = modelName ? sanitizeModelName(modelName) : noteStem;
         const folder = plugin.settings.snapshotFolder.replace(/\/$/, "");
         const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-        const stem = `3D-Embed-thumbnail-${modelNameBase}-${timestamp}`;
+        const stem = `${timestamp}-${modelNameBase}-3D-Embed-thumbnail`;
         const filename = folder ? `${folder}/${stem}.png` : `${stem}.png`;
 
         try {

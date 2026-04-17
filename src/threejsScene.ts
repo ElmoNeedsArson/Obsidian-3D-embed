@@ -250,8 +250,8 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
 
         let width = setting_width;
         let height: number;
-        let widthPercentage;
-        let alignment;
+        let widthPercentage: number;
+        let alignment: string;
 
         if (config.renderBlock) {
             if (config.renderBlock.alignment) {

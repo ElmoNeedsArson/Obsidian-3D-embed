@@ -153,6 +153,14 @@
     grid-template-columns: repeat(2, 1fr);
 }
 
+button.ThreeDEmbed_Codeblock_Remove,
+button.ThreeDEmbed_Codeblock_Copy,
+button.ThreeDEmbed_Codeblock_Export {
+    background: none;
+    background-color: transparent;
+    box-shadow: none;
+}
+
 .ThreeDEmbed_Codeblock_Remove {
     padding: var(--size-2-2) var(--size-2-3);
     position: absolute;
@@ -206,4 +214,28 @@ button.ThreeDEmbed_Codeblock_Remove:hover {
 
 button.ThreeDEmbed_Codeblock_Copy:hover, button.ThreeDEmbed_Codeblock_Export:hover {
     background-color: rgba(129, 129, 129, 0.2) !important;
+}
+
+.ThreeDEmbed_DirectView_container {
+    overflow: hidden !important;
+}
+
+.ThreeDEmbed_DirectView_wrapper {
+    height: 97%;
+}
+
+.ThreeDEmbed_modal_content {
+    padding: 10px;
+}
+
+.ThreeDEmbed_grid_container {
+    display: grid;
+    grid-template-columns: repeat(var(--3d-columns), 1fr);
+    gap: var(--3d-gap);
+}
+
+.ThreeDEmbed_embed_wrapper {
+    display: flex !important;
+    justify-content: var(--3d-align, center);
+    width: 100%;
 }

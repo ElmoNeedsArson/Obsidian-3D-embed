@@ -1,4 +1,4 @@
-import { Notice, getLinkpath } from 'obsidian';
+import { Notice, getLinkpath, MarkdownPostProcessorContext } from 'obsidian';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
@@ -9,18 +9,21 @@ import { gui2 } from './gui'
 import { applyCameraSettings } from './applyConfig'
 import { loadModels } from './loadModelType'
 import { loadLights } from './loadLightType'
+import { SceneData, GridConfig, GridSettings } from './types';
 
-export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, config: any, setting_width: number, setting_width_percentage: number, setting_height: number | string, setting_alignment: string, ctx: any, renderer: THREE.WebGLRenderer, grid: boolean, scissor: boolean, jic_gridSettings?: any) {
+export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, config: SceneData | GridConfig, setting_width: number, setting_width_percentage: number, setting_height: number | string, setting_alignment: string, ctx: MarkdownPostProcessorContext | null, renderer: THREE.WebGLRenderer, grid: boolean, scissor: boolean, jic_gridSettings?: GridSettings) {
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     if (scissor) {
         renderer.setScissorTest(true);
+        const gridConfig = config as GridConfig;
 
         // Determine grid dimensions
-        const cells = Object.entries(config).filter(([key]) => key.startsWith("cell")) as [string, any][];
+        const cells = Object.entries(gridConfig)
+            .filter((entry): entry is [string, SceneData] => entry[0].startsWith("cell") && entry[1] !== undefined);
         const numScenes: number = cells.length;
-        const columns: number = config.gridSettings?.columns || plugin.settings.columnsAmount || 3;
+        const columns: number = gridConfig.gridSettings?.columns || plugin.settings.columnsAmount || 3;
         const rows: number = Math.ceil(numScenes / columns);
 
         interface SceneView {
@@ -33,9 +36,9 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
         }
 
         let height_gl: number | string;
-        if (config.gridSettings) {
-            if (config.gridSettings.rowHeight) {
-                height_gl = config.gridSettings.rowHeight;
+        if (gridConfig.gridSettings) {
+            if (gridConfig.gridSettings.rowHeight) {
+                height_gl = gridConfig.gridSettings.rowHeight;
             } else {
                 height_gl = plugin.settings.rowHeight;
             }
@@ -50,7 +53,7 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
         for (let i = 0; i < numScenes; i++) {
             const [cellName, cellData] = cells[i];
 
-            let { scene, axesHelper, gridHelper } = setupBaseScene(cellData, plugin)
+            let { scene } = setupBaseScene(cellData, plugin)
 
             const camera = setCameraMode(!!cellData.camera?.orthographic, setting_width, setting_height as number, scene, plugin);
             setupHDRIBackground(cellData, plugin, scene, renderer)
@@ -62,7 +65,7 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
             const parentGroup = setupParentGroup(scene, modelArray, lightsArray);
 
             if (cellData.scene?.showGuiOverlay == true) {
-                new Notice(`GUI cannot be shown for 3D grid cells\nOne of your grid cells has the scene -> showGuiOverlay set to true`, 8000);
+                new Notice(`GUI cannot be shown for 3d grid cells\none of your grid cells has the scene -> showguioverlay set to true`, 8000);
             }
 
             views.push({ name: cellName, scene, camera, controls: orbit, group: parentGroup });
@@ -113,13 +116,13 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
             });
         }
 
-        waitForCanvasReady(renderer).then(() => {
+        void waitForCanvasReady(renderer).then(() => {
             updateViewLayout();
             setupInteractionHandlers();
         });
 
-        let gapX = config.gridSettings?.gapX || plugin.settings.gapX || 10
-        let gapY = config.gridSettings?.gapY || plugin.settings.gapY || 10
+        let gapX = gridConfig.gridSettings?.gapX || plugin.settings.gapX || 10
+        let gapY = gridConfig.gridSettings?.gapY || plugin.settings.gapY || 10
 
         function updateViewLayout() {
             const container = findContainerElement(el);
@@ -184,11 +187,11 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
 
         const animate = (): void => {
             if (renderer.getContext().isContextLost()) return;
-            requestAnimationFrame(animate);
+            window.requestAnimationFrame(animate);
 
             for (let i = 0; i < views.length; i++) {
                 const v = views[i];
-                const [cellName, cellData] = cells[i];
+                const [, cellData] = cells[i];
 
                 // Optional model rotation
                 if (cellData.scene?.autoRotation) {
@@ -246,28 +249,29 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
 
         setupPluginUnload(plugin, resizeObserver, renderer, views);
     } else {
-        let { scene, axesHelper, gridHelper } = setupBaseScene(config, plugin)
+        const sceneData = config as SceneData;
+        let { scene, axesHelper, gridHelper } = setupBaseScene(sceneData, plugin)
 
         let width = setting_width;
         let height: number;
         let widthPercentage: number;
         let alignment: string;
 
-        if (config.renderBlock) {
-            if (config.renderBlock.alignment) {
-                alignment = config.renderBlock.alignment;
+        if (sceneData.renderBlock) {
+            if (sceneData.renderBlock.alignment) {
+                alignment = sceneData.renderBlock.alignment;
             } else {
                 alignment = setting_alignment;
             }
 
-            if (config.renderBlock.widthPercentage) {
-                widthPercentage = config.renderBlock.widthPercentage / 100;
+            if (sceneData.renderBlock.widthPercentage) {
+                widthPercentage = sceneData.renderBlock.widthPercentage / 100;
             } else {
                 widthPercentage = setting_width_percentage;
             };
 
-            if (config.renderBlock.height) {
-                height = config.renderBlock.height;
+            if (sceneData.renderBlock.height) {
+                height = sceneData.renderBlock.height;
             } else {
                 height = setting_height as number;
             }
@@ -285,36 +289,45 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
             }
         }
 
-        let camera = setCameraMode(config.camera?.orthographic, width, height, scene, plugin);
+        let camera = setCameraMode(sceneData.camera?.orthographic, width, height, scene, plugin);
         renderer.setSize(width, height);
-        const lightsArray = setupLightsArray(config, plugin, scene, camera);
-        setupHDRIBackground(config, plugin, scene, renderer)
-        const orbit = setupOrbitControls(config, camera, renderer, plugin, scissor);
-        applyCameraSettings(camera, config, orbit, plugin);
-        const modelArray = await setupModelsArray(config, plugin, scene);
-        setupGroundShadows(config, scene, plugin)
+        const lightsArray = setupLightsArray(sceneData, plugin, scene, camera);
+        setupHDRIBackground(sceneData, plugin, scene, renderer)
+        const orbit = setupOrbitControls(sceneData, camera, renderer, plugin, scissor);
+        applyCameraSettings(camera, sceneData, orbit, plugin);
+        const modelArray = await setupModelsArray(sceneData, plugin, scene);
+        setupGroundShadows(sceneData, scene, plugin)
         const parentGroup = setupParentGroup(scene, modelArray, lightsArray);
 
-        if (config.scene && config.scene.showGuiOverlay && !grid) {
+        if (sceneData.scene && sceneData.scene.showGuiOverlay && !grid && ctx) {
             axesHelper ??= new THREE.AxesHelper(10);
             gridHelper ??= new THREE.GridHelper(10, 10);
-            gui2(plugin, el, scene, axesHelper, gridHelper, orbit, camera, renderer, ctx, modelArray, config)
-        } else if (grid && config.scene.showGuiOverlay) {
-            new Notice(`GUI cannot be shown for 3D grid cells\nOne of your grid cells has the scene -> showGuiOverlay set to true`, 8000);
+            gui2(plugin, el, scene, axesHelper, gridHelper, orbit, camera, renderer, ctx, modelArray, sceneData)
+        } else if (grid && sceneData.scene?.showGuiOverlay) {
+            new Notice(`GUI cannot be shown for 3d grid cells\none of your grid cells has the scene -> showguioverlay set to true`, 8000);
         }
 
+        let lastContainerWidth = -1;
+        let lastContainerHeight = -1;
         let resizeRafId: number | null = null;
         const onResize = () => {
             if (resizeRafId !== null) cancelAnimationFrame(resizeRafId);
-            resizeRafId = requestAnimationFrame(() => {
+            resizeRafId = window.requestAnimationFrame(() => {
                 resizeRafId = null;
                 const container = findContainerElement(el);
                 if (!container) return;
 
                 const containerWidth = container.clientWidth;
+                const containerHeight = container.clientHeight;
+
+                // Guard against ResizeObserver feedback loops (e.g. scrollbar appearing/disappearing)
+                if (containerWidth === lastContainerWidth && containerHeight === lastContainerHeight) return;
+                lastContainerWidth = containerWidth;
+                lastContainerHeight = containerHeight;
+
                 let newWidth;
                 if (jic_gridSettings) {
-                    newWidth = (containerWidth - ((jic_gridSettings.columns - 1) * jic_gridSettings.gapX)) * widthPercentage
+                    newWidth = (containerWidth - (((jic_gridSettings.columns ?? 1) - 1) * (jic_gridSettings.gapX ?? 0))) * widthPercentage
                 } else {
                     newWidth = containerWidth * widthPercentage;
                 }
@@ -322,26 +335,23 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
                     height = newWidth;
                 } else if (typeof setting_height === "string" && setting_height.startsWith("fill")) {
                     const fillPct = setting_height.includes(":") ? parseFloat(setting_height.split(":")[1]) / 100 : 1;
-                    height = container.clientHeight * fillPct;
+                    height = containerHeight * fillPct;
                 }
                 const align = alignment || "center";
 
-                // Apply style directly to your block container
+                // Only apply embed wrapper styling to codeblock parents, not to .view-content
                 const parent = el.parentElement;
-                if (parent && !grid) {
-                    parent.style.display = "flex";
-                    if (widthPercentage == 1) {
-                        parent.style.justifyContent = "center";
-                    } else {
-                        parent.style.justifyContent = align;
-                    }
-                    parent.style.width = "100%";
+                if (parent && !grid && !parent.classList.contains('view-content')) {
+                    parent.setCssProps({ '--3d-align': widthPercentage === 1 ? 'center' : align });
+                    parent.addClass("ThreeDEmbed_embed_wrapper");
                 }
 
                 el.style.width = `${newWidth}px`;
 
                 renderer.setSize(newWidth, height);
-                camera.aspect = newWidth / height;
+                if (camera instanceof THREE.PerspectiveCamera) {
+                    camera.aspect = newWidth / height;
+                }
                 camera.updateProjectionMatrix();
             });
         };
@@ -352,13 +362,13 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
 
         const animate = () => {
             if (renderer.getContext().isContextLost()) { return }
-            requestAnimationFrame(animate);
+            window.requestAnimationFrame(animate);
 
-            if (scene && config.scene && config.scene.autoRotation != undefined) {
-                parentGroup.rotation.x += config.scene.autoRotation[0];
-                parentGroup.rotation.y += config.scene.autoRotation[1];
-                parentGroup.rotation.z += config.scene.autoRotation[2];
-            } else if (plugin.settings.autoRotate && config?.scene?.autoRotation == undefined) {
+            if (scene && sceneData.scene && sceneData.scene.autoRotation != undefined) {
+                parentGroup.rotation.x += sceneData.scene.autoRotation[0];
+                parentGroup.rotation.y += sceneData.scene.autoRotation[1];
+                parentGroup.rotation.z += sceneData.scene.autoRotation[2];
+            } else if (plugin.settings.autoRotate && sceneData?.scene?.autoRotation == undefined) {
                 parentGroup.rotation.y -= 0.005;
             }
 
@@ -387,13 +397,13 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
     }
 }
 
-function setupPluginUnload(plugin: ThreeJSPlugin, resizeObserver: ResizeObserver, renderer: THREE.WebGLRenderer, views?: any[]) {
+function setupPluginUnload(plugin: ThreeJSPlugin, resizeObserver: ResizeObserver, renderer: THREE.WebGLRenderer, views?: Array<{ controls: OrbitControls }>) {
     plugin.register(() => {
         resizeObserver.disconnect();
         renderer.dispose();
         if (views) { //if in scissor mode
             for (const v of views) {
-                try { v.controls.dispose(); } catch (e) { /* ignore */ }
+                try { v.controls.dispose(); } catch { /* ignore */ }
             }
         }
     });
@@ -413,7 +423,7 @@ function setupParentGroup(scene: THREE.Scene, modelArray: THREE.Object3D[], ligh
     return parentGroup;
 }
 
-function setupBaseScene(data: any, plugin: ThreeJSPlugin) {
+function setupBaseScene(data: SceneData, plugin: ThreeJSPlugin) {
     const scene = new THREE.Scene();
     let axesHelper: THREE.AxesHelper | null = null;
     let gridHelper: THREE.GridHelper | null = null;
@@ -421,14 +431,14 @@ function setupBaseScene(data: any, plugin: ThreeJSPlugin) {
     if (data.scene?.backgroundColor === "transparent") {
         scene.background = null;
     } else if (plugin.settings.colorChoice == "transparent" && !data.scene?.backgroundColor) {
-         scene.background = null;
+        scene.background = null;
     } else {
         const bg = data.scene?.backgroundColor || plugin.settings.standardColor;
         scene.background = new THREE.Color(`#${bg.replace(/#/g, "")}`);
     }
 
-    axesHelper = new THREE.AxesHelper(data.scene?.length) || new THREE.AxesHelper(5); //TODO: hardcoded
-    gridHelper = new THREE.GridHelper(data.scene?.gridSize, data.scene?.gridSize) || new THREE.GridHelper(10, 10); //TODO: hardcoded
+    axesHelper = new THREE.AxesHelper(data.scene?.length || 5);
+    gridHelper = new THREE.GridHelper(data.scene?.gridSize || 10, data.scene?.gridSize || 10); //TODO: hardcoded
 
     if (data.scene?.showAxisHelper && axesHelper) {
         scene.add(axesHelper);
@@ -440,7 +450,7 @@ function setupBaseScene(data: any, plugin: ThreeJSPlugin) {
     return { scene, axesHelper, gridHelper };
 }
 
-async function setupModelsArray(data: any, plugin: ThreeJSPlugin, scene: THREE.Scene) {
+async function setupModelsArray(data: SceneData, plugin: ThreeJSPlugin, scene: THREE.Scene) {
     const modelArray: THREE.Object3D[] = [];
     if (Array.isArray(data.models)) {
         for (const model of data.models) {
@@ -496,7 +506,7 @@ async function setupModelsArray(data: any, plugin: ThreeJSPlugin, scene: THREE.S
     return modelArray;
 }
 
-function setupLightsArray(data: any, plugin: ThreeJSPlugin, scene: THREE.Scene, camera: THREE.Camera) {
+function setupLightsArray(data: SceneData, plugin: ThreeJSPlugin, scene: THREE.Scene, camera: THREE.Camera) {
     const lightsArray: { name: string; obj: THREE.Light }[] = [];
     if (Array.isArray(data.lights)) {
         for (const l of data.lights) {
@@ -504,10 +514,10 @@ function setupLightsArray(data: any, plugin: ThreeJSPlugin, scene: THREE.Scene, 
                 plugin,
                 scene,
                 l.type,
-                l.show,
-                l.color,
+                l.show ?? false,
+                l.color ?? "",
                 l.pos,
-                l.strength,
+                l.strength ?? 1,
                 camera,
                 l
             );
@@ -517,7 +527,7 @@ function setupLightsArray(data: any, plugin: ThreeJSPlugin, scene: THREE.Scene, 
         }
     } else {
         //adding lights from global settings
-        for(const l of plugin.settings.lightSettings) {
+        for (const l of plugin.settings.lightSettings) {
             const light = loadLights(
                 plugin,
                 scene,
@@ -537,7 +547,7 @@ function setupLightsArray(data: any, plugin: ThreeJSPlugin, scene: THREE.Scene, 
     return lightsArray;
 }
 
-function setupGroundShadows(data: any, scene: THREE.Scene, plugin: ThreeJSPlugin) {
+function setupGroundShadows(data: SceneData, scene: THREE.Scene, plugin: ThreeJSPlugin) {
     if (data.scene?.showGroundShadows) {
         const shadowMat = new THREE.ShadowMaterial({ opacity: 0.5 });
         const ground = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), shadowMat);
@@ -555,7 +565,7 @@ function setupGroundShadows(data: any, scene: THREE.Scene, plugin: ThreeJSPlugin
     }
 }
 
-function setupHDRIBackground(data: any, plugin: ThreeJSPlugin, scene: THREE.Scene, renderer: THREE.WebGLRenderer) {
+function setupHDRIBackground(data: SceneData, plugin: ThreeJSPlugin, scene: THREE.Scene, renderer: THREE.WebGLRenderer) {
     if (data.scene?.hdriBackground?.texturePath) {
         const pmremGenerator = new THREE.PMREMGenerator(renderer);
         const hdriLoader = new RGBELoader()
@@ -567,11 +577,11 @@ function setupHDRIBackground(data: any, plugin: ThreeJSPlugin, scene: THREE.Scen
                 texture.dispose();
                 scene.environment = envMap
 
-                if (data.scene.hdriBackground.sceneBackground) {
+                if (data.scene?.hdriBackground?.sceneBackground) {
                     scene.background = envMap;
                 }
 
-                if (data.scene.hdriBackground.baseGeometry) {
+                if (data.scene?.hdriBackground?.baseGeometry) {
                     const geometry2 = new THREE.TorusKnotGeometry(1.5, 0.50, 220, 20);
 
                     const material2 = new THREE.MeshStandardMaterial({
@@ -593,7 +603,7 @@ function setupHDRIBackground(data: any, plugin: ThreeJSPlugin, scene: THREE.Scen
     }
 }
 
-function setupOrbitControls(data: any, camera: THREE.Camera, renderer: THREE.WebGLRenderer, plugin: ThreeJSPlugin, scissor: boolean) {
+function setupOrbitControls(data: SceneData, camera: THREE.Camera, renderer: THREE.WebGLRenderer, plugin: ThreeJSPlugin, scissor: boolean) {
     const orbit = new OrbitControls(camera, renderer.domElement);
     orbit.enableDamping = data.scene?.orbitControlDamping ?? plugin.settings.dampedOrbit ?? true
     if (scissor) orbit.enabled = false;
@@ -601,8 +611,8 @@ function setupOrbitControls(data: any, camera: THREE.Camera, renderer: THREE.Web
     return orbit
 }
 
-function setCameraMode(orthographic: boolean, width: number, height: number, scene: THREE.Scene, plugin: ThreeJSPlugin) {
-    let camera: any;
+function setCameraMode(orthographic: boolean | undefined, width: number, height: number, scene: THREE.Scene, plugin: ThreeJSPlugin): THREE.PerspectiveCamera | THREE.OrthographicCamera {
+    let camera: THREE.PerspectiveCamera | THREE.OrthographicCamera;
     if (orthographic == undefined && plugin.settings.cameraType == "Orthographic") {
         const aspect = width / height;
         const distance = 10; // distance at which you want the orthographic camera to mimic the perspective camera
@@ -648,7 +658,7 @@ function waitForCanvasReady(renderer: THREE.WebGLRenderer): Promise<void> {
             if (rect.width > 0 && rect.height > 0) {
                 resolve();
             } else {
-                requestAnimationFrame(check);
+                window.requestAnimationFrame(check);
             }
         };
         check();

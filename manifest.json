@@ -1,8 +1,8 @@
 {
 	"id": "threed-embeds",
 	"name": "Embed 3D",
-	"version": "1.1.8",
-	"minAppVersion": "0.15.0",
+	"version": "1.1.9",
+	"minAppVersion": "1.6.6",
 	"description": "Embed and view 3DModels in markdown notes. Supports .stl, .obj, 3mf, fbx and .gltf/.glb files.",
 	"author": "Jesse Strijker",
 	"authorUrl": "https://jessestrijker.com",

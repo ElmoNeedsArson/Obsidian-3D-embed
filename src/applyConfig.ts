@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import ThreeJSPlugin from './main';
+import { SceneData, ModelConfig } from './types';
 
-export function applyCameraSettings(cam: THREE.Camera, config: any, controls: OrbitControls, plugin: ThreeJSPlugin) {
+export function applyCameraSettings(cam: THREE.Camera, config: SceneData, controls: OrbitControls, plugin: ThreeJSPlugin) {
     if (config.camera?.camPosXYZ) {
         cam.position.x = config.camera.camPosXYZ[0];
         cam.position.y = config.camera.camPosXYZ[1];
@@ -23,8 +24,8 @@ export function applyCameraSettings(cam: THREE.Camera, config: any, controls: Or
     }
 }
 
-export function applyModelConfig(plugin: ThreeJSPlugin, model: THREE.Object3D, modelconfig: any) {
+export function applyModelConfig(plugin: ThreeJSPlugin, model: THREE.Object3D, modelconfig: ModelConfig) {
     model.scale.set(modelconfig.scale || plugin.settings.standardScale || 1, modelconfig.scale || plugin.settings.standardScale || 1, modelconfig.scale || plugin.settings.standardScale || 1);
-    model.rotation.set(THREE.MathUtils.degToRad(modelconfig.rotation?.[0]) || THREE.MathUtils.degToRad(plugin.settings.modelRotX) || 0, THREE.MathUtils.degToRad(modelconfig.rotation?.[1]) || THREE.MathUtils.degToRad(plugin.settings.modelRotY) || 0, THREE.MathUtils.degToRad(modelconfig.rotation?.[2]) || THREE.MathUtils.degToRad(plugin.settings.modelRotZ) || 0);
+    model.rotation.set(THREE.MathUtils.degToRad(modelconfig.rotation?.[0] ?? 0) || THREE.MathUtils.degToRad(plugin.settings.modelRotX) || 0, THREE.MathUtils.degToRad(modelconfig.rotation?.[1] ?? 0) || THREE.MathUtils.degToRad(plugin.settings.modelRotY) || 0, THREE.MathUtils.degToRad(modelconfig.rotation?.[2] ?? 0) || THREE.MathUtils.degToRad(plugin.settings.modelRotZ) || 0);
     model.position.set(modelconfig.position?.[0] || plugin.settings.modelPosX || 0, modelconfig.position?.[1] || plugin.settings.modelPosY || 0, modelconfig.position?.[2] || plugin.settings.modelPosZ || 0);
 }

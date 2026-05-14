@@ -6,7 +6,7 @@ import { foldEffect } from '@codemirror/language';
 export function ThreeD_Embed_Grid_Command(plugin: ThreeJSPlugin) {
   plugin.addCommand({
     id: "Add a 3D grid embed from selection",
-    name: "Grid: Add a 3D grid embed from selection",
+    name: "Grid: Add a 3d grid embed from selection",
     editorCallback: (editor: Editor) => {
       const selection = editor.getSelection();
 
@@ -50,21 +50,21 @@ ${plugin.settings.lightSettings.map((light: LightSetting) => {
           const castShadows = light.castShadows ? "true" : "false"; // new boolean property
 
           switch (light.dropdownValue) {
-            case "hemisphere":
+            case "hemisphere": {
               const groundColor = (light.secondaryColor ?? "#FFFFFF").replace("#", "");
               return `      {"type": "hemisphere", "skyColor": "${colorString}", "groundColor": "${groundColor}", "strength": ${light.intensity}, "show": false}`;
-
+            }
             case "spot":
-              return `      {"type": "spot", "color": "${colorString}", "pos": [${posString}], "target": [${targetString}], "distance": ${light.distance ?? 0}, "angle": ${light.angle ?? 0}, "strength": ${light.intensity}, "castShadows": ${castShadows}, "show": false}`;
+              return `      {"type": "spot", "color": "${colorString}", "pos": [${posString.join(', ')}], "target": [${targetString.join(', ')}], "distance": ${light.distance ?? 0}, "angle": ${light.angle ?? 0}, "strength": ${light.intensity}, "castShadows": ${castShadows}, "show": false}`;
 
             case "directional":
-              return `      {"type": "directional", "color": "${colorString}", "pos": [${posString}], "target": [${targetString}], "strength": ${light.intensity}, "castShadows": ${castShadows}, "show": false}`;
+              return `      {"type": "directional", "color": "${colorString}", "pos": [${posString.join(', ')}], "target": [${targetString.join(', ')}], "strength": ${light.intensity}, "castShadows": ${castShadows}, "show": false}`;
 
             case "point":
-              return `      {"type": "point", "color": "${colorString}", "pos": [${posString}], "strength": ${light.intensity}, "castShadows": ${castShadows}, "show": false}`;
+              return `      {"type": "point", "color": "${colorString}", "pos": [${posString.join(', ')}], "strength": ${light.intensity}, "castShadows": ${castShadows}, "show": false}`;
 
             default:
-              return `      {"type": "${light.dropdownValue}", "color": "${colorString}", "pos": [${posString}], "strength": ${light.intensity}, "show": false}`;
+              return `      {"type": "${light.dropdownValue}", "color": "${colorString}", "pos": [${posString.join(', ')}], "strength": ${light.intensity}, "show": false}`;
           }
         }).join(",\n")}\n   ],
    "camera": { 
@@ -105,7 +105,12 @@ ${plugin.settings.lightSettings.map((light: LightSetting) => {
 
       editor.replaceSelection(codeBlock);
 
-      const cmView = (editor as any).cm || (editor as any).cmEditor || (editor as any).cm?.view;
+      interface CMEditorView {
+        state: { doc: { toString(): string }; selection: { main: { to: number } } };
+        dispatch(tr: { effects: unknown }): void;
+      }
+      type EditorWithCM = Editor & { cm?: CMEditorView; cmEditor?: CMEditorView };
+      const cmView = (editor as EditorWithCM).cm ?? (editor as EditorWithCM).cmEditor;
 
       if (!cmView) {
         console.warn("ThreeJS plugin: couldn't get CodeMirror EditorView for folding. cmView:", cmView);
@@ -154,7 +159,7 @@ ${plugin.settings.lightSettings.map((light: LightSetting) => {
 
             // Dispatch fold for this section
             cmView.dispatch({
-              effects: (foldEffect as any).of({ from: openingPos, to: closingPos + 1 })
+              effects: foldEffect.of({ from: openingPos, to: closingPos + 1 })
             });
           }
 

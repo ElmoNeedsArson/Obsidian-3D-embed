@@ -1,17 +1,12 @@
 import { Editor, Notice } from 'obsidian';
 import ThreeJSPlugin from '../main';
 import { LightSetting } from '../settings'; // adjust as needed
-// try this first (modern): 
-import { foldEffect } from '@codemirror/language';
-
-// fallback if your environment exposes fold in a different package, you can try:
-// import { foldEffect } from '@codemirror/fold';
 
 
 export function ThreeD_Embed_Command(plugin: ThreeJSPlugin) {
   plugin.addCommand({
     id: "Add a 3D embed at the cursorposition",
-    name: "Single Scene: Add a 3D embed at the cursorposition",
+    name: "Single scene: Add a 3d embed at the cursorposition",
     editorCallback: (editor: Editor) => {
       let selection = editor.getSelection().trim();
       let modelNames: string[] = [];
@@ -29,7 +24,7 @@ export function ThreeD_Embed_Command(plugin: ThreeJSPlugin) {
       }
 
       if (modelNames.length === 0) {
-        new Notice("No 3D model references found (expected syntax: ![[model.obj]])", 4000);
+        new Notice("No 3d model references found (expected syntax: ![[model.obj]])", 4000);
         return;
       }
 

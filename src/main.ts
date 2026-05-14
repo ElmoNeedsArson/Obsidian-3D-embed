@@ -1,4 +1,4 @@
-import { Editor, Notice, Plugin, getLinkpath, Modal, App, MarkdownView, setIcon, setTooltip } from 'obsidian';
+import { Notice, Plugin, getLinkpath, Modal, App, MarkdownView, setIcon, setTooltip, MarkdownPostProcessorContext } from 'obsidian';
 import { Direct3DView, DIRECT3D_VIEW_TYPE } from './direct3DView';
 import { SUPPORTED_3D_EXTENSIONS } from './loadModelType';
 
@@ -7,16 +7,17 @@ import { ThreeJSRendererChild, getUniqueId, getRenderer } from './rendermanager'
 import { initializeThreeJsScene } from './threejsScene';
 import { ThreeD_Embed_Command } from './commands/embedCodeblock'
 import { ThreeD_Embed_Grid_Command } from './commands/embedGridCodeblock'
+import { SceneData, ModelConfig, GridConfig } from './types';
 
 export default class ThreeJSPlugin extends Plugin {
     settings: ThreeDEmbedSettings = DEFAULT_SETTINGS;
 
     async loadSettings() {
-        this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+        this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Record<string, unknown>);
     }
 
     async saveSettings() {
-        const existingData = await this.loadData() || {};
+        const existingData = (await this.loadData() as Record<string, unknown> | null) ?? {};
         const updatedData = {
             ...existingData,             // preserve extra fields
             ...structuredClone(this.settings), // ensure nested changes get saved
@@ -35,23 +36,23 @@ export default class ThreeJSPlugin extends Plugin {
         this.registerView(DIRECT3D_VIEW_TYPE, (leaf) => new Direct3DView(leaf, this));
         this.registerExtensions([...SUPPORTED_3D_EXTENSIONS], DIRECT3D_VIEW_TYPE);
 
-        const data = await this.loadData(); //delete version from data.json to trigger modal again
+        const data = (await this.loadData()) as { version?: string; [key: string]: unknown } | null;
         if (!data) {
             // Fresh install — no data.json existed before
-            console.log("3D Embed: Fresh install, creating default data.json");
+            // console.log("3D Embed: Fresh install, creating default data.json");
             const newData = { version: this.manifest.version.toString(), ...DEFAULT_SETTINGS };
             await this.saveData(newData);
         } else {
             if (!data.version) {
                 // Old user upgrading from <1.0.9
-                console.log("3D Embed: No version found, showing update modal");
-                new UpdateModal(this.app, async () => { }).open();
+                // console.log("3D Embed: No version found, showing update modal");
+                new UpdateModal(this.app, () => {}).open();
 
                 const updatedData = { ...data, version: this.manifest.version.toString() };
                 await this.saveData(updatedData);
             } else if (data.version !== this.manifest.version) {
                 // Normal version update, already has version field
-                console.log(`3D Embed: Updating plugin data version from ${data.version} to ${this.manifest.version}`);
+                // console.log(`3D Embed: Updating plugin data version from ${data.version} to ${this.manifest.version}`);
                 const updatedData = { ...data, version: this.manifest.version.toString() };
                 await this.saveData(updatedData);
             } else {
@@ -71,8 +72,8 @@ export default class ThreeJSPlugin extends Plugin {
             ctx.addChild(child);
 
             try {
-                const parsedData = JSON.parse("{" + source + "}");
-                const modelPath = this.getModelPath(parsedData.models[0].name)
+                const parsedData = JSON.parse("{" + source + "}") as SceneData;
+                const modelPath = this.getModelPath(parsedData.models?.[0]?.name ?? "")
 
                 const requiredSubfields = {
                     camera: {
@@ -96,13 +97,13 @@ export default class ThreeJSPlugin extends Plugin {
                             // Models is an array, ensure we type 'model' properly
                             if (
                                 !Array.isArray(parsedData.models) ||
-                                parsedData.models.some((model: { [key: string]: any }) => model[subfield] === undefined)
+                                parsedData.models.some((model: ModelConfig) => model[subfield as keyof ModelConfig] === undefined)
                             ) {
                                 errors.push(`Please include the "${subfield}" field inside each object in "models". Example: ${example}`);
                             }
                         } else {
                             // Regular object field check (e.g., camera.orthographic)
-                            if (parsedData[parentField as keyof typeof parsedData]?.[subfield] === undefined) {
+                            if (parsedData[parentField as keyof typeof parsedData]?.[subfield as never] === undefined) {
                                 errors.push(`Please include the "${subfield}" field inside "${parentField}". Example: ${example}`);
                             }
                         }
@@ -121,16 +122,16 @@ export default class ThreeJSPlugin extends Plugin {
 
                 //Send through the width and height from settings, but in initializeThreeJsScene check if the json contains overrides for it
                 let widthPercentage = this.settings.standardEmbedWidthPercentage / 100;
-                const width = (ctx as any).el.clientWidth * widthPercentage || (ctx as any).el.clientWidth || 300;
+                const width = el.clientWidth * widthPercentage || el.clientWidth || 300;
                 const height = this.settings.standardEmbedHeight || 300;
                 const alignment = this.settings.alignment || "center";
 
                 const grid = false;
                 const scissor = false;
 
-                createHelperButtons(el, ctx, renderer.domElement, this, parsedData.models[0].name)
+                createHelperButtons(el, ctx, renderer.domElement, this, parsedData.models?.[0]?.name)
 
-                initializeThreeJsScene(this, el, parsedData, width, widthPercentage, height, alignment, ctx, renderer, grid, scissor);
+                void initializeThreeJsScene(this, el, parsedData, width, widthPercentage, height, alignment, ctx, renderer, grid, scissor);
             } catch (error) {
                 handleCodeblockError(error, source, el)
             }
@@ -150,7 +151,7 @@ export default class ThreeJSPlugin extends Plugin {
                 ctx.addChild(child);
 
                 try {
-                    const parsedData = JSON.parse("{" + source + "}");
+                    const parsedData = JSON.parse("{" + source + "}") as GridConfig;
 
                     const requiredSubfields = {
                         camera: {
@@ -167,14 +168,14 @@ export default class ThreeJSPlugin extends Plugin {
 
                     // Validate required subfields
                     const errors: string[] = [];
-                    const validCells: Record<string, any> = {};
+                    const validCells: Record<string, SceneData> = {};
 
-                    const validateScene = (sceneData: any, cellName: string) => {
+                    const validateScene = (sceneData: SceneData, cellName: string) => {
                         let cellIsValid = true;
 
                         for (const [parentField, subfields] of Object.entries(requiredSubfields)) {
                             for (const [subfield, example] of Object.entries(subfields)) {
-                                const value = sceneData[parentField];
+                                const value = sceneData[parentField as keyof SceneData];
 
                                 if (parentField === "models") {
                                     if (!Array.isArray(value)) {
@@ -183,8 +184,8 @@ export default class ThreeJSPlugin extends Plugin {
                                         continue;
                                     }
 
-                                    value.forEach((obj: any, i: number) => {
-                                        if (obj[subfield] === undefined) {
+                                    (value as ModelConfig[]).forEach((obj, i: number) => {
+                                        if (obj[subfield as keyof ModelConfig] === undefined) {
                                             errors.push(
                                                 `In "${cellName}", please include "${subfield}" inside each object in "${parentField}" (item ${i}). Example: ${example}`
                                             );
@@ -192,7 +193,7 @@ export default class ThreeJSPlugin extends Plugin {
                                         }
                                     });
                                 } else {
-                                    if (value?.[subfield] === undefined) {
+                                    if ((value as Record<string, unknown>)?.[subfield] === undefined) {
                                         errors.push(
                                             `In "${cellName}", please include "${subfield}" inside "${parentField}". Example: ${example}`
                                         );
@@ -207,7 +208,7 @@ export default class ThreeJSPlugin extends Plugin {
 
                     for (const [cellName, cellData] of Object.entries(parsedData)) {
                         if (!cellName.startsWith("cell")) continue;
-                        validateScene(cellData, cellName);
+                        validateScene(cellData as SceneData, cellName);
                     }
 
                     if (errors.length > 0) {
@@ -225,14 +226,14 @@ export default class ThreeJSPlugin extends Plugin {
 
                     createHelperButtons(el, ctx, renderer.domElement, this)
 
-                    initializeThreeJsScene(this, el, parsedData, width, widthPercentage, height, alignment, ctx, renderer, grid, scissor);
+                    void initializeThreeJsScene(this, el, parsedData, width, widthPercentage, height, alignment, ctx, renderer, grid, scissor);
 
                 } catch (error) {
                     handleCodeblockError(error, source, el)
                 }
             } else {
                 try {
-                    const parsedData = JSON.parse("{" + source + "}");
+                    const parsedData = JSON.parse("{" + source + "}") as GridConfig;
 
                     const requiredSubfields = {
                         camera: {
@@ -249,14 +250,14 @@ export default class ThreeJSPlugin extends Plugin {
 
                     // Validate required subfields
                     const errors: string[] = [];
-                    const validCells: Record<string, any> = {};
+                    const validCells: Record<string, SceneData> = {};
 
-                    const validateScene = (sceneData: any, cellName: string) => {
+                    const validateScene = (sceneData: SceneData, cellName: string) => {
                         let cellIsValid = true;
 
                         for (const [parentField, subfields] of Object.entries(requiredSubfields)) {
                             for (const [subfield, example] of Object.entries(subfields)) {
-                                const value = sceneData[parentField];
+                                const value = sceneData[parentField as keyof SceneData];
 
                                 if (parentField === "models") {
                                     if (!Array.isArray(value)) {
@@ -265,8 +266,8 @@ export default class ThreeJSPlugin extends Plugin {
                                         continue;
                                     }
 
-                                    value.forEach((obj: any, i: number) => {
-                                        if (obj[subfield] === undefined) {
+                                    (value as ModelConfig[]).forEach((obj, i: number) => {
+                                        if (obj[subfield as keyof ModelConfig] === undefined) {
                                             errors.push(
                                                 `In "${cellName}", please include "${subfield}" inside each object in "${parentField}" (item ${i}). Example: ${example}`
                                             );
@@ -274,7 +275,7 @@ export default class ThreeJSPlugin extends Plugin {
                                         }
                                     });
                                 } else {
-                                    if (value?.[subfield] === undefined) {
+                                    if ((value as Record<string, unknown>)?.[subfield] === undefined) {
                                         errors.push(
                                             `In "${cellName}", please include "${subfield}" inside "${parentField}". Example: ${example}`
                                         );
@@ -289,19 +290,13 @@ export default class ThreeJSPlugin extends Plugin {
 
                     for (const [cellName, cellData] of Object.entries(parsedData)) {
                         if (!cellName.startsWith("cell")) continue;
-                        validateScene(cellData, cellName);
+                        validateScene(cellData as SceneData, cellName);
                     }
 
                     if (errors.length > 0) {
                         console.error("Validation errors:", errors);
                         throw new Error(errors.join("\n"));
                     }
-
-                    //Send through the width and height from settings, but in initializeThreeJsScene check if the json contains overrides for it
-                    let widthPercentage = this.settings.standardEmbedWidthPercentage / 100;
-                    const width = (ctx as any).el.clientWidth * widthPercentage || (ctx as any).el.clientWidth || 300;
-                    const height = this.settings.standardEmbedHeight || 300;
-                    const alignment = this.settings.alignment || "center";
 
                     // Step 2 — Initialization loop (your renderer logic per cell)
                     for (const [cellName, cellData] of Object.entries(validCells)) {
@@ -317,11 +312,12 @@ export default class ThreeJSPlugin extends Plugin {
 
                         //const columns = 4; // desired number of columns // SHOULD THIS BE MOVED OUTSIDE LOOP?
                         const columns = parsedData.gridSettings?.columns || this.settings.columnsAmount || 4;
-                        el.style.display = 'grid';
-                        el.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
-                        el.style.gap = `${parsedData.gridSettings?.gapY || this.settings.gapY || 10}px ${parsedData.gridSettings?.gapX || this.settings.gapX || 10}px`
+                        el.addClass("ThreeDEmbed_grid_container");
+                        el.setCssProps({
+                            '--3d-columns': `${columns}`,
+                            '--3d-gap': `${parsedData.gridSettings?.gapY || this.settings.gapY || 10}px ${parsedData.gridSettings?.gapX || this.settings.gapX || 10}px`
+                        });
 
-                        const modelPath = this.getModelPath(cellData.models[0].name);
                         const width = 50;
                         const widthPercentage = 1 / columns;
                         const height = parsedData.gridSettings?.rowHeight || this.settings.rowHeight || 200;
@@ -331,8 +327,6 @@ export default class ThreeJSPlugin extends Plugin {
 
                         const removeButton = el.createEl("button", { text: "" });
                         removeButton.addClass("ThreeDEmbed_Codeblock_Remove");
-                        removeButton.style.background = "none";
-                        removeButton.style.boxShadow = "none";
 
                         setIcon(removeButton, "lucide-trash");
 
@@ -351,28 +345,28 @@ export default class ThreeJSPlugin extends Plugin {
 
                         const copyButton = el.createEl("button", { text: "" });
                         copyButton.addClass("ThreeDEmbed_Codeblock_Copy");
-                        copyButton.style.background = "none";
-                        copyButton.style.boxShadow = "none";
 
                         setIcon(copyButton, "lucide-copy");
 
-                        copyButton.addEventListener("click", async () => {
-                            const section = ctx.getSectionInfo(el);
-                            if (!section) return;
+                        copyButton.addEventListener("click", () => {
+                            void (async () => {
+                                const section = ctx.getSectionInfo(el);
+                                if (!section) return;
 
-                            const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-                            if (!view) return;
-                            const editor = view.editor;
+                                const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+                                if (!view) return;
+                                const editor = view.editor;
 
-                            const from = { line: section.lineStart, ch: 0 };
-                            const to = { line: section.lineEnd + 1, ch: 0 }; // +1 includes closing fence
-                            const blockText = editor.getRange(from, to);
+                                const from = { line: section.lineStart, ch: 0 };
+                                const to = { line: section.lineEnd + 1, ch: 0 }; // +1 includes closing fence
+                                const blockText = editor.getRange(from, to);
 
-                            await navigator.clipboard.writeText(blockText);
-                            new Notice("Copied to clipboard!");
+                                await navigator.clipboard.writeText(blockText);
+                                new Notice("Copied to clipboard!");
+                            })();
                         })
 
-                        initializeThreeJsScene(this, el, cellData, width, widthPercentage, height, alignment, ctx, renderer, grid, scissor, parsedData.gridSettings);
+                        void initializeThreeJsScene(this, el, cellData, width, widthPercentage, height, alignment, ctx, renderer, grid, scissor, parsedData.gridSettings);
                     }
                 } catch (error) {
                     handleCodeblockError(error, source, el)
@@ -389,18 +383,21 @@ export default class ThreeJSPlugin extends Plugin {
     }
 
     onunload() {
-        console.log("3D Embed Plugin Unloaded")
+        // console.log("3D Embed Plugin Unloaded")
     }
 }
 
-function handleCodeblockError(error: any, source: string, el: HTMLElement) {
-    let message = error.toString().includes("Expected ',' or '}'")
-        ? "Please make sure that every line BUT the last one ends with a comma ','"
-        : error.toString().includes("Expected double")
-            ? "The last line should not end with a comma"
-            : error.message;
+function handleCodeblockError(error: unknown, source: string, el: HTMLElement) {
+    const errStr = String(error);
+    const errMsg = error instanceof Error ? error.message : errStr;
 
-    const errInfo = parseJsonError(error.message);
+    let message = errStr.includes("Expected ',' or '}'")
+        ? "Please make sure that every line BUT the last one ends with a comma ','"
+        : errStr.includes("Expected double")
+            ? "The last line should not end with a comma"
+            : errMsg;
+
+    const errInfo = parseJsonError(errMsg);
 
     if (errInfo) {
         const lines = source.split("\n");
@@ -430,13 +427,11 @@ function sanitizeModelName(raw: string): string {
         .replace(/[\\/:*?"<>|]/g, "_");            // replace invalid filename chars
 }
 
-function createHelperButtons(el: HTMLElement, ctx: any, canvas: HTMLCanvasElement, plugin: ThreeJSPlugin, modelName?: string) {
+function createHelperButtons(el: HTMLElement, ctx: MarkdownPostProcessorContext, canvas: HTMLCanvasElement, plugin: ThreeJSPlugin, modelName?: string) {
     const removeButton = el.createEl("button", { text: "" });
     removeButton.addClass("ThreeDEmbed_Codeblock_Remove");
-    removeButton.style.background = "none";
-    removeButton.style.boxShadow = "none";
     setIcon(removeButton, "lucide-trash");
-    setTooltip(removeButton, "Remove 3D embed"); 
+    setTooltip(removeButton, "Remove 3D embed");
 
     removeButton.addEventListener("click", () => {
         const section = ctx.getSectionInfo(el);
@@ -453,90 +448,90 @@ function createHelperButtons(el: HTMLElement, ctx: any, canvas: HTMLCanvasElemen
 
     const copyButton = el.createEl("button", { text: "" });
     copyButton.addClass("ThreeDEmbed_Codeblock_Copy");
-    copyButton.style.background = "none";
-    copyButton.style.boxShadow = "none";
     setIcon(copyButton, "lucide-copy");
     setTooltip(copyButton, "Copy 3D embed to clipboard");
 
-    copyButton.addEventListener("click", async () => {
-        const section = ctx.getSectionInfo(el);
-        if (!section) return;
+    copyButton.addEventListener("click", () => {
+        void (async () => {
+            const section = ctx.getSectionInfo(el);
+            if (!section) return;
 
-        const view = plugin.app.workspace.getActiveViewOfType(MarkdownView);
-        if (!view) return;
-        const editor = view.editor;
+            const view = plugin.app.workspace.getActiveViewOfType(MarkdownView);
+            if (!view) return;
+            const editor = view.editor;
 
-        const from = { line: section.lineStart, ch: 0 };
-        const to = { line: section.lineEnd + 1, ch: 0 }; // +1 includes closing fence
-        const blockText = editor.getRange(from, to);
+            const from = { line: section.lineStart, ch: 0 };
+            const to = { line: section.lineEnd + 1, ch: 0 }; // +1 includes closing fence
+            const blockText = editor.getRange(from, to);
 
-        await navigator.clipboard.writeText(blockText);
-        new Notice("Copied to clipboard!");
+            await navigator.clipboard.writeText(blockText);
+            new Notice("Copied to clipboard!");
+        })();
     });
 
     const exportButton = el.createEl("button", { text: "" });
     exportButton.addClass("ThreeDEmbed_Codeblock_Export");
-    exportButton.style.background = "none";
-    exportButton.style.boxShadow = "none";
     setIcon(exportButton, "lucide-camera");
     setTooltip(exportButton, "Export snapshot to vault");
 
-    exportButton.addEventListener("click", async () => {
-        const dataUrl = canvas.toDataURL("image/png");
-        const base64 = dataUrl.split(",")[1];
-        const binary = atob(base64);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) {
-            bytes[i] = binary.charCodeAt(i);
-        }
-
-        const noteStem = ctx.sourcePath.replace(/.*\//, "").replace(/\.md$/, "");
-        const modelNameBase = modelName ? sanitizeModelName(modelName) : noteStem;
-        const folder = plugin.settings.snapshotFolder.replace(/\/$/, "");
-        const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-        const stem = `${timestamp}-${modelNameBase}-3D-Embed-thumbnail`;
-        const filename = folder ? `${folder}/${stem}.png` : `${stem}.png`;
-
-        try {
-            if (folder && !plugin.app.vault.getFolderByPath(folder)) {
-                new Notice(`Snapshot folder not found: "${folder}"`);
-                return;
+    exportButton.addEventListener("click", () => {
+        void (async () => {
+            const dataUrl = canvas.toDataURL("image/png");
+            const base64 = dataUrl.split(",")[1];
+            const binary = atob(base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
             }
 
-            if (plugin.settings.snapshotOverwrite) {
-                const noteFile = plugin.app.vault.getFileByPath(ctx.sourcePath);
-                if (noteFile) {
-                    const fm = plugin.app.metadataCache.getFileCache(noteFile)?.frontmatter;
-                    const oldLink: string = fm?.["3D Embed-thumbnail"] ?? "";
-                    const oldLinktext = oldLink.replace(/^\[\[/, "").replace(/\]\]$/, "");
-                    const oldFile = oldLinktext
-                        ? plugin.app.metadataCache.getFirstLinkpathDest(oldLinktext, ctx.sourcePath)
-                        : null;
-                    if (oldFile) {
-                        try {
-                            await plugin.app.vault.delete(oldFile);
-                        } catch {
-                            // old snapshot could not be deleted — proceed with saving the new one
+            const noteStem = ctx.sourcePath.replace(/.*\//, "").replace(/\.md$/, "");
+            const modelNameBase = modelName ? sanitizeModelName(modelName) : noteStem;
+            const folder = plugin.settings.snapshotFolder.replace(/\/$/, "");
+            const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+            const stem = `${timestamp}-${modelNameBase}-3D-Embed-thumbnail`;
+            const filename = folder ? `${folder}/${stem}.png` : `${stem}.png`;
+
+            try {
+                if (folder && !plugin.app.vault.getFolderByPath(folder)) {
+                    new Notice(`Snapshot folder not found: "${folder}"`);
+                    return;
+                }
+
+                if (plugin.settings.snapshotOverwrite) {
+                    const noteFile = plugin.app.vault.getFileByPath(ctx.sourcePath);
+                    if (noteFile) {
+                        const fm = plugin.app.metadataCache.getFileCache(noteFile)?.frontmatter;
+                        const oldLink: string = (fm?.["3D Embed-thumbnail"] as string | undefined) ?? "";
+                        const oldLinktext = oldLink.replace(/^\[\[/, "").replace(/\]\]$/, "");
+                        const oldFile = oldLinktext
+                            ? plugin.app.metadataCache.getFirstLinkpathDest(oldLinktext, ctx.sourcePath)
+                            : null;
+                        if (oldFile) {
+                            try {
+                                await plugin.app.fileManager.trashFile(oldFile);
+                            } catch {
+                                // old snapshot could not be deleted — proceed with saving the new one
+                            }
                         }
                     }
                 }
-            }
 
-            await plugin.app.vault.createBinary(filename, bytes.buffer);
+                await plugin.app.vault.createBinary(filename, bytes.buffer);
 
-            if (plugin.settings.snapshotAutoProperty) {
-                const noteFile = plugin.app.vault.getFileByPath(ctx.sourcePath);
-                if (noteFile) {
-                    await plugin.app.fileManager.processFrontMatter(noteFile, (fm) => {
-                        fm["3D Embed-thumbnail"] = `[[${stem}.png]]`;
-                    });
+                if (plugin.settings.snapshotAutoProperty) {
+                    const noteFile = plugin.app.vault.getFileByPath(ctx.sourcePath);
+                    if (noteFile) {
+                        await plugin.app.fileManager.processFrontMatter(noteFile, (fm: Record<string, unknown>) => {
+                            fm["3D Embed-thumbnail"] = `[[${stem}.png]]`;
+                        });
+                    }
                 }
-            }
 
-            new Notice(`Snapshot saved: ${filename}`);
-        } catch (e: any) {
-            new Notice(`Failed to save snapshot: ${e.message}`);
-        }
+                new Notice(`Snapshot saved: ${filename}`);
+            } catch (e: unknown) {
+                new Notice(`Failed to save snapshot: ${e instanceof Error ? e.message : String(e)}`);
+            }
+        })();
     });
 }
 
@@ -550,8 +545,8 @@ class UpdateModal extends Modal {
 
     onOpen() {
         const { contentEl } = this;
-        contentEl.style.padding = "10px";
-        contentEl.createEl("h2", { text: "Welcome to 3D Embed" });
+        contentEl.addClass("ThreeDEmbed_modal_content");
+        contentEl.createEl("h2", { text: "Welcome to 3d embed" });
 
         // Introductory text with GitHub link.
         const messagepart2 = contentEl.createEl("p");
@@ -561,14 +556,14 @@ class UpdateModal extends Modal {
 
         const warning = contentEl.createEl("p")
         const calloutEl = warning.createEl("div", { cls: "callout callout-warning" });
-        calloutEl.createEl("strong", { text: "Update Notice:" });
+        calloutEl.createEl("strong", { text: "Update notice:" });
         const calloutText = calloutEl.createEl("p");
         calloutText.appendText("If you updated from a version older than 1.0.8: this update the syntax of the codeblock has significantly changed. This causes the old embeds to stop working. ");
         calloutText.appendText("To fix this, remove your old codeblock and execute the 3D embed command again.")
 
         const calloutText2 = calloutEl.createEl("p");
         calloutText2.appendText("Now there is a chance you already put a lot of effort into the current setup of your models, unfortunately if you want to keep this setup, you will have to do a bit of manual work. You can review the updated syntax in the ");
-        const readmeLink = calloutText2.createEl("a", { text: "ReadMe", href: "https://github.com/ElmoNeedsArson/Obsidian-3D-embed#readme" });
+        const readmeLink = calloutText2.createEl("a", { text: "Readme", href: "https://github.com/ElmoNeedsArson/Obsidian-3D-embed#readme" });
         readmeLink.setAttribute("target", "_blank");
         calloutText2.appendText(" and fill in your values for the new syntax.");
 
@@ -580,8 +575,8 @@ class UpdateModal extends Modal {
 
         // Close button.
         const closeButton = contentEl.createEl("button", { text: "Close" });
-        closeButton.addEventListener("click", async () => {
-            await this.onAcknowledge();
+        closeButton.addEventListener("click", () => {
+            this.onAcknowledge();
             this.close();
         });
     }

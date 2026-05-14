@@ -122,13 +122,9 @@ export class ThreeDSettingsTab extends PluginSettingTab {
         const { containerEl } = this;
         containerEl.empty();
 
-        containerEl.createEl('h6', {
-            text: 'Important Note: All the settings below are default settings, all parameters you set here can be modified in the codeblock of your embed per 3D file. These settings are here as the base value where every scene gets initialized with',
-        });
+        new Setting(containerEl).setName("Important note: All the parameters below are defaults. Every value can be modified in the codeblock of your embed per 3d file. These are base values that every scene gets initialized with").setHeading();
 
-        containerEl.createEl('h2', {
-            text: 'Config Options',
-        });
+        new Setting(containerEl).setName("Codeblock behavior").setHeading();
 
         new Setting(containerEl)
             .setName('Load codeblock with all configurations')
@@ -143,13 +139,11 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         })
             )
 
-        containerEl.createEl('h2', {
-            text: 'Standard Scene Settings',
-        });
+        new Setting(containerEl).setName("Scene defaults").setHeading();
 
         new Setting(containerEl)
-            .setName('Scene Background')
-            .setDesc('Default background in your 3D scenes: either a color or transparent')
+            .setName('Scene background')
+            .setDesc('Default background in your 3d scenes: either a color or transparent')
             .addDropdown((dropdown) =>
                 dropdown
                     .addOptions({
@@ -166,7 +160,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
         if (this.plugin.settings.colorChoice === "color") {
             new Setting(containerEl)
                 .setName('Standard scene color')
-                .setDesc('Default background color for 3D scenes')
+                .setDesc('Default background color for 3d scenes')
                 .addColorPicker(colorPicker =>
                     colorPicker.setValue(this.plugin.settings.standardColor)
                         .onChange(async (value) => {
@@ -178,7 +172,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName('Standard height')
-            .setDesc('Default height of a 3D embed in your note (in pixels)')
+            .setDesc('Default height of a 3d embed in your note (in pixels)')
             .addText(text =>
                 text
                     .setValue(this.plugin.settings.standardEmbedHeight.toString())
@@ -192,7 +186,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName('Standard width percentage')
-            .setDesc('Default width percentage of a 3D embed in your note (in percentage of the note width)')
+            .setDesc('Default width percentage of a 3d embed in your note (in percentage of the note width)')
             .addSlider(slider =>
                 slider
                     .setValue(this.plugin.settings.standardEmbedWidthPercentage)
@@ -204,7 +198,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
             );
 
         new Setting(containerEl)
-            .setName('Alignment of 3D scenes')
+            .setName('Alignment of 3d scenes')
             .addDropdown((dropdown) =>
                 dropdown
                     .addOptions({
@@ -220,7 +214,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
 
 
         new Setting(containerEl)
-            .setName('Auto Rotate Scene')
+            .setName('Auto rotate scene')
             .setDesc('If true, will automatically rotate your scene to get a showcase effect')
             .addToggle(
                 (toggle) =>
@@ -233,7 +227,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
             )
 
         new Setting(containerEl)
-            .setName('Damped Orbit Controls')
+            .setName('Damped orbit controls')
             .setDesc('If true, will toggle smooth and damped orbit controls (e.g.) the model will rotate a bit more after you let go')
             .addToggle(
                 (toggle) =>
@@ -246,8 +240,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
             )
 
         new Setting(containerEl)
-            .setName('Show ground Shadows')
-            .setDesc('If true, will show a ground plane that can receive shadows from models and lights. \nNOTE: may impact performance, and your lightsources also need have "castShadows": true')
+            .setName('Show ground shadows')
+            .setDesc('If true, will show a ground plane that can receive shadows from models and lights. \nNote: may impact performance, and your lightsources also need have "castshadows": true')
             .addToggle(
                 (toggle) =>
                     toggle
@@ -259,8 +253,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
             )
 
         new Setting(containerEl)
-            .setName('Toggle Automatically show GUI')
-            .setDesc('If true, will show basic gui options for a scene (color selector, grid checkbox) upon model load. Can also be set in the codeblock config')
+            .setName('Toggle automatically show GUI')
+            .setDesc('If true, will show basic GUI options for a scene (color selector, grid checkbox) upon model load. Can also be set in the codeblock config')
             .addToggle(
                 (toggle) =>
                     toggle
@@ -271,13 +265,11 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         })
             )
 
-        containerEl.createEl('h2', {
-            text: 'Standard Model Settings',
-        });
+        new Setting(containerEl).setName("Model defaults").setHeading();
 
         new Setting(containerEl)
-            .setName('Standard scale of 3Dmodels')
-            .setDesc('Default size of 3D models in scene (non whole numbers should be seperated by dot, not comma)')
+            .setName('Standard scale of 3dmodels')
+            .setDesc('Default size of 3d models in scene (non whole numbers should be seperated by dot, not comma)')
             .addText(text =>
                 text
                     .setValue(this.plugin.settings.standardScale.toString())
@@ -291,8 +283,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setClass("ThreeDEmbed_Position_Inputs")
-            .setName('Standard Position Model')
-            .setDesc('The default position of the Model in your scene (X,Y,Z)')
+            .setName('Standard position model')
+            .setDesc('The default position of the model in your scene (X,y,z)')
             .addText(text =>
                 text
                     .setValue(this.plugin.settings.modelPosX.toString())
@@ -326,8 +318,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setClass("ThreeDEmbed_Position_Inputs")
-            .setName('Standard Rotation Model')
-            .setDesc('The default rotation of the model in your scene (X,Y,Z)')
+            .setName('Standard rotation model')
+            .setDesc('The default rotation of the model in your scene (X,y,z)')
             .addText(text =>
                 text
                     .setValue(this.plugin.settings.modelRotX.toString())
@@ -359,14 +351,12 @@ export class ThreeDSettingsTab extends PluginSettingTab {
 
             )
 
-        containerEl.createEl('h2', {
-            text: 'Standard Camera Settings',
-        });
+        new Setting(containerEl).setName("Camera defaults").setHeading();
 
         new Setting(containerEl)
             .setClass("ThreeDEmbed_Position_Inputs")
-            .setName('Standard Position Camera')
-            .setDesc('The default position of the camera in your scene (X,Y,Z)')
+            .setName('Standard position camera')
+            .setDesc('The default position of the camera in your scene (X,y,z)')
             .addText(text =>
                 text
                     .setValue(this.plugin.settings.camPosX.toString())
@@ -399,7 +389,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
             )
 
         new Setting(containerEl)
-            .setName('Camera Type')
+            .setName('Camera type')
             .setDesc('Defaults a camera type. You can also set this per scene, in the codeblock config.')
             .addDropdown(
                 (dropdown) =>
@@ -414,10 +404,10 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                             await this.plugin.saveSettings();
                         }));
 
-        containerEl.createEl("h2", { text: "Lighting Settings" });
+        new Setting(containerEl).setName("Lights").setHeading();
 
         new Setting(containerEl)
-            .setName("Add Lights")
+            .setName("Add lights")
             .setDesc("It is strongly recommended to keep the 2 preloaded lights")
             .addButton((button) => {
                 button.setButtonText("+").onClick(async () => {
@@ -443,16 +433,18 @@ export class ThreeDSettingsTab extends PluginSettingTab {
             const removeButton = summary.createEl("button", { text: "Remove" });
             removeButton.addClass("ThreeDEmbed_Remove_Button");
 
-            removeButton.addEventListener("click", async (evt) => {
-                evt.stopPropagation(); // prevent summary toggle when clicking remove
-                this.plugin.settings.lightSettings.splice(index, 1);
-                await this.plugin.saveSettings();
-                this.display();
+            removeButton.addEventListener("click", (evt) => {
+                void (async () => {
+                    evt.stopPropagation(); // prevent summary toggle when clicking remove
+                    this.plugin.settings.lightSettings.splice(index, 1);
+                    await this.plugin.saveSettings();
+                    this.display();
+                })();
             });
 
             // Light Type Dropdown (include our two new types)
             new Setting(details)
-                .setName("Light Type")
+                .setName("Light type")
                 .addDropdown((dropdown) => {
                     dropdown.addOptions({
                         point: "point",
@@ -520,8 +512,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
             if (light.dropdownValue !== "hemisphere") {
                 new Setting(details)
                     .setClass("ThreeDEmbed_Position_Inputs")
-                    .setName("Light Position")
-                    .setDesc("The position of the light in the scene (X, Y, Z)")
+                    .setName("Light position")
+                    .setDesc("The position of the light in the scene (X, y, z)")
                     .addText((text) =>
                         text
                             .setValue(light.position ? light.position[0].toString() : "0")
@@ -564,8 +556,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
             if (light.dropdownValue === "directional" || light.dropdownValue === "spot") {
                 new Setting(details)
                     .setClass("ThreeDEmbed_Position_Inputs")
-                    .setName("Target Position")
-                    .setDesc("The target position of the light in the scene (X, Y, Z)")
+                    .setName("Target position")
+                    .setDesc("The target position of the light in the scene (X, y, z)")
                     .addText((text) =>
                         text
                             .setValue(light.targetPosition ? light.targetPosition[0].toString() : "0")
@@ -607,7 +599,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
             // For the spotlights add a distance and angle setting
             if (light.dropdownValue === "spot") {
                 new Setting(details)
-                    .setName("Spotlight Distance")
+                    .setName("Spotlight distance")
                     .setDesc("Distance from the spotlight to the target.")
                     .addText((text) => {
                         text.inputEl.type = "number";
@@ -620,7 +612,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                     });
 
                 new Setting(details)
-                    .setName("Spotlight Angle")
+                    .setName("Spotlight angle")
                     .setDesc("Angle of the spotlight (in radians).")
                     .addText((text) => {
                         text.inputEl.type = "number";
@@ -635,7 +627,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
 
             if (light.dropdownValue === "directional" || light.dropdownValue === "spot" || light.dropdownValue === "point") {
                 new Setting(details)
-                    .setName("castShadows")
+                    .setName("Cast shadows")
                     .setDesc("Able or disable shadow casting for this light")
                     .addToggle(
                         (toggle) =>
@@ -651,7 +643,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
             // For hemisphere lights, do not show a position but show two color pickers.
             if (light.dropdownValue === "hemisphere") {
                 new Setting(details)
-                    .setName("Sky Color")
+                    .setName("Sky color")
                     .addColorPicker((picker) => {
                         picker.setValue(light.color || "#FFFFFF");
                         picker.onChange(async (value) => {
@@ -660,7 +652,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         });
                     });
                 new Setting(details)
-                    .setName("Ground Color")
+                    .setName("Ground color")
                     .addColorPicker((picker) => {
                         picker.setValue(light.secondaryColor || "#FFFFFF");
                         picker.onChange(async (value) => {
@@ -671,7 +663,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
             } else {
                 // For all other light types, show a single color picker.
                 new Setting(details)
-                    .setName("Light Color")
+                    .setName("Light color")
                     .addColorPicker((picker) => {
                         picker.setValue(light.color ?? "#FFFFFF");
                         picker.onChange(async (value) => {
@@ -683,7 +675,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
 
             // Light Intensity (always shown)
             new Setting(details)
-                .setName("Light Intensity")
+                .setName("Light intensity")
                 .addText((text) => {
                     text.inputEl.type = "number";
                     text.setValue(light.intensity.toString());
@@ -696,9 +688,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
             lightDiv.appendChild(details);
         });
 
-        containerEl.createEl('h2', {
-            text: 'Standard Grid Settings',
-        });
+        new Setting(containerEl).setName("Grid defaults").setHeading();
 
         new Setting(containerEl)
             .setName('Columns in grid view')
@@ -716,7 +706,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName('Cellheight')
-            .setDesc('height of all cells in grid view (in pixels)')
+            .setDesc('Height of all cells in grid view (in pixels)')
             .addText(text =>
                 text
                     .setValue(this.plugin.settings.rowHeight.toString())
@@ -729,8 +719,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
             )
 
         new Setting(containerEl)
-            .setName('Horizontal Gap width')
-            .setDesc('Width of gaps between scenes in grid view (in Pixels)')
+            .setName('Horizontal gap width')
+            .setDesc('Width of gaps between scenes in grid view (in pixels)')
             .addText(text =>
                 text
                     .setValue(this.plugin.settings.gapX.toString())
@@ -743,8 +733,8 @@ export class ThreeDSettingsTab extends PluginSettingTab {
             )
 
         new Setting(containerEl)
-            .setName('Vertical Gap width')
-            .setDesc('Height of gaps between scenes in grid view (in Pixels)')
+            .setName('Vertical gap width')
+            .setDesc('Height of gaps between scenes in grid view (in pixels)')
             .addText(text =>
                 text
                     .setValue(this.plugin.settings.gapY.toString())
@@ -758,7 +748,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName('Three.js Scissor mode')
-            .setDesc('Advanced option: If enabled uses scissoring to use one renderer for the grid (More resource friendly). If disabled uses one renderer for each grid cell. Requires restart to take effect')
+            .setDesc('Advanced option: If enabled uses scissoring to use one renderer for the grid (more resource friendly). If disabled uses one renderer for each grid cell. Requires restart to take effect')
             .addToggle(
                 (toggle) =>
                     toggle
@@ -769,9 +759,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         })
             )
 
-        containerEl.createEl('h2', {
-            text: 'STL Type Options',
-        });
+        new Setting(containerEl).setName("Stl appearance").setHeading();
 
         new Setting(containerEl)
             .setName('Standard model color')
@@ -798,16 +786,14 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                         })
             )
 
-        containerEl.createEl('h2', {
-            text: 'Thumbnail and Snapshot Settings (For bases)',
-        });
+        new Setting(containerEl).setName("Thumbnails and snapshots (for bases)").setHeading();
 
         new Setting(containerEl)
             .setName('Snapshot folder')
             .setDesc('Folder inside your vault where snapshots are saved when clicking the camera icon. Leave empty to save to the vault root.')
             .addText(text =>
                 text
-                    .setPlaceholder('e.g. attachments/3d-snapshots')
+                    .setPlaceholder('E.g. Attachments/3d-snapshots')
                     .setValue(this.plugin.settings.snapshotFolder)
                     .onChange(async (value) => {
                         this.plugin.settings.snapshotFolder = value.trim();
@@ -817,7 +803,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName('Auto-write snapshot property')
-            .setDesc('When a snapshot is exported, automatically add a "3D Embed-thumbnail" property to the note with a link to the saved image. Useful for showing preview images in Bases card view.')
+            .setDesc('When a snapshot is exported, automatically add a "3d embed-thumbnail" property to the note with a link to the saved image. Useful for showing preview images in bases card view.')
             .addToggle(toggle =>
                 toggle
                     .setValue(this.plugin.settings.snapshotAutoProperty)
@@ -829,7 +815,7 @@ export class ThreeDSettingsTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName('Overwrite existing snapshot')
-            .setDesc('When enabled, exporting a snapshot replaces the previous one for that model instead of creating a new timestamped file. NOTE: While this can help keep your vault tidy, it also means you will lose the previous snapshot when exporting a new one. Deleting files is always a cautionary tale, so make sure to use this option only if you are okay with losing previous snapshots.')
+            .setDesc('When enabled, exporting a snapshot replaces the previous one for that model instead of creating a new timestamped file. Note: While this can help keep your vault tidy, it also means you will lose the previous snapshot when exporting a new one. Deleting files is always a cautionary tale, so make sure to use this option only if you are okay with losing previous snapshots.')
             .addToggle(toggle =>
                 toggle
                     .setValue(this.plugin.settings.snapshotOverwrite)

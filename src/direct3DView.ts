@@ -34,9 +34,9 @@ export class Direct3DView extends FileView {
         // Dispose any previous renderer before creating a new one
         this.disposeCurrentRenderer();
 
-        container.style.overflow = "hidden";
+        container.addClass("ThreeDEmbed_DirectView_container");
         const wrapper = container.createDiv();
-        wrapper.style.height = "97%";
+        wrapper.addClass("ThreeDEmbed_DirectView_wrapper");
 
         const config = {
             models: [{
@@ -48,7 +48,7 @@ export class Direct3DView extends FileView {
 
         // Defer until after the browser has laid out the DOM so that
         // clientWidth/clientHeight return real values instead of 0.
-        await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+        await new Promise<void>(resolve => window.requestAnimationFrame(() => resolve()));
 
         const widthPercentage = 0.97;
         const width = container.clientWidth || 800;

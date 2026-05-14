@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 
 import ThreeJSPlugin from './main';
+import { XYZ, LightRenderConfig } from './types';
 
-export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: string, show: boolean, color: string, position: any, strength: number, cam: THREE.Camera, lightconfig: any) {
+export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: string, show: boolean, color: string, position: XYZ | undefined, strength: number, cam: THREE.Camera, lightconfig: LightRenderConfig) {
     //Take color from config or else standardvalue
     let lightColor
     if (color) {
@@ -12,16 +13,6 @@ export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: stri
         lightColor = "#" + color
     } else {
         lightColor = plugin.settings.lightSettings[0].color ?? 0xFFFFFF
-    }
-
-    let lightColor2
-    if (lightconfig.color2) {
-        if(lightconfig.color2.startsWith("#")) {
-            lightconfig.color2 = lightconfig.color2.slice(1);
-        }
-        lightColor2 = "#" + lightconfig.color2
-    } else {
-        lightColor2 = plugin.settings.lightSettings[0].color ?? 0xFFFFFF
     }
 
     //Set light strength
@@ -35,13 +26,11 @@ export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: stri
     }
 
     switch (type) {
-        case 'point':
+        case 'point': {
             const point = new THREE.PointLight(lightColor, lightStrength);
 
             if (position) {
                 point.position.set(position[0], position[1], position[2])
-            } else {
-                //point.position.set(plugin.settings.lightSettings[0].position[0], plugin.settings.lightSettings[0].position[1], plugin.settings.lightSettings[0].position[2])
             }
 
             if (lightconfig.castShadows) {
@@ -58,27 +47,22 @@ export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: stri
                 scene.add(pointLightHelper);
             }
             return point
-            break;
-        case 'ambient':
+        }
+        case 'ambient': {
             const ambient = new THREE.AmbientLight(lightColor, lightStrength);
 
             if (position) {
                 ambient.position.set(position[0], position[1], position[2])
-            } else {
-                //ambient.position.set(plugin.settings.lightSettings[0].position[0], plugin.settings.lightSettings[0].position[1], plugin.settings.lightSettings[0].position[2])
             }
 
             scene.add(ambient)
-            //callback(ambient);
             return ambient
-            break;
-        case 'directional':
+        }
+        case 'directional': {
             const directional = new THREE.DirectionalLight(lightColor, lightStrength);
 
             if (position) {
                 directional.position.set(position[0], position[1], position[2])
-            } else {
-                //directional.position.set(plugin.settings.lightSettings[0].position[0], plugin.settings.lightSettings[0].position[1], plugin.settings.lightSettings[0].position[2])
             }
 
             if (lightconfig.target) {
@@ -99,15 +83,12 @@ export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: stri
             scene.add(directional)
 
             if (show == true) {
-                //const helper = new THREE.DirectionalLightHelper(directional, 5);
-                //scene.add(helper);
-
-                // Add shadow camera helper for debugging
                 const shadowHelper = new THREE.CameraHelper(directional.shadow.camera);
                 scene.add(shadowHelper);
             }
             return directional
-        case 'spot':
+        }
+        case 'spot': {
             let distance;
             let angle;
             let decay;
@@ -117,8 +98,6 @@ export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: stri
             } else {
                 distance = 10;
             }
-
-
 
             if (lightconfig.angle) {
                 let entered_percentage = lightconfig.angle
@@ -146,8 +125,7 @@ export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: stri
             if (lightconfig.castShadows) {
                 spot.castShadow = true;
 
-                //spot.angle = Math.PI / 4; // cone width
-                spot.penumbra = 0.2;      // softness at edge
+                spot.penumbra = 0.2;
                 spot.shadow.camera.near = 0.5;
                 spot.shadow.camera.far = 100;
 
@@ -155,8 +133,6 @@ export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: stri
 
             if (position) {
                 spot.position.set(position[0], position[1], position[2])
-            } else {
-                //spot.position.set(plugin.settings.lightSettings[0].position[0], plugin.settings.lightSettings[0].position[1], plugin.settings.lightSettings[0].position[2])
             }
 
             scene.add(spot);
@@ -167,7 +143,8 @@ export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: stri
                 scene.add(spotLightHelper);
             }
             return spot
-        case 'hemisphere':
+        }
+        case 'hemisphere': {
             let skyColor = "#" + lightconfig.skyColor || "#FFFFFF";
             let groundColor = "#" + lightconfig.groundColor || "#FFFFFF";
             const hemisphere = new THREE.HemisphereLight(skyColor, groundColor, lightStrength);
@@ -179,7 +156,8 @@ export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: stri
 
             scene.add(hemisphere);
             return hemisphere
-        case 'attachToCam':
+        }
+        case 'attachToCam': {
             const AttachToCam = new THREE.DirectionalLight(lightColor, lightStrength);
 
             AttachToCam.position.set(0, 10, 45);
@@ -196,5 +174,6 @@ export function loadLights(plugin: ThreeJSPlugin, scene: THREE.Scene, type: stri
 
             cam.add(AttachToCam)
             return AttachToCam
+        }
     }
 }

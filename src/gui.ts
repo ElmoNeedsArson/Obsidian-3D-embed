@@ -1,12 +1,13 @@
-import { MarkdownView } from 'obsidian';
+import { MarkdownView, MarkdownPostProcessorContext } from 'obsidian';
 
 import * as THREE from 'three';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 import ThreeJSPlugin from './main';
+import { SceneData, ModelConfig, JsonValue } from './types';
 
-export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene, axesHelper: THREE.AxesHelper, gridHelper: THREE.GridHelper, orbit: OrbitControls, camera: THREE.Camera, renderer: THREE.Renderer, ctx: any, modelArr: any, config: any) {
+export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene, axesHelper: THREE.AxesHelper, gridHelper: THREE.GridHelper, orbit: OrbitControls, camera: THREE.Camera, renderer: THREE.Renderer, ctx: MarkdownPostProcessorContext, modelArr: THREE.Object3D[], config: SceneData) {
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
     let selectedGroup: THREE.Group | null = null;
@@ -16,11 +17,8 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
     const controls = new TransformControls(camera, renderer.domElement);
     controls.addEventListener('change', () => renderer.render(scene, camera)); // Ensure updates
 
-    let isTransforming = false;
-
     controls.addEventListener('dragging-changed', (event) => {
         orbit.enabled = !(event as { value: boolean }).value;
-        isTransforming = (event as { value: boolean }).value;
     });
 
     let isTransforming2 = false;
@@ -105,7 +103,7 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
     function applyHoverEffect(group: THREE.Group) {
         group.traverse((child) => {
             if (child instanceof THREE.Mesh) {
-                child.userData.originalMaterial = child.material;
+                (child.userData as { originalMaterial?: THREE.Material | THREE.Material[] }).originalMaterial = child.material as THREE.Material | THREE.Material[];
                 child.material = new THREE.MeshBasicMaterial({ color: 0xffff00, wireframe: true });
             }
         });
@@ -115,7 +113,7 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
     function resetHoverEffect(group: THREE.Group) {
         group.traverse((child) => {
             if (child instanceof THREE.Mesh && child.userData.originalMaterial) {
-                child.material = child.userData.originalMaterial;
+                child.material = child.userData.originalMaterial as THREE.Material | THREE.Material[];
             }
         });
     }
@@ -127,61 +125,61 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
     const gizmo = controls.getHelper();
 
     //Parent element sidebar
-    let sidebar = document.createElement('div')
+    let sidebar = activeDocument.createElement('div')
     sidebar.addClass("ThreeD_embed_sidebar")
     el.appendChild(sidebar)
 
     //Footer and options
-    let footer = document.createElement('div')
+    let footer = activeDocument.createElement('div')
     footer.addClass("ThreeD_embed_sidebar_footer")
     sidebar.appendChild(footer)
-    let options = document.createElement('div')
+    let options = activeDocument.createElement('div')
     options.addClass("ThreeD_embed_sidebar_options")
     sidebar.appendChild(options)
 
     //Seperator line
-    let seperator = document.createElement('hr');
+    let seperator = activeDocument.createElement('hr');
     seperator.addClass("ThreeD_embed_seperator")
     footer.appendChild(seperator)
 
     //Reset button
-    let reset = document.createElement('button');
+    let reset = activeDocument.createElement('button');
     reset.addClass("ThreeD_embed_reset")
     reset.innerText = "↩"
     reset.title = "Resrt to codeblock config (can only do this once)"
     footer.appendChild(reset)
 
     //Reload button
-    let applyReload = document.createElement('button');
+    let applyReload = activeDocument.createElement('button');
     applyReload.addClass("ThreeD_embed_reload")
     applyReload.innerText = "✔"
     applyReload.title = "Permanentally save all your modifications to the scene"
     footer.appendChild(applyReload)
 
     //color input
-    let colorInput = document.createElement('input');
-    if (config.scene.backgroundColor != "transparent") {
+    let colorInput = activeDocument.createElement('input');
+    if (config.scene?.backgroundColor != "transparent") {
         colorInput.addClass("ThreeD_embed_colorInput")
         colorInput.type = 'color'
-        colorInput.value = "#" + config.scene.backgroundColor || plugin.settings.standardColor
-        colorInput.title = "Set the Scene Color"
+        colorInput.value = "#" + config.scene?.backgroundColor || plugin.settings.standardColor
+        colorInput.title = "Set the scene color"
         options.appendChild(colorInput)
     }
 
     //Grid and Axis button
-    let gridAxis = document.createElement('button');
+    let gridAxis = activeDocument.createElement('button');
     gridAxis.addClass("ThreeD_embed_gridAxis")
     gridAxis.innerText = "⛶"
     gridAxis.title = "Toggle a grid and axis"
     options.appendChild(gridAxis)
 
     //Radio buttons for transformcontrols
-    let transformBtn = document.createElement('button')
+    let transformBtn = activeDocument.createElement('button')
     transformBtn.classList.add("ThreeD_embed_radioButton", "transformBtn", "active")
     transformBtn.innerText = "✣"
     options.appendChild(transformBtn)
 
-    let rotationBtn = document.createElement('button')
+    let rotationBtn = activeDocument.createElement('button')
     rotationBtn.classList.add("ThreeD_embed_radioButton", "rotationBtn")
     rotationBtn.innerText = "⟲"
     options.appendChild(rotationBtn)
@@ -189,23 +187,29 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
     //Resets to settings from codeblock
     reset.addEventListener('click', () => {
         //NEEDS TO CHANGE, RESET SHOULD MEAN READ OUT THE CONFIG OR THE STANDARD SETTINGS --- Discussion Point
-        modelArr.forEach((child: THREE.Group, index: number) => {
-            child.position.x = config.models[index].position[0];
-            child.position.y = config.models[index].position[1];
-            child.position.z = config.models[index].position[2];
+        (modelArr as THREE.Group[]).forEach((child: THREE.Group, index: number) => {
+            const modelCfg = config.models?.[index];
+            if (!modelCfg) return;
+            child.position.x = modelCfg.position?.[0] ?? 0;
+            child.position.y = modelCfg.position?.[1] ?? 0;
+            child.position.z = modelCfg.position?.[2] ?? 0;
 
-            child.rotation.x = THREE.MathUtils.degToRad(config.models[index].rotation[0]);
-            child.rotation.y = THREE.MathUtils.degToRad(config.models[index].rotation[1]);
-            child.rotation.z = THREE.MathUtils.degToRad(config.models[index].rotation[2]);
+            child.rotation.x = THREE.MathUtils.degToRad(modelCfg.rotation?.[0] ?? 0);
+            child.rotation.y = THREE.MathUtils.degToRad(modelCfg.rotation?.[1] ?? 0);
+            child.rotation.z = THREE.MathUtils.degToRad(modelCfg.rotation?.[2] ?? 0);
         });
 
-        camera.position.x = config.camera.camPosXYZ[0];
-        camera.position.y = config.camera.camPosXYZ[1];
-        camera.position.z = config.camera.camPosXYZ[2];
+        if (config.camera?.camPosXYZ) {
+            camera.position.x = config.camera.camPosXYZ[0];
+            camera.position.y = config.camera.camPosXYZ[1];
+            camera.position.z = config.camera.camPosXYZ[2];
+        }
 
-        orbit.target.x = config.camera.LookatXYZ[0];
-        orbit.target.y = config.camera.LookatXYZ[1];
-        orbit.target.z = config.camera.LookatXYZ[2];
+        if (config.camera?.LookatXYZ) {
+            orbit.target.x = config.camera.LookatXYZ[0];
+            orbit.target.y = config.camera.LookatXYZ[1];
+            orbit.target.z = config.camera.LookatXYZ[2];
+        }
 
         scene.background = new THREE.Color(plugin.settings.standardColor);
         colorInput.value = plugin.settings.standardColor
@@ -214,7 +218,7 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
     //Saves settings to codeblock
     applyReload.addEventListener("click", () => {
         const view = plugin.app.workspace.getActiveViewOfType(MarkdownView);
-        const sec = ctx.getSectionInfo(ctx.el);
+        const sec = ctx.getSectionInfo(el);
         const lineno = sec?.lineStart;
         const lineEnd = sec?.lineEnd;
         const colorValue: string = colorInput.value.replace("#", "");
@@ -226,33 +230,37 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
 
         try {
             // Update global properties
-            if (config.scene.backgroundColor && config.scene.backgroundColor != "transparent") config.scene.backgroundColor = colorValue;
-            if (config.scene.showGuiOverlay) config.scene.showGuiOverlay = false;
-            if (config.camera.camPosXYZ) config.camera.camPosXYZ = [camera.position.x, camera.position.y, camera.position.z];
-            if (config.camera.LookatXYZ) config.camera.LookatXYZ = [orbit.target.x, orbit.target.y, orbit.target.z];
+            if (config.scene?.backgroundColor && config.scene.backgroundColor != "transparent") config.scene.backgroundColor = colorValue;
+            if (config.scene?.showGuiOverlay) config.scene.showGuiOverlay = false;
+            if (config.camera?.camPosXYZ) config.camera.camPosXYZ = [camera.position.x, camera.position.y, camera.position.z];
+            if (config.camera?.LookatXYZ) config.camera.LookatXYZ = [orbit.target.x, orbit.target.y, orbit.target.z];
 
             // Update models
-            config.models.forEach((model: any, index: number) => {
-                model.position = [modelArr[index].position.x.toFixed(3), modelArr[index].position.y.toFixed(3), modelArr[index].position.z.toFixed(3)];
+            config.models?.forEach((model: ModelConfig, index: number) => {
+                model.position = [
+                    parseFloat(modelArr[index].position.x.toFixed(3)),
+                    parseFloat(modelArr[index].position.y.toFixed(3)),
+                    parseFloat(modelArr[index].position.z.toFixed(3))
+                ];
                 model.rotation = [
-                    (modelArr[index].rotation.x * (180 / Math.PI)).toFixed(3),
-                    (modelArr[index].rotation.y * (180 / Math.PI)).toFixed(3),
-                    (modelArr[index].rotation.z * (180 / Math.PI)).toFixed(3)
+                    parseFloat((modelArr[index].rotation.x * (180 / Math.PI)).toFixed(3)),
+                    parseFloat((modelArr[index].rotation.y * (180 / Math.PI)).toFixed(3)),
+                    parseFloat((modelArr[index].rotation.z * (180 / Math.PI)).toFixed(3))
                 ];
             });
 
             // Custom formatter that outputs JSON in a specific style.
             // Top-level keys (first iteration) are not indented.
-            function customFormat(value: any, indent = ""): string {
+            function customFormat(value: JsonValue, indent = ""): string {
                 const indentStep = "   "; // 3 spaces for each nested level
 
                 // Handle arrays
                 if (Array.isArray(value)) {
                     // If all elements are primitives, output inline.
                     if (value.every(isPrimitive)) {
-                        return `[${value.join(", ")}]`;
+                        return `[${(value as (string | number | boolean | null)[]).join(", ")}]`;
                     }
-                    // If the array contains only “simple objects”, format each inline.
+                    // If the array contains only "simple objects", format each inline.
                     if (value.every(isSimpleObject)) {
                         const items = value.map(item => formatObjectInline(item));
                         return `[\n${indentStep}${items.join(",\n" + indentStep)}\n]`;
@@ -268,7 +276,7 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
                     // For each key, add no indent if we're at the top level (indent === ""),
                     // or indent using indent+indentStep for nested levels.
                     const lines = keys.map(key => {
-                        const formattedValue = customFormat(value[key], indentStep);
+                        const formattedValue = customFormat((value as Record<string, JsonValue>)[key], indentStep);
                         // Use no indentation for top-level keys; add indentation for nested keys.
                         const keyPrefix = indent === "" ? "" : indent;
                         return `${keyPrefix}"${key}": ${formattedValue}`;
@@ -281,14 +289,14 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
             }
 
             // Determines if a value is a primitive.
-            function isPrimitive(val: any): boolean {
+            function isPrimitive(val: JsonValue): boolean {
                 return val === null || (typeof val !== "object" && typeof val !== "function");
             }
 
             // Checks if an object is "simple": all of its properties are primitives
             // or flat arrays (arrays of primitives).
-            function isSimpleObject(obj: any): boolean {
-                if (obj === null || typeof obj !== "object") return false;
+            function isSimpleObject(obj: JsonValue): boolean {
+                if (obj === null || typeof obj !== "object" || Array.isArray(obj)) return false;
                 return Object.values(obj).every(val => {
                     if (Array.isArray(val)) {
                         return val.every(isPrimitive);
@@ -298,33 +306,34 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
             }
 
             // Formats a simple object on one line.
-            function formatObjectInline(obj: any): string {
+            function formatObjectInline(obj: JsonValue): string {
+                if (obj === null || typeof obj !== "object" || Array.isArray(obj)) return JSON.stringify(obj);
                 const entries = Object.entries(obj).map(([key, val]) => {
                     let formatted: string;
                     if (Array.isArray(val)) {
                         // If the array is flat, join it inline.
                         if (val.every(isPrimitive)) {
-                            formatted = `[${val.join(", ")}]`;
+                            formatted = `[${(val as (string | number | boolean | null)[]).join(", ")}]`;
                         } else {
                             formatted = JSON.stringify(val);
                         }
                     } else {
-                        formatted = typeof val === "string" ? JSON.stringify(val) : String(val);
+                        formatted = JSON.stringify(val);
                     }
                     return `"${key}": ${formatted}`;
                 });
                 return `{${entries.join(", ")}}`;
             }
 
-            let formattedJson = customFormat(config);
+            let formattedJson = customFormat(config as unknown as JsonValue);
             // Remove the outer braces (like if you're inserting it inside a code block without them)
             formattedJson = formattedJson.slice(1, -1).trim();
 
             // Now insert formattedJson into your editor:
             view.editor.replaceRange(
                 "```3D\n" + formattedJson + "\n```\n",
-                { line: lineno, ch: 0 },
-                { line: lineEnd + 1, ch: 0 }
+                { line: lineno ?? 0, ch: 0 },
+                { line: (lineEnd ?? 0) + 1, ch: 0 }
             );
         } catch (error) {
             console.error("Error updating JSON: " + error);
@@ -344,9 +353,9 @@ export function gui2(plugin: ThreeJSPlugin, el: HTMLElement, scene: THREE.Scene,
         renderer.render(scene, camera);
     }
 
-    document.querySelectorAll('.ThreeD_embed_radioButton').forEach(button => {
+    activeDocument.querySelectorAll('.ThreeD_embed_radioButton').forEach(button => {
         button.addEventListener('click', () => {
-            document.querySelectorAll('.ThreeD_embed_radioButton').forEach(btn => btn.classList.remove('active'));
+            activeDocument.querySelectorAll('.ThreeD_embed_radioButton').forEach(btn => btn.classList.remove('active'));
 
             const btnElement = button as HTMLButtonElement;
             let classes = button.classList

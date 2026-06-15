@@ -2,7 +2,8 @@
 |:--:|:--:|
 | <img alt="4" src="https://github.com/user-attachments/assets/ba47623c-4036-4b26-a134-9442f742940d" /> | <img alt="3" src="https://github.com/user-attachments/assets/7de120bb-6c2b-4cd7-81fb-861232e05ef9" /> |
 
-# 3D Embed Plugin - How to use
+# Embed 3D
+## 3D Embed Plugin - How to use
 
 Currently supported filetypes: `stl, glb, obj (and mtl), fbx, 3mf`
 

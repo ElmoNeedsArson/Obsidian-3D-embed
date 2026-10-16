@@ -281,6 +281,8 @@ To change camera settings:
 - `camPosXYZ` allows you to set the camera position
 - `LookatXYZ` allows you to aim the camera at a specific point
 
+The **Focus on load** setting is enabled by default. It smoothly frames the models after the scene layout is ready when `camPosXYZ` matches the standard camera position configured in plugin settings (allowing tiny floating-point differences). A custom camera position is left unchanged.
+
 ### GUI (BETA)
 Now working with a codeblock might be a tad annoying to finetune your models. So I've been working on a GUI that allows you to change some of the parameters with more ease. 
 By changing this option in your config of the scene to true
@@ -306,11 +308,14 @@ Every `3D` embed has a small **camera icon** in its overlay alongside the existi
 
 ![image](https://github.com/user-attachments/assets/89bef302-c103-46cb-a268-8047dd08eaa3)
 
-The filename follows the pattern:
+The filename pattern depends on the **Snapshot timestamp position** setting:
 ```
-3D-Embed-thumbnail-{modelname}-{timestamp}.png
+{timestamp}-{modelname}-3D-Embed-thumbnail.png
+{modelname}-3D-Embed-thumbnail-{timestamp}.png
+{modelname}-3D-Embed-thumbnail.png
 ```
-And will be saved in the folder you specify in the settings or in the root of your vault if nothing is specified
+Choose whether the timestamp appears before or after the model name, or omit it, in settings. It appears after the model name by default. The snapshot is saved in the folder you specify in settings, or in the root of your vault if no folder is specified.
+If a generated filename already exists, a numeric suffix such as `_1` or `_2` is added to avoid replacing it.
 
 ### Bases settings
 These options are found under the **Bases** header in the plugin settings tab (All the way at the bottom).
@@ -318,6 +323,7 @@ These options are found under the **Bases** header in the plugin settings tab (A
 | Setting | Description |
 |---|---|
 | **Snapshot folder** | Vault folder where snapshot images are saved. Leave empty to save to the vault root. Example: `attachments/3d-snapshots` |
+| **Snapshot timestamp position** | Choose whether to place the timestamp before or after the model name, or omit it from snapshot filenames. |
 | **Auto-write snapshot property** | When enabled, saving a snapshot automatically adds a `3D Embed-thumbnail` property to the note containing the embed. |
 | **Overwrite existing snapshot** | When enabled, the previous snapshot referenced by the `3D Embed-thumbnail` property is deleted from the vault before the new one is saved. Useful for keeping your vault tidy when you frequently re-export a scene. **Note:** this permanently deletes the old file, only use it if you do not need a history of snapshots. |
 

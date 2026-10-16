@@ -56,6 +56,7 @@ export interface ThreeDEmbedSettings {
     stlColor: string;
     lightSettings: LightSetting[];
     snapshotFolder: string;
+    snapshotTimestampPosition: "prefix" | "suffix" | "none";
     snapshotAutoProperty: boolean;
     snapshotOverwrite: boolean;
 }
@@ -93,6 +94,7 @@ export const DEFAULT_SETTINGS: ThreeDEmbedSettings = {
     stlWireframe: false,
     stlColor: "#606060",
     snapshotFolder: "",
+    snapshotTimestampPosition: "suffix",
     snapshotAutoProperty: false,
     snapshotOverwrite: false,
     lightSettings: [
@@ -811,6 +813,23 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                     .setValue(this.plugin.settings.snapshotFolder)
                     .onChange(async (value) => {
                         this.plugin.settings.snapshotFolder = value.trim();
+                        await this.plugin.saveSettings();
+                    })
+            )
+
+        new Setting(containerEl)
+            .setName('Snapshot timestamp position')
+            .setDesc('Choose whether the snapshot filename includes a timestamp, and where it appears.')
+            .addDropdown(dropdown =>
+                dropdown
+                    .addOptions({
+                        prefix: 'Before model name',
+                        suffix: 'After model name',
+                        none: 'No timestamp',
+                    })
+                    .setValue(this.plugin.settings.snapshotTimestampPosition)
+                    .onChange(async (value) => {
+                        this.plugin.settings.snapshotTimestampPosition = value === 'prefix' || value === 'suffix' ? value : 'none';
                         await this.plugin.saveSettings();
                     })
             )

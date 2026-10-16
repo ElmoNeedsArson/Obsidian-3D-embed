@@ -497,8 +497,12 @@ function createHelperButtons(el: HTMLElement, ctx: MarkdownPostProcessorContext,
             const modelNameBase = modelName ? sanitizeModelName(modelName) : noteStem;
             const folder = plugin.settings.snapshotFolder.replace(/\/$/, "");
             const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-            const stem = `${timestamp}-${modelNameBase}-3D-Embed-thumbnail`;
-            const filename = folder ? `${folder}/${stem}.png` : `${stem}.png`;
+            const snapshotName = `${modelNameBase}-3D-Embed-thumbnail`;
+            const baseStem = plugin.settings.snapshotTimestampPosition === "none"
+                ? snapshotName
+                : plugin.settings.snapshotTimestampPosition === "prefix"
+                    ? `${timestamp}-${snapshotName}`
+                    : `${snapshotName}-${timestamp}`;
 
             try {
                 if (folder && !plugin.app.vault.getFolderByPath(folder)) {
@@ -523,6 +527,14 @@ function createHelperButtons(el: HTMLElement, ctx: MarkdownPostProcessorContext,
                             }
                         }
                     }
+                }
+
+                let stem = baseStem;
+                let filename = folder ? `${folder}/${stem}.png` : `${stem}.png`;
+                let duplicateIndex = 1;
+                while (plugin.app.vault.getFileByPath(filename)) {
+                    stem = `${baseStem}_${duplicateIndex++}`;
+                    filename = folder ? `${folder}/${stem}.png` : `${stem}.png`;
                 }
 
                 await plugin.app.vault.createBinary(filename, bytes.buffer);

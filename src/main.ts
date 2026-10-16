@@ -57,7 +57,6 @@ export default class ThreeJSPlugin extends Plugin {
                 await this.saveData(updatedData);
             } else {
                 // Everything up to date
-                // eslint-disable-next-line obsidianmd/rule-custom-message
                 console.log(`3D Embed: Plugin version ${this.manifest.version} loaded`);
             }
         }

@@ -57,6 +57,7 @@ export default class ThreeJSPlugin extends Plugin {
                 await this.saveData(updatedData);
             } else {
                 // Everything up to date
+                // eslint-disable-next-line obsidianmd/rule-custom-message
                 console.log(`3D Embed: Plugin version ${this.manifest.version} loaded`);
             }
         }
@@ -129,9 +130,13 @@ export default class ThreeJSPlugin extends Plugin {
                 const grid = false;
                 const scissor = false;
 
-                createHelperButtons(el, ctx, renderer.domElement, this, parsedData.models?.[0]?.name)
+                let focusScene: () => void = () => {};
+                const scanBoxButton = createHelperButtons(el, ctx, renderer.domElement, this, parsedData.models?.[0]?.name);
+                scanBoxButton.addEventListener("click", () => focusScene());
 
-                void initializeThreeJsScene(this, el, parsedData, width, widthPercentage, height, alignment, ctx, renderer, grid, scissor);
+                void initializeThreeJsScene(this, el, parsedData, width, widthPercentage, height, alignment, ctx, renderer, grid, scissor, undefined, (frame: () => void) => {
+                    focusScene = frame;
+                });
             } catch (error) {
                 handleCodeblockError(error, source, el)
             }
@@ -224,9 +229,13 @@ export default class ThreeJSPlugin extends Plugin {
                     const grid = true;
                     const scissor = true;
 
-                    createHelperButtons(el, ctx, renderer.domElement, this)
+                    let focusScene: () => void = () => {};
+                    const scanBoxButton = createHelperButtons(el, ctx, renderer.domElement, this);
+                    scanBoxButton.addEventListener("click", () => focusScene());
 
-                    void initializeThreeJsScene(this, el, parsedData, width, widthPercentage, height, alignment, ctx, renderer, grid, scissor);
+                    void initializeThreeJsScene(this, el, parsedData, width, widthPercentage, height, alignment, ctx, renderer, grid, scissor, undefined, (frame: () => void) => {
+                        focusScene = frame;
+                    });
 
                 } catch (error) {
                     handleCodeblockError(error, source, el)
@@ -427,7 +436,7 @@ function sanitizeModelName(raw: string): string {
         .replace(/[\\/:*?"<>|]/g, "_");            // replace invalid filename chars
 }
 
-function createHelperButtons(el: HTMLElement, ctx: MarkdownPostProcessorContext, canvas: HTMLCanvasElement, plugin: ThreeJSPlugin, modelName?: string) {
+function createHelperButtons(el: HTMLElement, ctx: MarkdownPostProcessorContext, canvas: HTMLCanvasElement, plugin: ThreeJSPlugin, modelName?: string): HTMLButtonElement {
     const removeButton = el.createEl("button", { text: "" });
     removeButton.addClass("ThreeDEmbed_Codeblock_Remove");
     setIcon(removeButton, "lucide-trash");
@@ -533,6 +542,12 @@ function createHelperButtons(el: HTMLElement, ctx: MarkdownPostProcessorContext,
             }
         })();
     });
+
+    const scanBoxButton = el.createEl("button", { text: "" });
+    scanBoxButton.addClass("ThreeDEmbed_Codeblock_ScanBox");
+    setIcon(scanBoxButton, "lucide-scan");
+    setTooltip(scanBoxButton, "Center/Focus Scene");
+    return scanBoxButton;
 }
 
 class UpdateModal extends Modal {

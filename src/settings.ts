@@ -40,6 +40,7 @@ export interface ThreeDEmbedSettings {
     alignment: string;
     autoRotate: boolean;
     dampedOrbit: boolean;
+    focusOnLoad: boolean;
     camPosX: number;
     camPosY: number;
     camPosZ: number;
@@ -64,7 +65,7 @@ export const DEFAULT_SETTINGS: ThreeDEmbedSettings = {
     showConfig: true,
     colorChoice: "transparent",
     standardColor: "#ADD8E6",
-    showGroundShadows: true,
+    showGroundShadows: false,
     standardScale: 0.5,
     modelPosX: 0,
     modelPosY: 0,
@@ -77,6 +78,7 @@ export const DEFAULT_SETTINGS: ThreeDEmbedSettings = {
     alignment: "center",
     autoRotate: true,
     dampedOrbit: true,
+    focusOnLoad: true,
     camPosX: 0,
     camPosY: 5,
     camPosZ: 10,
@@ -387,6 +389,18 @@ export class ThreeDSettingsTab extends PluginSettingTab {
                     })
 
             )
+
+        new Setting(containerEl)
+            .setName('Focus on load')
+            .setDesc('When enabled, centers the scene on load only if the codeblock camera position matches the standard camera position configured above. A different position is treated as custom and left unchanged.')
+            .addToggle(toggle =>
+                toggle
+                    .setValue(this.plugin.settings.focusOnLoad)
+                    .onChange(async (value) => {
+                        this.plugin.settings.focusOnLoad = value;
+                        await this.plugin.saveSettings();
+                    })
+            );
 
         new Setting(containerEl)
             .setName('Camera type')

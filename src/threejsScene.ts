@@ -10,8 +10,9 @@ import { applyCameraSettings } from './applyConfig'
 import { loadModels } from './loadModelType'
 import { loadLights } from './loadLightType'
 import { SceneData, GridConfig, GridSettings } from './types';
+import { frameObjects } from './frameObjects';
 
-export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, config: SceneData | GridConfig, setting_width: number, setting_width_percentage: number, setting_height: number | string, setting_alignment: string, ctx: MarkdownPostProcessorContext | null, renderer: THREE.WebGLRenderer, grid: boolean, scissor: boolean, jic_gridSettings?: GridSettings) {
+export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElement, config: SceneData | GridConfig, setting_width: number, setting_width_percentage: number, setting_height: number | string, setting_alignment: string, ctx: MarkdownPostProcessorContext | null, renderer: THREE.WebGLRenderer, grid: boolean, scissor: boolean, jic_gridSettings?: GridSettings, onFrameReady?: (frame: () => void) => void) {
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -32,6 +33,8 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
             camera: THREE.PerspectiveCamera | THREE.OrthographicCamera;
             controls: OrbitControls;
             group: THREE.Group;
+            models: THREE.Object3D[];
+            focusOnLoad: boolean;
             viewport?: { left: number; bottom: number; cellWidth: number; cellHeight: number };
         }
 
@@ -68,8 +71,22 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
                 new Notice(`GUI cannot be shown for 3d grid cells\none of your grid cells has the scene -> showguioverlay set to true`, 8000);
             }
 
-            views.push({ name: cellName, scene, camera, controls: orbit, group: parentGroup });
+            views.push({
+                name: cellName,
+                scene,
+                camera,
+                controls: orbit,
+                group: parentGroup,
+                models: modelArray,
+                focusOnLoad: plugin.settings.focusOnLoad && hasStandardCameraPosition(cellData, plugin),
+            });
         }
+
+        onFrameReady?.(() => {
+            for (const view of views) {
+                frameObjects(view.camera, view.controls, view.models);
+            }
+        });
 
         function setupInteractionHandlers() {
             let activeControls: OrbitControls | null = null;
@@ -119,6 +136,9 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
         void waitForCanvasReady(renderer).then(() => {
             updateViewLayout();
             setupInteractionHandlers();
+            for (const view of views) {
+                if (view.focusOnLoad) frameObjects(view.camera, view.controls, view.models);
+            }
         });
 
         let gapX = gridConfig.gridSettings?.gapX || plugin.settings.gapX || 10
@@ -296,6 +316,8 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
         const orbit = setupOrbitControls(sceneData, camera, renderer, plugin, scissor);
         applyCameraSettings(camera, sceneData, orbit, plugin);
         const modelArray = await setupModelsArray(sceneData, plugin, scene);
+        let focusOnLoadPending = plugin.settings.focusOnLoad && hasStandardCameraPosition(sceneData, plugin);
+        onFrameReady?.(() => frameObjects(camera, orbit, modelArray));
         setupGroundShadows(sceneData, scene, plugin)
         const parentGroup = setupParentGroup(scene, modelArray, lightsArray);
 
@@ -353,6 +375,11 @@ export async function initializeThreeJsScene(plugin: ThreeJSPlugin, el: HTMLElem
                     camera.aspect = newWidth / height;
                 }
                 camera.updateProjectionMatrix();
+
+                if (focusOnLoadPending) {
+                    focusOnLoadPending = false;
+                    frameObjects(camera, orbit, modelArray);
+                }
             });
         };
 
@@ -609,6 +636,15 @@ function setupOrbitControls(data: SceneData, camera: THREE.Camera, renderer: THR
     if (scissor) orbit.enabled = false;
 
     return orbit
+}
+
+function hasStandardCameraPosition(data: SceneData, plugin: ThreeJSPlugin): boolean {
+    const position = data.camera?.camPosXYZ;
+    const epsilon = 1e-6;
+    return position !== undefined &&
+        Math.abs(position[0] - plugin.settings.camPosX) <= epsilon &&
+        Math.abs(position[1] - plugin.settings.camPosY) <= epsilon &&
+        Math.abs(position[2] - plugin.settings.camPosZ) <= epsilon;
 }
 
 function setCameraMode(orthographic: boolean | undefined, width: number, height: number, scene: THREE.Scene, plugin: ThreeJSPlugin): THREE.PerspectiveCamera | THREE.OrthographicCamera {
